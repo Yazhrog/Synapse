@@ -4,7 +4,7 @@
 #|-/ /--| Shell Config        |-/ /--|#
 #|/ /---+---------------------+/ /---|#
 # Step 7 — HyprShell Config
-# Creates user config dirs, seeds cache, copies default wallpapers, and runs
+# Creates user config dirs, seeds color files, copies default wallpapers, and runs
 # a live keybind conflict check against the active Hyprland session.
 
 step 7 "HyprShell Config"
@@ -23,15 +23,16 @@ printf '{}\n'                        > "$USER_DATA/keybinds.json"
 
 log_ok "Config dirs created"
 
-# Cache and wallpapers
-spin "  Initialising cache..." \
-    bash -c "mkdir -p '$HOME/.cache/brain-shell' && touch '$HOME/.cache/brain-shell/colors.json'"
+# Seed color files (matugen will overwrite these on first wallpaper apply)
+touch "$USER_DATA/colors.json"
+touch "$HOME/.config/hypr/colors.conf"
+log_ok "Color seed files created"
 
 mkdir -p "$HOME/Pictures/Wallpapers"
 spin "  Copying default wallpapers..." \
     cp -r -n "$REPO_DIR/config/quickshell/src/assets/wallpapers/." "$HOME/Pictures/Wallpapers/" || true
 
-log_ok "Cache and wallpapers initialised"
+log_ok "Wallpapers initialised"
 
 # ╭───────────────────────────────────────────────────────────────────────╮
 # │ Keybind Conflict Detection                                            │

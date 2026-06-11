@@ -5,7 +5,8 @@
 #|/ /---+---------------------+/ /---|#
 # Step 6 — Hyprland & Ghostty Config
 # Deploys the merged Lua WM config to ~/.config/hypr/ and places the
-# ghostty config if one is bundled. Does not overwrite existing files.
+# ghostty config if one is bundled. hyprland.lua is always overwritten;
+# user configs (ghostty, starship, zsh, hyprlock) are not.
 
 step 6 "Hyprland Config"
 
@@ -13,11 +14,10 @@ HYPR_DIR="$HOME/.config/hypr"
 mkdir -p "$HYPR_DIR/modules" "$HYPR_DIR/scripts"
 
 # hyprland.lua entry point
-if cp -n "$REPO_DIR/config/hypr/hyprland.lua" "$HYPR_DIR/hyprland.lua" 2>/dev/null; then
+if spin "  Copying hyprland.lua..." cp "$REPO_DIR/config/hypr/hyprland.lua" "$HYPR_DIR/hyprland.lua"; then
     log_ok "hyprland.lua → ~/.config/hypr/"
 else
-    log_warn "hyprland.lua already exists — not overwritten"
-    log_info "To update: cp $REPO_DIR/config/hypr/hyprland.lua $HYPR_DIR/hyprland.lua"
+    log_warn "hyprland.lua copy failed"
 fi
 
 # Modules
@@ -89,13 +89,22 @@ if [[ -d "$FASTFETCH_SRC" ]]; then
 fi
 
 # Starship config
-STARSHIP_SRC="$REPO_DIR/config/starship/configs/config-default.toml"
-if [[ -f "$STARSHIP_SRC" ]]; then
+STARSHIP_SRC="$REPO_DIR/config/starship"
+if [[ -d "$STARSHIP_SRC" ]]; then
     mkdir -p "$HOME/.config/starship"
-    if cp -n "$STARSHIP_SRC" "$HOME/.config/starship/starship.toml" 2>/dev/null; then
-        log_ok "starship config → ~/.config/starship/starship.toml"
+    if spin "  Copying starship configs..." cp -r -n "$STARSHIP_SRC/." "$HOME/.config/starship/" 2>/dev/null; then
+        log_ok "starship configs → ~/.config/starship/"
     else
-        log_info "starship config already exists — not overwritten"
+        log_info "starship configs already exist — not overwritten"
+    fi
+    # Symlink starship.toml → configs/config-default.toml (active config)
+    STARSHIP_LINK="$HOME/.config/starship/starship.toml"
+    STARSHIP_TARGET="$HOME/.config/starship/configs/config-default.toml"
+    if [[ ! -e "$STARSHIP_LINK" ]]; then
+        ln -sf "$STARSHIP_TARGET" "$STARSHIP_LINK"
+        log_ok "starship.toml → configs/config-default.toml"
+    else
+        log_info "starship.toml already exists — not replaced"
     fi
 fi
 

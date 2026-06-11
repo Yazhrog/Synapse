@@ -56,7 +56,7 @@ zstyle ':fzf-tab:complete:*' fzf-preview '
     elif [[ -f $realpath ]]; then
         bat --color=always --style=plain "$realpath"
     fi'
- zstyle ':fzf-tab:*' fzf-flags --bind='ctrl-/:change-preview-window(down|hidden|)'
+zstyle ':fzf-tab:*' fzf-flags --bind='ctrl-/:change-preview-window(down|hidden|)'
 
 ##### Include Aliases ####
 [ -f "$HOME/.config/zsh/aliasrc" ] && source "$HOME/.config/zsh/aliasrc"
@@ -64,6 +64,7 @@ zstyle ':fzf-tab:complete:*' fzf-preview '
 
 #### Shell Integration ####
 eval "$(fzf --zsh)"
+export STARSHIP_CONFIG="$HOME/.config/starship/starship.toml"
 eval "$(starship init zsh)"
 
 export VIRTUAL_ENV_DISABLE_PROMPT=0

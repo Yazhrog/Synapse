@@ -11,7 +11,7 @@ All filesystem locations touched by the installer or at runtime.
 
 | Source (repo)                              | Destination                                  | Overwrite? |
 |--------------------------------------------|----------------------------------------------|------------|
-| `config/hypr/hyprland.lua`                 | `~/.config/hypr/hyprland.lua`                | No (`-n`)  |
+| `config/hypr/hyprland.lua`                 | `~/.config/hypr/hyprland.lua`                | Yes        |
 | `config/hypr/modules/`                     | `~/.config/hypr/modules/`                    | Yes        |
 | `config/hypr/scripts/`                     | `~/.config/hypr/scripts/`                    | Yes        |
 | `config/hypr/hypridle.conf`                | `~/.config/hypr/hypridle.conf`               | Yes        |
@@ -19,7 +19,8 @@ All filesystem locations touched by the installer or at runtime.
 | `config/ghostty/config` *(if present)*     | `~/.config/ghostty/config`                   | No (`-n`)  |
 | `config/mpv/` *(if present)*               | `~/.config/mpv/`                             | No (`-n`)  |
 | `config/fastfetch/` *(if present)*         | `~/.config/fastfetch/`                       | No (`-n`)  |
-| `config/starship/configs/config-default.toml` | `~/.config/starship/starship.toml`        | No (`-n`)  |
+| `config/starship/`                             | `~/.config/starship/`                        | No (`-n`)  |
+| *(symlink created)*                            | `~/.config/starship/starship.toml` → `configs/config-default.toml` | No |
 | `config/zsh/.zshenv`                       | `~/.zshenv`                                  | No (`-n`)  |
 | `config/zsh/`                              | `~/.config/zsh/`                             | No (`-n`)  |
 
@@ -41,12 +42,13 @@ Directories created unconditionally:
 - `~/.config/HyprShell/src/user_data/wallpapers/`
 - `~/.config/hypr/shaders/`
 - `~/.config/matugen/templates/`
-- `~/.cache/brain-shell/` (+ empty `colors.json` seed file)
 - `~/Pictures/Wallpapers/`
 
-Seed files written:
+Seed files written (overwritten by runtime on first wallpaper apply):
 - `~/.config/HyprShell/src/user_data/config_Provider.json` — `{"configProvider": "lua"}`
 - `~/.config/HyprShell/src/user_data/keybinds.json` — `{}`
+- `~/.config/HyprShell/src/user_data/colors.json` — empty
+- `~/.config/hypr/colors.conf` — empty
 
 ---
 
@@ -67,8 +69,8 @@ It writes two outputs (defined in `matugen.toml`):
 
 | Matugen output | Path |
 |----------------|------|
-| `brain_shell` template | `~/.cache/brain-shell/colors.json` |
-| `hyprland_colors` template | `$SHELL_DIR/src/config/colors.conf` (next to `matugen.toml`) |
+| `brain_shell` template | `~/.config/HyprShell/src/user_data/colors.json` |
+| `hyprland_colors` template | `~/.config/hypr/colors.conf` |
 
 > `$SHELL_DIR` = the directory quickshell was launched from (typically `~/.config/quickshell`).
 
@@ -96,8 +98,7 @@ HyprShell looks for shaders in these locations (in order):
 1. `~/.config/hypr/shaders/`
 2. `~/.local/share/hypr/shaders/`
 3. `/usr/share/hyprshade/shaders/`
-4. `~/.local/src/Brain_Shell/src/config/shaders/`
-5. `~/.config/quickshell/src/config/shaders/`
+4. `~/.config/quickshell/src/config/shaders/`
 
 ---
 
@@ -105,8 +106,7 @@ HyprShell looks for shaders in these locations (in order):
 
 | Invocation | Config used |
 |------------|-------------|
-| `hyprlock` (via `SUPER+L` keybind, no `-c`) | `~/.config/hypr/hyprlock.conf` (default) |
-| `hyprlock -c …` (hypridle fallback) | `~/.local/src/Brain_Shell/src/config/hyprlock.conf` |
+| `hyprlock` (via `SUPER+L` or hypridle `lock_cmd`) | `~/.config/hypr/hyprlock.conf` (default) |
 
 ---
 
@@ -121,7 +121,8 @@ HyprShell looks for shaders in these locations (in order):
 │   │   ├── hyprlock.conf
 │   │   ├── modules/
 │   │   ├── scripts/
-│   │   └── shaders/
+│   │   ├── shaders/
+│   │   └── colors.conf              ← matugen output (runtime)
 │   ├── HyprShell/src/user_data/
 │   │   ├── config_Provider.json
 │   │   ├── keybinds.json
@@ -131,20 +132,16 @@ HyprShell looks for shaders in these locations (in order):
 │   │   ├── hotspot.json
 │   │   ├── update_prefs.json
 │   │   ├── screenrec.json
+│   │   ├── colors.json              ← matugen output (runtime)
 │   │   └── wallpapers/
-│   │       ├── curr_wall             ← symlink (runtime)
-│   │       └── curr_wall_static.jpg  ← jpeg copy (runtime)
+│   │       ├── curr_wall            ← symlink (runtime)
+│   │       └── curr_wall_static.jpg ← jpeg copy (runtime)
 │   ├── matugen/templates/
 │   ├── ghostty/config
 │   ├── mpv/
 │   ├── fastfetch/
 │   ├── starship/starship.toml
-│   ├── zsh/
-│   └── quickshell/src/config/
-│       └── colors.conf          ← matugen output (runtime)
-├── .cache/
-│   └── brain-shell/
-│       └── colors.json          ← matugen output (runtime)
+│   └── zsh/
 ├── .zshenv
 └── Pictures/
     ├── Wallpapers/
