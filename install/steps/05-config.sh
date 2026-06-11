@@ -124,6 +124,17 @@ if [[ -d "$ZSH_SRC" ]]; then
     fi
 fi
 
+# Qt6ct config
+QT6CT_SRC="$REPO_DIR/config/qt6ct/qt6ct.conf"
+if [[ -f "$QT6CT_SRC" ]]; then
+    mkdir -p "$HOME/.config/qt6ct"
+    if spin "  Copying qt6ct config..." cp -n "$QT6CT_SRC" "$HOME/.config/qt6ct/qt6ct.conf" 2>/dev/null; then
+        log_ok "qt6ct.conf → ~/.config/qt6ct/"
+    else
+        log_info "qt6ct.conf already exists — not overwritten"
+    fi
+fi
+
 echo ""
 log_warn "ACTION REQUIRED: Edit ~/.config/hypr/modules/monitors.lua"
 log_info "Replace DP-1 / HDMI-A-1 with your actual monitor names."

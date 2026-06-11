@@ -140,7 +140,13 @@ HyprShell looks for shaders in these locations (in order):
 │   ├── ghostty/config
 │   ├── mpv/
 │   ├── fastfetch/
-│   ├── starship/starship.toml
+│   ├── starship/
+│   │   ├── configs/
+│   │   │   ├── config-default.toml
+│   │   │   ├── catpuccin.toml
+│   │   │   ├── prezto.toml
+│   │   │   └── tokyo-night.toml
+│   │   └── starship.toml            ← symlink → configs/config-default.toml
 │   └── zsh/
 ├── .zshenv
 └── Pictures/
