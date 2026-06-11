@@ -3,10 +3,10 @@
 #|--/ /-| HyprShell           |--/ /-|#
 #|-/ /--| Services            |-/ /--|#
 #|/ /---+---------------------+/ /---|#
-# Step 4 — Systemd Services
+# Step 5 — Systemd Services
 # Enables system-level and user-level services required by HyprShell.
 
-step 4 "Systemd Services"
+step 5 "Systemd Services"
 
 _svc_system() {
     if spin "  system: $1" sudo systemctl enable --now "$1"; then

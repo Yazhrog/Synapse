@@ -3,12 +3,12 @@
 #|--/ /-| HyprShell           |--/ /-|#
 #|-/ /--| Hypr Config         |-/ /--|#
 #|/ /---+---------------------+/ /---|#
-# Step 6 — Hyprland & Ghostty Config
+# Step 7 — Hyprland & Ghostty Config
 # Deploys the merged Lua WM config to ~/.config/hypr/ and places the
 # ghostty config if one is bundled. hyprland.lua is always overwritten;
 # user configs (ghostty, starship, zsh, hyprlock) are not.
 
-step 6 "Hyprland Config"
+step 7 "Hyprland Config"
 
 HYPR_DIR="$HOME/.config/hypr"
 mkdir -p "$HYPR_DIR/modules" "$HYPR_DIR/scripts"

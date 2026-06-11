@@ -3,11 +3,11 @@
 #|--/ /-| HyprShell           |--/ /-|#
 #|-/ /--| Shell Config        |-/ /--|#
 #|/ /---+---------------------+/ /---|#
-# Step 7 — HyprShell Config
+# Step 8 — HyprShell Config
 # Creates user config dirs, seeds color files, copies default wallpapers, and runs
 # a live keybind conflict check against the active Hyprland session.
 
-step 7 "HyprShell Config"
+step 8 "HyprShell Config"
 
 USER_DATA="$HOME/.config/HyprShell/src/user_data"
 

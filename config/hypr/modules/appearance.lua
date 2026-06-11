@@ -1,11 +1,22 @@
+local ok, colors = pcall(dofile, os.getenv("HOME") .. "/.config/hypr/modules/colors.lua")
+if not ok then
+    colors = {
+        primary   = "cba6f7",
+        secondary = "62a0ea",
+        outline   = "9a9996",
+        shadow    = "5e5c64",
+    }
+end
+
+local function rgba(hex, a) return "rgba(" .. hex .. (a or "ff") .. ")" end
+
 hl.config({
     general = {
         gaps_in          = 2,
         gaps_out         = 12,
         border_size      = 3,
         col = {
-            active_border   = {colors = {"rgba(cba6f7ff)", "rgba(62a0eaff)"}, angle = 0},
-            inactive_border = "rgba(9a9996ff)",
+            active_border   = {colors = {rgba(colors.primary)}},
         },
         resize_on_border = true,
         allow_tearing    = true,
@@ -23,7 +34,7 @@ hl.config({
             enabled      = true,
             range        = 5,
             render_power = 3,
-            color        = "rgba(5e5c64ff)",
+            color        = 0x33000000,
         },
 
         blur = {
@@ -41,4 +52,3 @@ hl.config({
         force_zero_scaling = true,
     },
 })
-

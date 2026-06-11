@@ -8,3 +8,7 @@ output_path = '~/.config/HyprShell/src/user_data/colors.json'
 [templates.hyprland_colors]
 input_path = "colors.conf.template"
 output_path = "~/.config/hypr/colors.conf"
+
+[templates.hyprland_colors_lua]
+input_path = "colors.lua.template"
+output_path = "~/.config/hypr/modules/colors.lua"

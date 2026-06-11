@@ -3,11 +3,11 @@
 #|--/ /-| HyprShell           |--/ /-|#
 #|-/ /--| Plugins             |-/ /--|#
 #|/ /---+---------------------+/ /---|#
-# Step 5 — Hyprland Plugins
+# Step 6 — Hyprland Plugins
 # Registers and enables hymission via hyprpm.
 # Plugins activate on the next Hyprland start (hyprpm reload -n in autostart).
 
-step 5 "Hyprland Plugins"
+step 6 "Hyprland Plugins"
 
 if ! command -v hyprpm &>/dev/null; then
     log_warn "hyprpm not found — skipping plugin setup."
