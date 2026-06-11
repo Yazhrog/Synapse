@@ -1,0 +1,52 @@
+alias grep='grep --color=auto'
+alias src='source ~/.config/zsh/.zshrc'
+alias zrc='nvim ~/.config/zsh'
+alias f='fzf'
+alias ff='fastfetch'
+alias pyenv='source ~/viscose/bin/activate'
+
+alias gtp='gitag.sh'
+alias 42='cd /home/thomas/Documents/ING/Final42sh/42sh'
+alias ing='cd /home/thomas/Documents/ING'
+alias mfmake='~/.tools/mfmaker.sh'
+alias hmake='~/.tools/hmaker.sh'
+
+# Change directory aliases
+alias home='cd ~'
+alias cd..='cd ..'
+alias ..='cd ..'
+alias ...='cd ../..'
+alias ....='cd ../../..'
+alias .....='cd ../../../..'
+
+# Alias's for multiple directory listing commands
+alias ls='eza -ah --color=always --icons=always' # add colors and file type extensions
+
+alias t="eza --tree -I '.git'"
+
+# Alias's for archives
+alias mktar='tar -cvf'
+alias mkbz2='tar -cvjf'
+alias mkgz='tar -cvzf'
+alias untar='tar -xvf'
+alias unbz2='tar -xvjf'
+alias ungz='tar -xvf'
+
+# Alias's to modified commands
+alias cp='cp -iv'
+alias mv='mv -iv'
+alias rm='rm -v'
+alias ping='ping -c 5'
+alias c='clear'
+alias vim='nvim'
+alias nv='nvim'
+alias cop='wl-copy'
+alias zed='zeditor'
+alias cat='bat'
+
+alias plic='cd ~/Projects/MTI/PLIC/'
+
+
+alias psql="sudo -u postgres psql"
+alias pg_dump="sudo -u postgres pg_dump"
+alias pg_restore="sudo -u postgres pg_restore"
