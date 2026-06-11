@@ -11,12 +11,10 @@ hl.on("hyprland.start", function()
 
     -- Hyprland plugins (must run after portals)
     hl.exec_cmd("hyprpm reload -n")
+    hl.exec_cmd("hyprctl plugin load " .. os.getenv("HOME") .. "/.config/hypr/plugin/hyprselect/hyprselect.so")
 
     -- GTK theme
     hl.exec_cmd(os.getenv("HOME") .. "/.config/hypr/scripts/gtk.sh")
-
-    -- Hot corners daemon
-    hl.exec_cmd(os.getenv("HOME") .. "/.config/hypr/scripts/hotcorner.sh")
 
     -- Brain_Shell visual layer
     hl.exec_cmd("awww-daemon")

@@ -1,8 +1,8 @@
 hl.config({
     general = {
-        gaps_in          = 5,
-        gaps_out         = 7,
-        border_size      = 2,
+        gaps_in          = 2,
+        gaps_out         = 12,
+        border_size      = 3,
         col = {
             active_border   = {colors = {"rgba(cba6f7ff)", "rgba(62a0eaff)"}, angle = 0},
             inactive_border = "rgba(9a9996ff)",
@@ -13,7 +13,7 @@ hl.config({
     },
 
     decoration = {
-        rounding         = 2,
+        rounding         = 12,
         active_opacity   = 0.9,
         inactive_opacity = 0.9,
         dim_inactive     = false,
@@ -27,10 +27,13 @@ hl.config({
         },
 
         blur = {
-            enabled  = true,
-            size     = 6,
-            passes   = 2,
-            vibrancy = 0.9,
+            enabled     = true,
+            size        = 3,
+            passes      = 3,
+            new_optimizations = on,
+            ignore_opacity = true,
+            xray        = true,
+            vibrancy    = 0.9,
         },
     },
 

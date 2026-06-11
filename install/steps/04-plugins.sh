@@ -4,7 +4,7 @@
 #|-/ /--| Plugins             |-/ /--|#
 #|/ /---+---------------------+/ /---|#
 # Step 5 — Hyprland Plugins
-# Registers and enables the four HyprShell plugins via hyprpm.
+# Registers and enables hymission via hyprpm.
 # Plugins activate on the next Hyprland start (hyprpm reload -n in autostart).
 
 step 5 "Hyprland Plugins"
@@ -12,9 +12,8 @@ step 5 "Hyprland Plugins"
 if ! command -v hyprpm &>/dev/null; then
     log_warn "hyprpm not found — skipping plugin setup."
     log_info "Install Hyprland ≥ 0.55 (which ships hyprpm), then run:"
-    log_info "  hyprpm add https://github.com/hyprwm/hyprland-plugins"
-    log_info "  hyprpm add https://github.com/Vortex-Basis-LLC/hyprfocus"
-    log_info "  hyprpm enable hyprexpo borders-plus-plus hyprbars hyprfocus"
+    log_info "  hyprpm add https://github.com/gfhdhytghd/hymission"
+    log_info "  hyprpm enable hymission"
     return 0
 fi
 
@@ -36,16 +35,32 @@ _hyprpm_enable() {
     fi
 }
 
-_hyprpm_add "https://github.com/hyprwm/hyprland-plugins" \
-    "hyprwm/hyprland-plugins  (hyprexpo, borders-plus-plus, hyprbars)"
-_hyprpm_add "https://github.com/Vortex-Basis-LLC/hyprfocus" \
-    "Vortex-Basis-LLC/hyprfocus"
+_hyprpm_add "https://github.com/gfhdhytghd/hymission" "gfhdhytghd/hymission"
 
 echo ""
-_hyprpm_enable hyprexpo
-_hyprpm_enable borders-plus-plus
-_hyprpm_enable hyprbars
-_hyprpm_enable hyprfocus
+hyprpm update
+_hyprpm_enable hymission
+hyprpm reload
+
+echo ""
+
+# ── hyprselect (manual .so plugin) ───────────────────────────────────────────
+PLUGIN_DIR="$HOME/.config/hypr/plugin"
+HYPRSELECT_DIR="$PLUGIN_DIR/hyprselect"
+
+mkdir -p "$PLUGIN_DIR"
+
+if [[ -d "$HYPRSELECT_DIR" ]]; then
+    spin "  Updating hyprselect..." git -C "$HYPRSELECT_DIR" pull --ff-only
+else
+    spin "  Cloning hyprselect..." git clone https://github.com/jmanc3/hyprselect "$HYPRSELECT_DIR"
+fi
+
+if spin "  Building hyprselect..." make -C "$HYPRSELECT_DIR"; then
+    log_ok "hyprselect built → $HYPRSELECT_DIR/hyprselect.so"
+else
+    log_warn "hyprselect build failed — check build deps (make, g++, hyprland headers)"
+fi
 
 echo ""
 log_ok "Plugin setup complete. Plugins activate on next Hyprland start."
