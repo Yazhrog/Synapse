@@ -129,7 +129,7 @@ PACMAN_DEPS=(
     lm_sensors rfkill
 
     # Hyprland ecosystem
-    hyprland hyprsunset hyprlock hyprpolkitagent hypridle
+    hyprland hyprlock hyprpolkitagent hypridle
     xdg-desktop-portal-hyprland
 
     # Fonts
@@ -163,6 +163,8 @@ AUR_DEPS=(
     hyprshutdown     # power menu backend
     grimblast-git    # screenshot helper
     bibata-cursor-theme  # animated cursor themes
+    wayland-idle-inhibitor-git  # Wayland idle inhibitor for caffeine mode (inhibits hypridle)
+    sunsetr                     # schedule-aware color temperature daemon (night light)
 )
 
 if [[ "$AUR_HELPER" == "none" ]]; then

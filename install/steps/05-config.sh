@@ -124,6 +124,18 @@ if [[ -d "$ZSH_SRC" ]]; then
     fi
 fi
 
+# Sunsetr config (non-overwrite — preserves user-tuned geolocation)
+SUNSETR_SRC="$REPO_DIR/config/sunsetr/sunsetr.toml"
+if [[ -f "$SUNSETR_SRC" ]]; then
+    mkdir -p "$HOME/.config/sunsetr"
+    if cp -n "$SUNSETR_SRC" "$HOME/.config/sunsetr/sunsetr.toml" 2>/dev/null; then
+        log_ok "sunsetr.toml → ~/.config/sunsetr/"
+        log_info "Update latitude/longitude with: sunsetr geo"
+    else
+        log_info "sunsetr.toml already exists — not overwritten"
+    fi
+fi
+
 # Qt6ct config
 QT6CT_SRC="$REPO_DIR/config/qt6ct/qt6ct.conf"
 if [[ -f "$QT6CT_SRC" ]]; then

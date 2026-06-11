@@ -124,35 +124,37 @@ StatCard {
     }
 
     // ─────────────────────────────────────────────────────────────────────────
-    //  Night Light  (hyprsunset)
+    //  Night Light  (sunsetr — schedule-aware color temperature daemon)
     // ─────────────────────────────────────────────────────────────────────────
     property bool nightLightOn: false
 
-    Process { id: nlCheck; command: ["bash", "-c", "pgrep -x hyprsunset"]; running: false
-        stdout: SplitParser { onRead: function(l) { if (l.trim() !== "") root.nightLightOn = true } } }
-    Process { id: nlProc; command: ["hyprsunset", "-t", "5600"]; running: false }
-    Process { id: nlKill; command: ["bash", "-c", "pkill hyprsunset"]; running: false }
+    Process { id: nlCheck
+        command: ["bash", "-c", "sunsetr status 2>&1 | grep -q ERROR && echo off || echo on"]
+        running: false
+        stdout: SplitParser { onRead: function(l) { root.nightLightOn = l.trim() === "on" } } }
+    Process { id: nlProc; command: ["sunsetr", "-b"]; running: false }
+    Process { id: nlKill; command: ["sunsetr", "stop"]; running: false
+        onRunningChanged: if (!running) root.nightLightOn = false }
     function _nightLightToggle() {
         if (root.nightLightOn) {
             nlProc.running = false; nlKill.running = false; nlKill.running = true
-            root.nightLightOn = false
         } else { nlProc.running = true; root.nightLightOn = true }
     }
 
     // ─────────────────────────────────────────────────────────────────────────
-    //  Caffeine  (systemd-inhibit)
+    //  Caffeine  (wayland-idle-inhibitor — inhibits the Wayland idle protocol
+    //             so hypridle listeners actually stop firing)
     // ─────────────────────────────────────────────────────────────────────────
     property bool caffeineOn: false
 
     Process { id: caffeineCheck
-        command: ["bash", "-c", "pgrep -f 'systemd-inhibit.*Caffeine'"]; running: false
+        command: ["bash", "-c", "pgrep -x wayland-idle-inhibitor"]; running: false
         stdout: SplitParser { onRead: function(l) { if (l.trim() !== "") root.caffeineOn = true } } }
     Process { id: caffeineProc
-        command: ["systemd-inhibit","--what=idle:sleep",
-                  "--who=Brain Shell","--why=Caffeine mode","sleep","infinity"]
+        command: ["wayland-idle-inhibitor"]
         running: false }
     Process { id: caffeineKill
-        command: ["bash", "-c", "pkill -f 'systemd-inhibit.*Caffeine'"]; running: false
+        command: ["bash", "-c", "pkill -x wayland-idle-inhibitor"]; running: false
         onRunningChanged: if (!running) root.caffeineOn = false }
     function _caffeineToggle() {
         if (root.caffeineOn) {
