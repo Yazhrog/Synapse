@@ -75,7 +75,7 @@ QtObject {
     // Watch the JSON file written by the installer
     property var _providerFile: FileView {
         id: providerFile
-        path: Quickshell.env("HOME") + "/.config/Brain_Shell/src/user_data/config_Provider.json"
+        path: Quickshell.env("HOME") + "/.config/HyprShell/src/user_data/config_Provider.json"
         watchChanges: true
         
         onFileChanged: {

@@ -13,15 +13,9 @@ USER_DATA="$HOME/.config/HyprShell/src/user_data"
 
 spin "  Creating config dirs..." \
     mkdir -p "$USER_DATA" \
+            "$USER_DATA/wallpapers" \
             "$HOME/.config/hypr/shaders" \
             "$HOME/.config/matugen/templates"
-
-# hypridle config (non-overwrite)
-if cp -n "$REPO_DIR/config/quickshell/src/config/hypridle.conf" "$HOME/.config/hypr/" 2>/dev/null; then
-    log_ok "hypridle.conf → ~/.config/hypr/"
-else
-    log_info "hypridle.conf already exists — not overwritten"
-fi
 
 # HyprShell always uses Lua
 printf '{"configProvider": "lua"}\n' > "$USER_DATA/config_Provider.json"

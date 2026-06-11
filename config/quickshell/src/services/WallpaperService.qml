@@ -10,15 +10,18 @@ import "../"
 // Flow:
 //   Component.onCompleted → readConfigProc (sets currentWall etc.)
 //                         → refresh() (populates wallpapers list)
-//   apply(path)           → awww img + ln -sf ~/.curr_wall + matugen
+//   apply(path)           → awww img + ln -sf curr_wall + matugen
 //                         → saveConfig() (writes src/user_data/wallpaper.json)
 // ============================================================
 
 QtObject {
     id: root
 
-    // ── Config path — src/user_data/wallpaper.json (relative to this file) ──────
-	readonly property string configPath: Quickshell.env("HOME") + "/.config/Brain_Shell/src/user_data/wallpaper.json"
+    // ── Paths ─────────────────────────────────────────────────────────────────
+    readonly property string configPath:      Quickshell.env("HOME") + "/.config/HyprShell/src/user_data/wallpaper.json"
+    readonly property string _wallDir:        Quickshell.env("HOME") + "/.config/HyprShell/src/user_data/wallpapers"
+    readonly property string _currWall:       _wallDir + "/curr_wall"
+    readonly property string _currWallStatic: _wallDir + "/curr_wall_static.jpg"
 
     // ── State ─────────────────────────────────────────────────────────────────
     property var    wallpapers:   []
@@ -112,13 +115,14 @@ QtObject {
         root.currentWall = path
         applyProc.command = [
             "bash", "-c",
-            "awww img --transition-type grow --transition-step 200 --transition-duration 1.2 --transition-fps 60 --transition-pos bottom \"" + path + "\" " +
-            "&& ln -sf \"" + path + "\" ~/.curr_wall " +
+            "mkdir -p '" + root._wallDir + "' " +
+            "&& awww img --transition-type grow --transition-step 200 --transition-duration 1.2 --transition-fps 60 --transition-pos bottom \"" + path + "\" " +
+            "&& ln -sf \"" + path + "\" '" + root._currWall + "' " +
             "&& (if [[ \"" + path + "\" == *.gif ]]; then " +
-            "rm -f ~/.curr_wall_static.jpg; magick \"" + path + "[0]\" ~/.curr_wall_static.jpg || true; " +
-            "else ln -sf \"" + path + "\" ~/.curr_wall_static.jpg; fi) " +
-            "&& matugen image \"$(readlink -f ~/.curr_wall_static.jpg)\" -c \"" + Quickshell.shellDir + "/src/config/matugen.toml\" --source-color-index 0 --type scheme-" + root.scheme + " " +
-            "&& matugen image \"$(readlink -f ~/.curr_wall_static.jpg)\" --source-color-index 0 --type scheme-" + root.scheme + " || true"
+            "rm -f '" + root._currWallStatic + "'; magick \"" + path + "[0]\" '" + root._currWallStatic + "' || true; " +
+            "else ln -sf \"" + path + "\" '" + root._currWallStatic + "'; fi) " +
+            "&& matugen image \"$(readlink -f '" + root._currWallStatic + "')\" -c \"" + Quickshell.shellDir + "/src/config/matugen.toml\" --source-color-index 0 --type scheme-" + root.scheme + " " +
+            "&& matugen image \"$(readlink -f '" + root._currWallStatic + "')\" --source-color-index 0 --type scheme-" + root.scheme + " || true"
         ]
         applyProc.running = true
     }

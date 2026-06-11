@@ -22,11 +22,11 @@ Item {
 
     // ── Avatar path ───────────────────────────────────────────────────────────
     property string _avatarPath: ""
-    property string _staticJpg:  ""   // resolved once: $HOME/.curr_wall_static.jpg
+    property string _staticJpg:  ""   // resolved once: $HOME/.config/HyprShell/src/user_data/wallpapers/curr_wall_static.jpg
 
     // Resolve $HOME once, then set the fixed path.
     // Both gif (magick frame) and non-gif (symlink) cases now land at the
-    // same ~/.curr_wall_static.jpg so no readlink resolution is needed.
+    // same curr_wall_static.jpg so no readlink resolution is needed.
     Process {
         command: ["bash", "-c", "echo $HOME"]
         running: true
@@ -34,7 +34,7 @@ Item {
             onRead: function(line) {
                 var h = line.trim()
                 if (h === "") return
-                root._staticJpg  = h + "/.curr_wall_static.jpg"
+                root._staticJpg  = h + "/.config/HyprShell/src/user_data/wallpapers/curr_wall_static.jpg"
                 root._avatarPath = root._staticJpg
             }
         }

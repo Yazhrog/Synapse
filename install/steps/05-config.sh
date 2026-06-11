@@ -35,6 +35,20 @@ else
     log_warn "scripts/ copy failed"
 fi
 
+# Hypridle config
+if spin "  Copying Hypridle config..." cp -r "$REPO_DIR/config/hypr/hypridle.conf" "$HYPR_DIR/hypridle.conf"; then
+    log_ok "hypridle.conf → ~/.config/hypr/"
+else
+    log_warn "hypridle.conf copy failed"
+fi
+
+# Hyprlock config
+if spin "  Copying Hyprlock config..." cp -n "$REPO_DIR/config/hypr/hyprlock.conf" "$HYPR_DIR/hyprlock.conf"; then
+    log_ok "hyprlock.conf → ~/.config/hypr/"
+else
+    log_info "hyprlock.conf already exists — not overwritten"
+fi
+
 # Screenshots directory
 mkdir -p "$HOME/Pictures/Screenshots"
 log_ok "~/Pictures/Screenshots/ ready"
