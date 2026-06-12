@@ -37,7 +37,7 @@ hl.window_rule({
     size   = "1000 700",
 })
 
--- Brain_Shell popup layer — enable blur
+-- Synapse popup layer — enable blur
 hl.layer_rule({
     name  = "quickshell-blur",
     match = { namespace = "quickshell" },

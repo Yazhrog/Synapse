@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #|---/ /+---------------------+---/ /|#
-#|--/ /-| HyprShell           |--/ /-|#
+#|--/ /-| Synapse             |--/ /-|#
 #|-/ /--| Arch Installer      |-/ /--|#
 #|/ /---+---------------------+/ /---|#
 #  Invoked by boot.sh:  $1=HYPRLAND_CONF  $2=BACKUP_DIR  $3=REPO_DIR
@@ -13,7 +13,7 @@ set -eo pipefail
 
 HYPRLAND_CONF="${1:?Missing arg: HYPRLAND_CONF path}"
 BACKUP_DIR="${2:?Missing arg: BACKUP_DIR}"
-REPO_DIR="${3:-$HOME/.local/src/HyprShell}"
+REPO_DIR="${3:-$HOME/.local/src/Synapse}"
 
 # ╭───────────────────────────────────────────────────────────────────────╮
 # │ Utilities                                                             │

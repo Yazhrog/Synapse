@@ -1,7 +1,7 @@
-# HyprShell — Deployment Map
+# Synapse — Deployment Map
 
 All filesystem locations touched by the installer or at runtime.
-`$REPO` = wherever you cloned HyprShell (default `~/.local/src/HyprShell`).
+`$REPO` = wherever you cloned Synapse (default `~/.local/src/Synapse`).
 
 ---
 
@@ -31,45 +31,45 @@ Directories created unconditionally:
 
 ---
 
-### Step 6 — HyprShell / Quickshell config  (`install/steps/06-shell-config.sh`)
+### Step 6 — Synapse / Quickshell config  (`install/steps/06-shell-config.sh`)
 
 | Source (repo)                                       | Destination                                        | Overwrite? |
 |-----------------------------------------------------|----------------------------------------------------|------------|
 | `config/quickshell/src/assets/wallpapers/`          | `~/Pictures/Wallpapers/`                           | No (`-n`)  |
 
 Directories created unconditionally:
-- `~/.config/HyprShell/src/user_data/`
-- `~/.config/HyprShell/src/user_data/wallpapers/`
+- `~/.config/Synapse/src/user_data/`
+- `~/.config/Synapse/src/user_data/wallpapers/`
 - `~/.config/hypr/shaders/`
 - `~/.config/matugen/templates/`
 - `~/Pictures/Wallpapers/`
 
 Seed files written (overwritten by runtime on first wallpaper apply):
-- `~/.config/HyprShell/src/user_data/config_Provider.json` — `{"configProvider": "lua"}`
-- `~/.config/HyprShell/src/user_data/keybinds.json` — `{}`
-- `~/.config/HyprShell/src/user_data/colors.json` — empty
+- `~/.config/Synapse/src/user_data/config_Provider.json` — `{"configProvider": "lua"}`
+- `~/.config/Synapse/src/user_data/keybinds.json` — `{}`
+- `~/.config/Synapse/src/user_data/colors.json` — empty
 - `~/.config/hypr/colors.conf` — empty
 
 ---
 
 ## Runtime paths (written by Quickshell services)
 
-These are created/updated while HyprShell is running, not during install.
+These are created/updated while Synapse is running, not during install.
 
 ### Wallpaper & theming  (`WallpaperService.qml`)
 
 | Path | What it is |
 |------|------------|
-| `~/.config/HyprShell/src/user_data/wallpapers/curr_wall` | Symlink → current wallpaper file |
-| `~/.config/HyprShell/src/user_data/wallpapers/curr_wall_static.jpg` | Static JPEG copy of current wall (for hyprlock background) |
-| `~/.config/HyprShell/src/user_data/wallpaper.json` | Persisted wallpaper path + color scheme |
+| `~/.config/Synapse/src/user_data/wallpapers/curr_wall` | Symlink → current wallpaper file |
+| `~/.config/Synapse/src/user_data/wallpapers/curr_wall_static.jpg` | Static JPEG copy of current wall (for hyprlock background) |
+| `~/.config/Synapse/src/user_data/wallpaper.json` | Persisted wallpaper path + color scheme |
 
 Matugen is invoked at wallpaper-change time using `$SHELL_DIR/src/config/matugen.toml`.
 It writes two outputs (defined in `matugen.toml`):
 
 | Matugen output | Path |
 |----------------|------|
-| `brain_shell` template | `~/.config/HyprShell/src/user_data/colors.json` |
+| `synapse` template | `~/.config/Synapse/src/user_data/colors.json` |
 | `hyprland_colors` template | `~/.config/hypr/colors.conf` |
 
 > `$SHELL_DIR` = the directory quickshell was launched from (typically `~/.config/quickshell`).
@@ -80,20 +80,20 @@ It writes two outputs (defined in `matugen.toml`):
 
 | Path | Service | What it stores |
 |------|---------|----------------|
-| `~/.config/HyprShell/src/user_data/wallpaper.json` | WallpaperService | Current wallpaper path + scheme |
-| `~/.config/HyprShell/src/user_data/clipboard_pins.json` | ClipboardService | Pinned clipboard entries |
-| `~/.config/HyprShell/src/user_data/tasks.json` | KanbanBoard | Kanban task cards |
-| `~/.config/HyprShell/src/user_data/hotspot.json` | QuickSettings | Hotspot config |
-| `~/.config/HyprShell/src/user_data/update_prefs.json` | UpdateService | Auto-update preferences |
-| `~/.config/HyprShell/src/user_data/screenrec.json` | ScreenRecService | Screen recording settings |
-| `~/.config/HyprShell/src/user_data/keybinds.json` | KeybindService | Custom keybind overrides |
-| `~/.config/HyprShell/src/user_data/config_Provider.json` | Shell bootstrap | Config provider selection (`lua`) |
+| `~/.config/Synapse/src/user_data/wallpaper.json` | WallpaperService | Current wallpaper path + scheme |
+| `~/.config/Synapse/src/user_data/clipboard_pins.json` | ClipboardService | Pinned clipboard entries |
+| `~/.config/Synapse/src/user_data/tasks.json` | KanbanBoard | Kanban task cards |
+| `~/.config/Synapse/src/user_data/hotspot.json` | QuickSettings | Hotspot config |
+| `~/.config/Synapse/src/user_data/update_prefs.json` | UpdateService | Auto-update preferences |
+| `~/.config/Synapse/src/user_data/screenrec.json` | ScreenRecService | Screen recording settings |
+| `~/.config/Synapse/src/user_data/keybinds.json` | KeybindService | Custom keybind overrides |
+| `~/.config/Synapse/src/user_data/config_Provider.json` | Shell bootstrap | Config provider selection (`lua`) |
 
 ---
 
 ### Shader search paths  (`QuickSettings.qml`)
 
-HyprShell looks for shaders in these locations (in order):
+Synapse looks for shaders in these locations (in order):
 
 1. `~/.config/hypr/shaders/`
 2. `~/.local/share/hypr/shaders/`
@@ -123,7 +123,7 @@ HyprShell looks for shaders in these locations (in order):
 │   │   ├── scripts/
 │   │   ├── shaders/
 │   │   └── colors.conf              ← matugen output (runtime)
-│   ├── HyprShell/src/user_data/
+│   ├── Synapse/src/user_data/
 │   │   ├── config_Provider.json
 │   │   ├── keybinds.json
 │   │   ├── wallpaper.json

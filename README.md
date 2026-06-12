@@ -1,4 +1,4 @@
-  <h1 align=center>Brain_Shell</h1>
+  <h1 align=center>Synapse</h1>
   
   <h3 align="center">
   A dynamic, highly modular Wayland desktop shell built with Quickshell and QML, tailored for Hyprland.
@@ -11,8 +11,8 @@
   <img src="https://img.shields.io/badge/hyprland-v0.55+-5E81AC?style=for-the-badge&logoColor=D9E0EE&labelColor=252733" alt="Hyprland v0.55+" />
   <img src="https://img.shields.io/badge/quickshell-framework-A1C999?style=for-the-badge&logoColor=D9E0EE&labelColor=252733" alt="Quickshell Framework" />
   <br>
-  <a href="https://github.com/Brainitech/Brain_Shell/blob/main/LICENSE">
-    <img src="https://img.shields.io/github/license/Brainitech/Brain_Shell?style=for-the-badge&color=A1C999&logo=opensourceinitiative&logoColor=D9E0EE&labelColor=252733" alt="License" />
+  <a href="https://github.com/Brainitech/Synapse/blob/main/LICENSE">
+    <img src="https://img.shields.io/github/license/Brainitech/Synapse?style=for-the-badge&color=A1C999&logo=opensourceinitiative&logoColor=D9E0EE&labelColor=252733" alt="License" />
   </a>
 </p>
 
@@ -35,7 +35,7 @@
 - **Clipboard Manager** — Cliphist integration for history management
 - **Highly Customizable** — QML-based UI, easily extended
 
-> **Note:** Brain Shell is currently in its `v0.1.0` release. While the core architecture and theming pipeline are feature-complete, you may encounter bugs. Please report them on our [Discord](https://discord.gg/BV8UduvABx) or via GitHub Issues!
+> **Note:** Synapse is currently in its `v0.1.0` release. While the core architecture and theming pipeline are feature-complete, you may encounter bugs. Please report them on our [Discord](https://discord.gg/BV8UduvABx) or via GitHub Issues!
 
 ---
 
@@ -46,14 +46,14 @@
 ### One line installer
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/Brainitech/Brain_Shell/refs/heads/main/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/Brainitech/Synapse/refs/heads/main/install.sh | bash
 ```
 
 ### Manual installation
 
 ```bash
-git clone https://github.com/Brainitech/Brain_Shell.git
-cd Brain_Shell
+git clone https://github.com/Brainitech/Synapse.git
+cd Synapse
 chmod +x install.sh
 ./install.sh
 ```
@@ -64,7 +64,7 @@ The installer automatically:
 - ✓ Detects your Window Manager and Hyprland Config
 - ✓ Backs up your entire `~/.config`
 - ✓ Installs all required dependencies
-- ✓ Clones the repository to `~/.local/src/Brain_Shell`
+- ✓ Clones the repository to `~/.local/src/Synapse`
 - ✓ Updates your Hyprland config
 - ✓ Creates configuration directories
 
@@ -77,7 +77,7 @@ The installer automatically:
 </h2>
 
 > [!IMPORTANT]
-> **Matugen is required** for dynamic color generation. Brain Shell will not function correctly without it.
+> **Matugen is required** for dynamic color generation. Synapse will not function correctly without it.
 
 ### Core Dependencies
 
@@ -210,10 +210,10 @@ Known Issues
   Contributing
 </h2>
 
-Brain Shell is actively developed and welcomes contributions!
+Synapse is actively developed and welcomes contributions!
 
-- Found a bug? → [Open an issue](https://github.com/Brainitech/Brain_Shell/issues)
-- Have an idea? → [Start a discussion](https://github.com/Brainitech/Brain_Shell/discussions)
+- Found a bug? → [Open an issue](https://github.com/Brainitech/Synapse/issues)
+- Have an idea? → [Start a discussion](https://github.com/Brainitech/Synapse/discussions)
 - Want to contribute? → Fork, branch, and submit a pull request
 
 ---

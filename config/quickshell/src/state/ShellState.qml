@@ -53,9 +53,9 @@ QtObject {
             if (KeybindService.isCapturing) {
                 // Enter passthrough mode (disables Hyprland binds)
                 if (configProvider === "lua") {
-                    submapProcess.command = ["hyprctl", "dispatch", "hl.dsp.submap('BrainShell_clean')"]
+                    submapProcess.command = ["hyprctl", "dispatch", "hl.dsp.submap('Synapse_clean')"]
                 } else {
-                    submapProcess.command = ["hyprctl", "dispatch", "submap", "BrainShell_clean"]
+                    submapProcess.command = ["hyprctl", "dispatch", "submap", "Synapse_clean"]
                 }
             } else {
                 // Exit passthrough mode (re-enables Hyprland binds)
@@ -75,7 +75,7 @@ QtObject {
     // Watch the JSON file written by the installer
     property var _providerFile: FileView {
         id: providerFile
-        path: Quickshell.env("HOME") + "/.config/HyprShell/src/user_data/config_Provider.json"
+        path: Quickshell.env("HOME") + "/.config/Synapse/src/user_data/config_Provider.json"
         watchChanges: true
         
         onFileChanged: {
@@ -95,7 +95,7 @@ QtObject {
                 root.configProvider = data.configProvider
             }
         } catch (e) {
-            console.error("Brain Shell: Failed to parse config_Provider.json")
+            console.error("Synapse: Failed to parse config_Provider.json")
         }
     }
 }

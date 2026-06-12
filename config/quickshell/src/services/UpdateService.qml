@@ -73,8 +73,8 @@ QtObject {
         )
 
     // ── Paths ──────────────────────────────────────────────────────────────
-    readonly property string _dir:        Quickshell.env("HOME") + "/.local/src/Brain_Shell"
-    readonly property string _cfgPath:    Quickshell.env("HOME") + "/.config/HyprShell/src/user_data/update_prefs.json"
+    readonly property string _dir:        Quickshell.env("HOME") + "/.local/src/Synapse"
+    readonly property string _cfgPath:    Quickshell.env("HOME") + "/.config/Synapse/src/user_data/update_prefs.json"
 
     // ── Startup: 30s delay ─────────────────────────────────────────────────
     property var _startTimer: Timer {
@@ -211,7 +211,7 @@ QtObject {
     property var _stashPullProc: Process {
         command: ["bash", "-c",
             // stash with || true so an empty worktree doesn't abort the whole chain
-            "git -C '" + root._dir + "' stash push -m 'brain-shell-pre-update' 2>/dev/null || true; " +
+            "git -C '" + root._dir + "' stash push -m 'synapse-pre-update' 2>/dev/null || true; " +
             "git -C '" + root._dir + "' pull origin main 2>&1"]
         running: false
         onExited: function(code) {

@@ -3,7 +3,7 @@ import Quickshell.Io
 import "../"
 import "../components"
 
-// KanbanBoard — three columns, JSON at $HOME/.config/HyprShell/src/user_data/tasks.json.
+// KanbanBoard — three columns, JSON at $HOME/.config/Synapse/src/user_data/tasks.json.
 //
 // Key behaviours:
 //   • Draft: task only saved when Enter pressed or focus lost with text.
@@ -55,11 +55,11 @@ Item {
             onRead: function(line) {
                 var h = line.trim()
                 if (h === "") return
-                root._filePath = h + "/.config/HyprShell/src/user_data/tasks.json"
+                root._filePath = h + "/.config/Synapse/src/user_data/tasks.json"
                 mkProc.command = [
                     "bash", "-c",
                     "[ -f '" + root._filePath + "' ] || " +
-                    "(mkdir -p \"$HOME/.config/HyprShell/src/user_data\" && " +
+                    "(mkdir -p \"$HOME/.config/Synapse/src/user_data\" && " +
                     "printf '%s' '{\"tasks\":[],\"nextId\":0}' > '" + root._filePath + "')"
                 ]
                 mkProc.running = false; mkProc.running = true

@@ -1,5 +1,4 @@
 -- Autostart — runs once when Hyprland starts
--- Brain_Shell daemons are integrated here; no separate install-injected block needed.
 
 hl.on("hyprland.start", function()
     -- Wayland environment and portals
@@ -16,10 +15,10 @@ hl.on("hyprland.start", function()
     -- GTK theme
     hl.exec_cmd(os.getenv("HOME") .. "/.config/hypr/scripts/gtk.sh")
 
-    -- Brain_Shell visual layer
+    -- Synapse visual layer
     hl.exec_cmd("awww-daemon")
-    hl.exec_cmd("hypridle -c " .. os.getenv("HOME") .. "/.local/src/HyprShell/config/quickshell/src/config/hypridle.conf")
-    hl.exec_cmd("quickshell -c " .. os.getenv("HOME") .. "/.local/src/HyprShell/config/quickshell")
+    hl.exec_cmd("hypridle -c " .. os.getenv("HOME") .. "/.local/src/Synapse/config/quickshell/src/config/hypridle.conf")
+    hl.exec_cmd("quickshell -c " .. os.getenv("HOME") .. "/.local/src/Synapse/config/quickshell")
 
     -- Clipboard history (text + images)
     hl.exec_cmd("wl-paste --type text --watch cliphist store")

@@ -177,12 +177,12 @@ StatCard {
     property bool   hotspotBusy:   false
     property bool   _hsWifiWasOff: false  // wifi radio was off when hotspot started; restore on stop
     property string hotspotLabel:  ""    // sublabel: "Active" | "Not on ethernet" | ""
-    property string _hsSSID:       "BrainShell"
+    property string _hsSSID:       "Synapse"
     property string _hsPassword:   "changeme1"
     property string _hsWifiIface:  "wlan0"
 
     readonly property string _hsCfgPath:
-        Quickshell.env("HOME") + "/.config/HyprShell/src/user_data/hotspot.json"
+        Quickshell.env("HOME") + "/.config/Synapse/src/user_data/hotspot.json"
 
     // Load config on startup
     Process {
@@ -190,7 +190,7 @@ StatCard {
         command: ["bash", "-c",
             "[ -f '" + root._hsCfgPath + "' ] || " +
             "(mkdir -p \"$(dirname '" + root._hsCfgPath + "')\" && " +
-            "printf '%s' '{\"ssid\":\"BrainShell\",\"password\":\"changeme1\"}' > '" + root._hsCfgPath + "'); " +
+            "printf '%s' '{\"ssid\":\"Synapse\",\"password\":\"changeme1\"}' > '" + root._hsCfgPath + "'); " +
             "cat '" + root._hsCfgPath + "'"]
         running: false
         stdout: StdioCollector {
@@ -305,7 +305,7 @@ StatCard {
         // Disconnect by interface — works regardless of what nmcli named the connection
         command: ["bash", "-c",
             "nmcli device disconnect " + root._hsWifiIface + " 2>/dev/null; " +
-            "nmcli con delete BrainShellHotspot 2>/dev/null; true"]
+            "nmcli con delete SynapseHotspot 2>/dev/null; true"]
         running: false
         onRunningChanged: if (!running) {
             root.hotspotBusy   = false
@@ -348,7 +348,7 @@ StatCard {
                     // Rebuild stop command with current iface before running
                     hsStopProc.command = ["bash", "-c",
                         "nmcli device disconnect " + root._hsWifiIface + " 2>/dev/null; " +
-                        "nmcli con delete BrainShellHotspot 2>/dev/null; true"]
+                        "nmcli con delete SynapseHotspot 2>/dev/null; true"]
                     hsStopProc.running = false; hsStopProc.running = true
                     hsLabelResetTimer.restart()
                 }
@@ -367,12 +367,12 @@ StatCard {
             "sleep 1; " +
             // Disconnect whatever is currently on the interface 
             "nmcli device disconnect \"" + iface + "\" 2>/dev/null; " +
-            "nmcli con delete BrainShellHotspot 2>/dev/null; " +
+            "nmcli con delete SynapseHotspot 2>/dev/null; " +
             "nmcli device wifi hotspot " +
                 "ifname \"" + iface + "\" " +
                 "ssid \"" + ssid + "\" " +
                 "password \"" + pass + "\" " +
-                "con-name BrainShellHotspot 2>&1"]
+                "con-name SynapseHotspot 2>&1"]
         hsStartProc.running = false; hsStartProc.running = true
     }
 
@@ -384,7 +384,7 @@ StatCard {
             // Rebuild with current iface (detected after startup)
             hsStopProc.command = ["bash", "-c",
                 "nmcli device disconnect \"" + root._hsWifiIface + "\" 2>/dev/null; " +
-                "nmcli con delete BrainShellHotspot 2>/dev/null; true"]
+                "nmcli con delete SynapseHotspot 2>/dev/null; true"]
             hsStopProc.running = false; hsStopProc.running = true
         } else {
             root.hotspotBusy  = true
@@ -478,7 +478,7 @@ StatCard {
     property bool   filterPickerOpen: false
     
     // Add your standard shader directories here (space-separated)
-    property string shaderPaths: "~/.config/hypr/shaders ~/.local/share/hypr/shaders /usr/share/hyprshade/shaders ~/.local/src/Brain_Shell/src/config/shaders ~/.config/quickshell/src/config/shaders"
+    property string shaderPaths: "~/.config/hypr/shaders ~/.local/share/hypr/shaders /usr/share/hyprshade/shaders ~/.local/src/Synapse/src/config/shaders ~/.config/quickshell/src/config/shaders"
 
     // Check process stays exactly the same — it already reads cleanly from Hyprland!
     Process {

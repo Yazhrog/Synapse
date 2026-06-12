@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #|---/ /+---------------------+---/ /|#
-#|--/ /-| HyprShell           |--/ /-|#
+#|--/ /-| Synapse             |--/ /-|#
 #|-/ /--| Boot Script         |-/ /--|#
 #|/ /---+---------------------+/ /---|#
 
@@ -35,14 +35,16 @@ trap 'echo ""; log_error "Installation aborted unexpectedly (line $LINENO)."; ex
 
 clear
 echo -e "${BOLD}"
-echo "  ██╗  ██╗██╗   ██╗██████╗ ██████╗ ███████╗██╗  ██╗███████╗██╗     ██╗     "
-echo "  ██║  ██║╚██╗ ██╔╝██╔══██╗██╔══██╗██╔════╝██║  ██║██╔════╝██║     ██║     "
-echo "  ███████║ ╚████╔╝ ██████╔╝██████╔╝███████╗███████║█████╗  ██║     ██║     "
-echo "  ██╔══██║  ╚██╔╝  ██╔═══╝ ██╔══██╗╚════██║██╔══██║██╔══╝  ██║     ██║     "
-echo "  ██║  ██║   ██║   ██║     ██║  ██║███████║██║  ██║███████╗███████╗███████╗"
-echo "  ╚═╝  ╚═╝   ╚═╝   ╚═╝     ╚═╝  ╚═╝╚══════╝╚═╝  ╚═╝╚══════╝╚══════╝╚══════╝"
+echo "   ▄████████ ▄██   ▄   ███▄▄▄▄      ▄████████    ▄███████▄    ▄████████    ▄████████" 
+echo "  ███    ███ ███   ██▄ ███▀▀▀██▄   ███    ███   ███    ███   ███    ███   ███    ███" 
+echo "  ███    █▀  ███▄▄▄███ ███   ███   ███    ███   ███    ███   ███    █▀    ███    █▀ " 
+echo "  ███        ▀▀▀▀▀▀███ ███   ███   ███    ███   ███    ███   ███         ▄███▄▄▄    " 
+echo "▀███████████ ▄██   ███ ███   ███ ▀███████████ ▀█████████▀  ▀███████████ ▀▀███▀▀▀    " 
+echo "         ███ ███   ███ ███   ███   ███    ███   ███                 ███   ███    █▄ " 
+echo "   ▄█    ███ ███   ███ ███   ███   ███    ███   ███           ▄█    ███   ███    ███" 
+echo " ▄████████▀   ▀█████▀   ▀█   █▀    ███    █▀   ▄████▀       ▄████████▀    ██████████" 
 echo -e "${NC}"
-echo -e "  ${DIM}v0.1.0  ·  Brain_Shell visual layer + HyprlandLUA WM config${NC}"
+echo -e "  ${DIM}v0.1.0  ·  Synapse Shell + Hyprland LUA config${NC}"
 echo ""
 
 # ╭───────────────────────────────────────────────────────────────────────╮
@@ -112,7 +114,7 @@ fi
 step 2 "Backup"
 
 BACKUP_TS=$(date +%Y%m%d_%H%M%S)
-BACKUP_DIR="$HOME/.config.backup-${BACKUP_TS}-HyprShell"
+BACKUP_DIR="$HOME/.config.backup-${BACKUP_TS}-Synapse"
 mkdir -p "$BACKUP_DIR"
 
 if [[ -d "$HYPR_DIR" ]]; then
@@ -129,7 +131,7 @@ fi
 step 3 "Repository"
 
 REPO_PARENT="$HOME/.local/src"
-REPO_DIR="$REPO_PARENT/HyprShell"
+REPO_DIR="$REPO_PARENT/Synapse"
 mkdir -p "$REPO_PARENT"
 
 if [[ -d "$REPO_DIR/.git" ]]; then
@@ -138,9 +140,9 @@ if [[ -d "$REPO_DIR/.git" ]]; then
         git -C "$REPO_DIR" pull origin main
     log_ok "Repository updated: $REPO_DIR"
 else
-    # TODO: update this URL once the HyprShell repo is published
-    spin "Cloning HyprShell..." \
-        git clone -b main https://github.com/YOUR_USERNAME/HyprShell.git "$REPO_DIR"
+    # TODO: update this URL once the Synapse repo is published
+    spin "Cloning Synapse..." \
+        git clone -b main https://github.com/YOUR_USERNAME/Synapse.git "$REPO_DIR"
     log_ok "Repository cloned: $REPO_DIR"
 fi
 
@@ -164,9 +166,9 @@ bash "$DISTRO_INSTALLER" "$HYPRLAND_CONF" "$BACKUP_DIR" "$REPO_DIR"
 step 5 "Done"
 
 echo ""
-log_ok "HyprShell is installed."
+log_ok "Synapse is installed."
 echo ""
-echo -e "  ${BOLD}Restart Hyprland to activate HyprShell:${NC}"
+echo -e "  ${BOLD}Restart Hyprland to activate Synapse:${NC}"
 log_info "Log out and log back in  ${DIM}(recommended)${NC}"
 log_info "hyprctl dispatch exit"
 log_info "Ctrl+Alt+Q               ${DIM}(if configured)${NC}"
@@ -177,7 +179,7 @@ log_info "Run: hyprpm enable hyprexpo borders-plus-plus hyprbars hyprfocus"
 log_info "Drop your ghostty config into ~/.config/ghostty/config if needed"
 echo ""
 echo -e "  ${BOLD}Paths:${NC}"
-log_info "Shell config:  ~/.config/HyprShell"
+log_info "Shell config:  ~/.config/Synapse"
 log_info "Hypr config:   ~/.config/hypr/"
 log_info "Source:        $REPO_DIR"
 echo ""

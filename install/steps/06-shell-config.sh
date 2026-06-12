@@ -1,15 +1,15 @@
 #!/usr/bin/env bash
 #|---/ /+---------------------+---/ /|#
-#|--/ /-| HyprShell           |--/ /-|#
+#|--/ /-| Synapse             |--/ /-|#
 #|-/ /--| Shell Config        |-/ /--|#
 #|/ /---+---------------------+/ /---|#
-# Step 8 — HyprShell Config
+# Step 8 — Synapse Config
 # Creates user config dirs, seeds color files, copies default wallpapers, and runs
 # a live keybind conflict check against the active Hyprland session.
 
-step 8 "HyprShell Config"
+step 8 "Synapse Config"
 
-USER_DATA="$HOME/.config/HyprShell/src/user_data"
+USER_DATA="$HOME/.config/Synapse/src/user_data"
 
 spin "  Creating config dirs..." \
     mkdir -p "$USER_DATA" \
@@ -17,7 +17,7 @@ spin "  Creating config dirs..." \
             "$HOME/.config/hypr/shaders" \
             "$HOME/.config/matugen/templates"
 
-# HyprShell always uses Lua
+# Synapse always uses Lua
 printf '{"configProvider": "lua"}\n' > "$USER_DATA/config_Provider.json"
 printf '{}\n'                        > "$USER_DATA/keybinds.json"
 
@@ -43,7 +43,7 @@ log_info "Checking for keybind conflicts with the active Hyprland session..."
 python3 << 'PYEOF' || log_warn "Keybind check skipped (Python error or no Hyprland session)."
 import subprocess, json, os, sys
 
-# Default keybinds registered internally by HyprShell (Quickshell/QML)
+# Default keybinds registered internally by Synapse (Quickshell/QML)
 DEFAULTS = {
     "dashboard-home":      {"mods": "SUPER",        "key": "D",      "label": "Dashboard: Home"},
     "dashboard-stats":     {"mods": "CTRL + SHIFT", "key": "ESCAPE", "label": "Dashboard: Stats"},
@@ -106,7 +106,7 @@ for action, info in conflicts.items():
     print(f"    {'':24}  already used by: {info['used_by']}\n")
     unbound[action] = {"mods": "", "key": ""}
 
-config_path = os.path.expanduser("~/.config/HyprShell/src/user_data/keybinds.json")
+config_path = os.path.expanduser("~/.config/Synapse/src/user_data/keybinds.json")
 with open(config_path, "w") as f:
     json.dump(unbound, f, indent=2)
 

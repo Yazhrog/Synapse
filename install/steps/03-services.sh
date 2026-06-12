@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 #|---/ /+---------------------+---/ /|#
-#|--/ /-| HyprShell           |--/ /-|#
+#|--/ /-| Synapse             |--/ /-|#
 #|-/ /--| Services            |-/ /--|#
 #|/ /---+---------------------+/ /---|#
 # Step 5 — Systemd Services
-# Enables system-level and user-level services required by HyprShell.
+# Enables system-level and user-level services required by Synapse.
 
 step 5 "Systemd Services"
 

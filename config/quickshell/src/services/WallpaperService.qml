@@ -18,8 +18,8 @@ QtObject {
     id: root
 
     // ── Paths ─────────────────────────────────────────────────────────────────
-    readonly property string configPath:      Quickshell.env("HOME") + "/.config/HyprShell/src/user_data/wallpaper.json"
-    readonly property string _wallDir:        Quickshell.env("HOME") + "/.config/HyprShell/src/user_data/wallpapers"
+    readonly property string configPath:      Quickshell.env("HOME") + "/.config/Synapse/src/user_data/wallpaper.json"
+    readonly property string _wallDir:        Quickshell.env("HOME") + "/.config/Synapse/src/user_data/wallpapers"
     readonly property string _currWall:       _wallDir + "/curr_wall"
     readonly property string _currWallStatic: _wallDir + "/curr_wall_static.jpg"
 
@@ -82,7 +82,7 @@ QtObject {
                 } catch(e) {}
             }
             if (root.currentWall === "") {
-                var defaultWall = Quickshell.shellDir + "/src/assets/wallpapers/brain-shell-default-0.png"
+                var defaultWall = Quickshell.shellDir + "/src/assets/wallpapers/synapse-default-0.png"
                 root.apply(defaultWall)
             }
             root.refresh()

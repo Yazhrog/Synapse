@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #|---/ /+---------------------+---/ /|#
-#|--/ /-| HyprShell           |--/ /-|#
+#|--/ /-| Synapse             |--/ /-|#
 #|-/ /--| Hypr Config         |-/ /--|#
 #|/ /---+---------------------+/ /---|#
 # Step 7 — Hyprland & Ghostty Config

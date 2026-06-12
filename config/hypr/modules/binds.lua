@@ -1,9 +1,9 @@
--- HyprShell keybindings
+-- Synapse keybindings
 --
--- Brain_Shell popup binds (Super+D, Super+V, Super+A, Super+M, Super+N, Super+W,
--- Super+B, Super+Escape, Alt+F9, etc.) are registered internally by Brain_Shell
+-- Synapse popup binds (Super+D, Super+V, Super+A, Super+M, Super+N, Super+W,
+-- Super+B, Super+Escape, Alt+F9, etc.) are registered internally by Synapse
 -- via Quickshell/QML — they are NOT listed here to avoid conflicts.
--- The Brain_Shell installer will warn if any overlap is detected.
+-- The Synapse installer will warn if any overlap is detected.
 
 -- ── App launchers ─────────────────────────────────────────────────────────────
 hl.bind("SUPER + Return", hl.dsp.exec_cmd("ghostty"))

@@ -2,7 +2,7 @@ import QtQuick
 import Quickshell.Io
 
 // ============================================================
-// ColorsLoader — watches ~/.config/HyprShell/src/user_data/colors.json
+// ColorsLoader — watches ~/.config/Synapse/src/user_data/colors.json
 // and exposes parsed color properties.
 //
 // Not a singleton. Instantiated as a property inside Theme.qml.
@@ -36,7 +36,7 @@ QtObject {
             onRead: function(line) {
                 var h = line.trim()
                 if (h !== "")
-                    colorsFile.path = h + "/.config/HyprShell/src/user_data/colors.json"
+                    colorsFile.path = h + "/.config/Synapse/src/user_data/colors.json"
             }
         }
     }

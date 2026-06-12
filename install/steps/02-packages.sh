@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #|---/ /+---------------------+---/ /|#
-#|--/ /-| HyprShell           |--/ /-|#
+#|--/ /-| Synapse             |--/ /-|#
 #|-/ /--| Packages            |-/ /--|#
 #|/ /---+---------------------+/ /---|#
 # Step 2 & 3 — Packages
@@ -154,7 +154,7 @@ step 3 "AUR Packages"
 AUR_DEPS=(
     quickshell       # REQUIRED — the shell runtime
     ghostty          # terminal emulator
-    awww             # animation daemon (Brain_Shell wallpaper/color system)
+    awww             # animation daemon (Synapse wallpaper/color system)
     matugen          # Material You color generation
     envycontrol      # GPU switching (optional, for NVIDIA/Intel laptops)
     auto-cpufreq     # CPU power management (optional, for laptops)
@@ -178,7 +178,7 @@ else
 fi
 
 if [[ "$AUR_HELPER" != "none" ]] && ! "$AUR_HELPER" -Q quickshell &>/dev/null 2>&1; then
-    die "quickshell failed to install. HyprShell cannot run without it."
+    die "quickshell failed to install. Synapse cannot run without it."
 fi
 
 # ╭───────────────────────────────────────────────────────────────────────╮

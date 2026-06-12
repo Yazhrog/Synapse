@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #|---/ /+---------------------+---/ /|#
-#|--/ /-| HyprShell           |--/ /-|#
+#|--/ /-| Synapse             |--/ /-|#
 #|-/ /--| Validator           |-/ /--|#
 #|/ /---+---------------------+/ /---|#
 
@@ -30,7 +30,7 @@ check_opt() {
 }
 
 clear
-echo -e "${BOLD}HyprShell — Post-Installation Validator${NC}"
+echo -e "${BOLD}Synapse — Post-Installation Validator${NC}"
 echo ""
 
 if [[ -f /etc/os-release ]]; then
@@ -167,26 +167,26 @@ else
     log_optional "~/.config/ghostty/config"
 fi
 
-if [[ -d "$HOME/.local/src/HyprShell" ]]; then
-    log_installed "~/.local/src/HyprShell  (source)"
+if [[ -d "$HOME/.local/src/Synapse" ]]; then
+    log_installed "~/.local/src/Synapse  (source)"
 else
-    log_missing "~/.local/src/HyprShell  (source)"
+    log_missing "~/.local/src/Synapse  (source)"
 fi
 
-if [[ -d "$HOME/.config/HyprShell" ]]; then
-    log_installed "~/.config/HyprShell  (user config)"
+if [[ -d "$HOME/.config/Synapse" ]]; then
+    log_installed "~/.config/Synapse  (user config)"
 else
-    log_missing "~/.config/HyprShell  (user config)"
+    log_missing "~/.config/Synapse  (user config)"
 fi
 
 echo ""
 echo "── BACKUPS ──────────────────────────────────────────────────────"
-mapfile -t backups < <(ls -d "$HOME"/.config.backup-*-HyprShell 2>/dev/null)
+mapfile -t backups < <(ls -d "$HOME"/.config.backup-*-Synapse 2>/dev/null)
 if [[ ${#backups[@]} -gt 0 ]]; then
-    log_info "Found ${#backups[@]} HyprShell backup(s):"
+    log_info "Found ${#backups[@]} Synapse backup(s):"
     for b in "${backups[@]}"; do echo -e "    ${BLUE}→${NC} ${b##*/}"; done
 else
-    log_optional "No HyprShell config backups found"
+    log_optional "No Synapse config backups found"
 fi
 
 echo ""

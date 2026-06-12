@@ -1,4 +1,4 @@
--- HyprShell — main Hyprland config entry point
+-- Synapse — main Hyprland config entry point
 -- Loads all modules in order
 
 require("modules/monitors")

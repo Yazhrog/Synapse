@@ -1,9 +1,9 @@
 [config]
 # Mandatory config section for matugen
 
-[templates.brain_shell]
-input_path = './brain-shell-colors.json.example'
-output_path = '~/.config/HyprShell/src/user_data/colors.json'
+[templates.synapse]
+input_path = './synapse-colors.json.example'
+output_path = '~/.config/Synapse/src/user_data/colors.json'
 
 [templates.hyprland_colors]
 input_path = "colors.conf.template"
