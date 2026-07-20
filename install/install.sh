@@ -35,7 +35,7 @@ source "$INSTALL_DIR/utils.sh"
 
 declare -a FAILED_PKGS=()
 AUR_HELPER=""
-TOTAL_STEPS=7
+TOTAL_STEPS=8
 
 # ╭───────────────────────────────────────────────────────────────────────╮
 # │ Steps                                                                 │
@@ -47,7 +47,7 @@ source "$STEPS_DIR/01-aur-helper.sh"
 source "$STEPS_DIR/02-packages.sh"
 source "$STEPS_DIR/03-services.sh"
 source "$STEPS_DIR/04-plugins.sh"
-source "$STEPS_DIR/05-hypr-config.sh"
+source "$STEPS_DIR/05-config.sh"
 source "$STEPS_DIR/06-shell-config.sh"
 
 # ╭───────────────────────────────────────────────────────────────────────╮
