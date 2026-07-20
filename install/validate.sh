@@ -115,21 +115,26 @@ echo ""
 echo "── HYPRLAND ECOSYSTEM ───────────────────────────────────────────"
 check_cmd "hyprlock"
 check_cmd "hypridle"
-check_cmd "hyprsunset"
+check_cmd "sunsetr"
+check_opt "wayland-idle-inhibitor"
 
 echo ""
 echo "── HYPRLAND PLUGINS ─────────────────────────────────────────────"
 if command -v hyprpm &>/dev/null; then
     plugin_list=$(hyprpm list 2>/dev/null)
-    for plugin in hyprexpo "borders-plus-plus" hyprbars hyprfocus; do
-        if echo "$plugin_list" | grep -qi "$plugin"; then
-            log_installed "plugin: $plugin"
-        else
-            log_missing "plugin: $plugin  (run: hyprpm enable $plugin)"
-        fi
-    done
+    if echo "$plugin_list" | grep -qi "hymission"; then
+        log_installed "plugin: hymission"
+    else
+        log_missing "plugin: hymission  (run: hyprpm add https://github.com/gfhdhytghd/hymission && hyprpm enable hymission)"
+    fi
 else
-    log_missing "hyprpm (needed to check plugin status)"
+    log_missing "hyprpm (needed to check hymission status)"
+fi
+
+if [[ -f "$HOME/.config/hypr/plugin/hyprselect/hyprselect.so" ]]; then
+    log_installed "plugin: hyprselect (built)"
+else
+    log_missing "plugin: hyprselect  (built by install step 6 — re-run the installer or build it manually)"
 fi
 
 echo ""

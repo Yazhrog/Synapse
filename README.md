@@ -143,7 +143,8 @@ The installer automatically:
 
 - **hyprlock** – Lock screen
 - **hypridle** – Idle management daemon
-- **hyprsunset** – Blue light filter
+- **sunsetr** – Blue light filter / night light
+- **wayland-idle-inhibitor** – Caffeine mode (inhibits idle while active)
 - **hyprshutdown** – Graceful shutdown
 - **xdg-desktop-portal-hyprland** – Portal backend
 
