@@ -10,7 +10,12 @@ QtObject {
 
     readonly property string _shellDir: Quickshell.shellDir
     readonly property string _configDir: Quickshell.env("HOME") + "/.config/Synapse"
+    // Loaded unconditionally by config/hypr/modules/synapse-keybinds.lua on every
+    // Hyprland (re)parse — see that file. Not auto-included by this service.
     readonly property string _luaPath:  _configDir + "/SynapseKeybinds.lua"
+    // Written for parity but not auto-sourced anywhere: hyprland.conf isn't
+    // shipped by this repo, so .conf-provider users must add
+    // `source = ~/.config/Synapse/SynapseKeybinds.conf` to their own config.
     readonly property string _confPath: _configDir + "/SynapseKeybinds.conf"
     readonly property string _jsonPath: _configDir + "/src/user_data/keybinds.json"
     
@@ -24,26 +29,24 @@ QtObject {
     property bool isCapturing: false
 
     // ── Defaults ──────────────────────────────────────────────────────────────
-    readonly property var _defaults: ({
-        "dashboard-home":     { mods: "SUPER",        key: "D",      label: "Dashboard: System",    group: "Dashboard"      },
-        "dashboard-stats":    { mods: "CTRL + SHIFT",  key: "ESCAPE", label: "Dashboard: Home",      group: "Dashboard"      },
-        "dashboard-kanban":   { mods: "SUPER",        key: "Z",      label: "Dashboard: Tasks",     group: "Dashboard"      },
-        "dashboard-launcher": { mods: "SUPER",        key: "Q",      label: "Dashboard: Apps",      group: "Dashboard"      },
-        "dashboard-config":   { mods: "SUPER",        key: "C",      label: "Dashboard: Config",    group: "Dashboard"      },
-        "PowerMenu-toggle":   { mods: "SUPER",        key: "ESCAPE", label: "Arch Menu",            group: "Popups"         },
-        "notification-toggle":{ mods: "SUPER",        key: "N",      label: "Notifications",        group: "Popups"         },
-        "wallpaper-toggle":   { mods: "SUPER",        key: "W",      label: "Wallpaper",            group: "Popups"         },
-        "clipboard-toggle":   { mods: "SUPER",        key: "V",      label: "Clipboard",            group: "Popups"         },
-        "wifi-toggle":        { mods: "SUPER + ALT",   key: "W",      label: "Network: Wi-Fi",       group: "Network Tabs"   },
-        "bluetooth-toggle":   { mods: "SUPER + ALT",   key: "B",      label: "Network: Bluetooth",   group: "Network Tabs"   },
-        "vpn-toggle":         { mods: "SUPER + ALT",   key: "G",      label: "Network: VPN",         group: "Network Tabs"   },
-        "hotspot-toggle":     { mods: "SUPER + ALT",   key: "H",      label: "Network: Hotspot",     group: "Network Tabs"   },
-        "audioOut-toggle":    { mods: "SUPER",        key: "A",      label: "Audio: Output",        group: "Audio Tabs"     },
-        "audioIn-toggle":     { mods: "SUPER + ALT",   key: "I",      label: "Audio: Input",         group: "Audio Tabs"     },
-        "audioMix-toggle":    { mods: "SUPER",        key: "M",      label: "Audio: Mixer",         group: "Audio Tabs"     },
-        "focus-toggle":       { mods: "SUPER",        key: "B",      label: "Focus Mode",           group: "Quick Settings" },
-        "screenrec-on":       { mods: "ALT",          key: "F9",     label: "Screen Record",        group: "Quick Settings" },
-    })
+    // Single source of truth: config/quickshell/src/config/keybind-defaults.json.
+    // install/steps/06-shell-config.sh reads the same file for its live conflict
+    // check, so the two never drift out of sync with each other or with the
+    // IpcHandler targets in IpcManager.qml.
+    property var _defaults: ({})
+
+    property var _defaultsFile: FileView {
+        id: defaultsFile
+        path: root._shellDir + "/src/config/keybind-defaults.json"
+        onLoaded: {
+            try {
+                root._defaults = JSON.parse(defaultsFile.text())
+            } catch (e) {
+                console.error("Synapse: failed to parse keybind-defaults.json — no shell keybinds will be active")
+            }
+            root._loadProc.running = true
+        }
+    }
 
     property var keybinds: ({})
 
@@ -174,7 +177,6 @@ QtObject {
                 } catch(e) {}
                 root.keybinds = merged
                 root._writeFiles()
-                root._ensureInclude()
             }
         }
     }
@@ -372,34 +374,7 @@ QtObject {
         return lines.join("\n")
     }
 
-    // ── Auto-include in hyprland configs ──────────────────────────────────────
-    property var _includeProc: Process { command: []; running: false }
-
-    function _ensureInclude() {
-        var lp = root._luaPath.replace(/"/g, "\\\"")
-        var cp = root._confPath.replace(/"/g, "\\\"")
-        
-        if (configProvider === "lua") {
-            _includeProc.command = ["bash", "-c", [
-                "MARKER='SynapseKeybinds'",
-                "LUA=\"$HOME/.config/hypr/hyprland.lua\"",
-                "if [ -f \"$LUA\" ] && ! grep -qF \"$MARKER\" \"$LUA\"; then",
-                "  printf '\\n-- SynapseKeybinds\\ndofile(\"" + lp + "\")\\n' >> \"$LUA\"",
-                "fi",
-            ].join("\n")]
-        } else {
-            _includeProc.command = ["bash", "-c", [
-                "MARKER='SynapseKeybinds'",
-                "CONF=\"$HOME/.config/hypr/hyprland.conf\"",
-                "if [ -f \"$CONF\" ] && ! grep -qF \"$MARKER\" \"$CONF\"; then",
-                "  printf '\\n# SynapseKeybinds\\nsource = " + cp + "\\n' >> \"$CONF\"",
-                "fi",
-            ].join("\n")]
-        }
-        
-        _includeProc.running = false
-        _includeProc.running = true
-    }
-
-    Component.onCompleted: _loadProc.running = true
+    // Loading of user overrides is kicked off by _defaultsFile.onLoaded above,
+    // once _defaults is populated — not on Component.onCompleted, since the
+    // merge in _loadProc needs _defaults to already be there.
 }
