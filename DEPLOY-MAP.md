@@ -7,7 +7,7 @@ All filesystem locations touched by the installer or at runtime.
 
 ## Install-time deployments
 
-### Step 5 — Hyprland & app configs  (`install/steps/05-config.sh`)
+### `install/steps/05-config.sh`  (displayed as step 7/8, "Hyprland Config")
 
 | Source (repo)                              | Destination                                  | Overwrite? |
 |--------------------------------------------|----------------------------------------------|------------|
@@ -23,6 +23,8 @@ All filesystem locations touched by the installer or at runtime.
 | *(symlink created)*                            | `~/.config/starship/starship.toml` → `configs/config-default.toml` | No |
 | `config/zsh/.zshenv`                       | `~/.zshenv`                                  | No (`-n`)  |
 | `config/zsh/`                              | `~/.config/zsh/`                             | No (`-n`)  |
+| `config/sunsetr/sunsetr.toml` *(if present)*   | `~/.config/sunsetr/sunsetr.toml`             | No (`-n`)  |
+| `config/qt6ct/qt6ct.conf` *(if present)*       | `~/.config/qt6ct/qt6ct.conf`                 | No (`-n`)  |
 
 Directories created unconditionally:
 - `~/.config/hypr/modules/`
@@ -31,7 +33,7 @@ Directories created unconditionally:
 
 ---
 
-### Step 6 — Synapse / Quickshell config  (`install/steps/06-shell-config.sh`)
+### `install/steps/06-shell-config.sh`  (displayed as step 8/8, "Synapse Config")
 
 | Source (repo)                                       | Destination                                        | Overwrite? |
 |-----------------------------------------------------|----------------------------------------------------|------------|
@@ -50,6 +52,8 @@ Seed files written (overwritten by runtime on first wallpaper apply):
 - `~/.config/Synapse/src/user_data/colors.json` — empty
 - `~/.config/hypr/colors.conf` — empty
 
+After seeding, this step also runs a live `hyprctl binds -j` conflict check against Synapse's default keybind set. If any default collides with an existing Hyprland bind, that entry is immediately rewritten into `keybinds.json` as unbound (`{"mods": "", "key": ""}`) instead of staying `{}` — so a fresh install's `keybinds.json` is not always the empty-object seed shown above.
+
 ---
 
 ## Runtime paths (written by Quickshell services)
@@ -65,12 +69,15 @@ These are created/updated while Synapse is running, not during install.
 | `~/.config/Synapse/src/user_data/wallpaper.json` | Persisted wallpaper path + color scheme |
 
 Matugen is invoked at wallpaper-change time using `$SHELL_DIR/src/config/matugen.toml`.
-It writes two outputs (defined in `matugen.toml`):
+It writes three outputs (defined in `matugen.toml`):
 
 | Matugen output | Path |
 |----------------|------|
 | `synapse` template | `~/.config/Synapse/src/user_data/colors.json` |
 | `hyprland_colors` template | `~/.config/hypr/colors.conf` |
+| `hyprland_colors_lua` template | `~/.config/hypr/modules/colors.lua` |
+
+`colors.lua` is `dofile()`'d by `~/.config/hypr/modules/appearance.lua` on Hyprland startup/reload — it's the only one of the three matugen outputs the Lua Hyprland config actually reads (`colors.conf` is sourced by `hyprlock.conf` instead).
 
 > `$SHELL_DIR` = the directory quickshell was launched from (typically `~/.config/quickshell`).
 
@@ -88,6 +95,19 @@ It writes two outputs (defined in `matugen.toml`):
 | `~/.config/Synapse/src/user_data/screenrec.json` | ScreenRecService | Screen recording settings |
 | `~/.config/Synapse/src/user_data/keybinds.json` | KeybindService | Custom keybind overrides |
 | `~/.config/Synapse/src/user_data/config_Provider.json` | Shell bootstrap | Config provider selection (`lua`) |
+
+---
+
+### Keybinds  (`KeybindService.qml`)
+
+| Path | What it is |
+|------|------------|
+| `~/.config/Synapse/SynapseKeybinds.lua` | Generated Hyprland binds (all 18 shell actions, defaults ⊕ `keybinds.json` overrides). Rewritten on every save. |
+| `~/.config/Synapse/SynapseKeybinds.conf` | Same, `.conf` syntax. Written for parity but not sourced by anything the installer ships — `.conf`-provider users must add `source = ~/.config/Synapse/SynapseKeybinds.conf` to their own `hyprland.conf` manually. |
+
+`SynapseKeybinds.lua` is loaded unconditionally by `~/.config/hypr/modules/synapse-keybinds.lua` (deployed by step 05 with the rest of `config/hypr/modules/`, `require()`'d from `hyprland.lua`) — via `pcall(dofile, ...)` since the generated file doesn't exist until Quickshell has run at least once. Nothing auto-edits `hyprland.lua`/`hyprland.conf` at runtime; the `require()` line ships as part of the repo like any other module.
+
+The default combos/labels/groups for those 18 actions live in `config/quickshell/src/config/keybind-defaults.json` — read directly by `KeybindService.qml` and by the install-time conflict check in `06-shell-config.sh` (see above), so there's one canonical copy instead of two hand-maintained ones.
 
 ---
 
@@ -120,6 +140,7 @@ Synapse looks for shaders in these locations (in order):
 │   │   ├── hypridle.conf
 │   │   ├── hyprlock.conf
 │   │   ├── modules/
+│   │   │   └── colors.lua           ← matugen output (runtime)
 │   │   ├── scripts/
 │   │   ├── shaders/
 │   │   └── colors.conf              ← matugen output (runtime)
@@ -147,7 +168,11 @@ Synapse looks for shaders in these locations (in order):
 │   │   │   ├── prezto.toml
 │   │   │   └── tokyo-night.toml
 │   │   └── starship.toml            ← symlink → configs/config-default.toml
-│   └── zsh/
+│   ├── zsh/
+│   ├── sunsetr/
+│   │   └── sunsetr.toml
+│   └── qt6ct/
+│       └── qt6ct.conf
 ├── .zshenv
 └── Pictures/
     ├── Wallpapers/
