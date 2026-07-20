@@ -154,7 +154,7 @@ The installer automatically:
 <summary><b>Fonts</b></summary>
 
 - **ttf-jetbrains-mono-nerd** – Primary font (Nerd Font variant)
-- **ttf-noto-nerd** – Emoji and CJK support
+- **ttf-nerd-fonts-symbols-common** – Nerd Font icon glyphs used across the shell UI
 
 </details>
 
