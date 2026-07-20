@@ -17,7 +17,7 @@ hl.on("hyprland.start", function()
 
     -- Synapse visual layer
     hl.exec_cmd("awww-daemon")
-    hl.exec_cmd("hypridle -c " .. os.getenv("HOME") .. "/.local/src/Synapse/config/quickshell/src/config/hypridle.conf")
+    hl.exec_cmd("hypridle -c " .. os.getenv("HOME") .. "/.config/hypr/hypridle.conf")
     hl.exec_cmd("quickshell -c " .. os.getenv("HOME") .. "/.local/src/Synapse/config/quickshell")
 
     -- Clipboard history (text + images)
