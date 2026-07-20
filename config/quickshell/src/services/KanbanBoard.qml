@@ -640,7 +640,7 @@ Item {
                                 Text {
                                     anchors.centerIn: parent
                                     text: root._zp2(root.pickerTimeH)
-                                    font.pixelSize: 13; font.family: "JetBrains Mono"; font.weight: Font.Bold
+                                    font.pixelSize: 13; font.family: "JetBrainsMono Nerd Font"; font.weight: Font.Bold
                                     color: Theme.active
                                 }
                             }
@@ -675,7 +675,7 @@ Item {
                                 Text {
                                     anchors.centerIn: parent
                                     text: root._zp2(root.pickerTimeM)
-                                    font.pixelSize: 13; font.family: "JetBrains Mono"; font.weight: Font.Bold
+                                    font.pixelSize: 13; font.family: "JetBrainsMono Nerd Font"; font.weight: Font.Bold
                                     color: Theme.active
                                 }
                             }

@@ -37,7 +37,7 @@ Item {
             Text {
                 anchors.horizontalCenter: parent.horizontalCenter
                 text: "HH"; font.pixelSize: 9; font.weight: Font.Medium
-                font.family: "JetBrains Mono"
+                font.family: "JetBrainsMono Nerd Font"
                 color: Qt.rgba(1,1,1,0.3)
             }
 
@@ -58,7 +58,7 @@ Item {
                     anchors.centerIn: parent
                     text: root.zp(root.hVal)
                     font.pixelSize: 20; font.weight: Font.Bold
-                    font.family: "JetBrains Mono"
+                    font.family: "JetBrainsMono Nerd Font"
                     color: Qt.rgba(235/255, 240/255, 255/255, 0.9)
                 }
 
@@ -89,7 +89,7 @@ Item {
             anchors.verticalCenterOffset: 8
             text: ":"
             font.pixelSize: 22; font.weight: Font.Bold
-            font.family: "JetBrains Mono"
+            font.family: "JetBrainsMono Nerd Font"
             color: Qt.rgba(1,1,1,0.3)
         }
 
@@ -101,7 +101,7 @@ Item {
             Text {
                 anchors.horizontalCenter: parent.horizontalCenter
                 text: "MM"; font.pixelSize: 9; font.weight: Font.Medium
-                font.family: "JetBrains Mono"
+                font.family: "JetBrainsMono Nerd Font"
                 color: Qt.rgba(1,1,1,0.3)
             }
 
@@ -122,7 +122,7 @@ Item {
                     anchors.centerIn: parent
                     text: root.zp(root.mVal)
                     font.pixelSize: 20; font.weight: Font.Bold
-                    font.family: "JetBrains Mono"
+                    font.family: "JetBrainsMono Nerd Font"
                     color: Qt.rgba(235/255, 240/255, 255/255, 0.9)
                 }
 

@@ -447,7 +447,7 @@ Item {
                         id: _pillT
                         anchors.centerIn: parent
                         text:           br._pillText
-                        font.pixelSize: 10; font.family: "JetBrains Mono"
+                        font.pixelSize: 10; font.family: "JetBrainsMono Nerd Font"
                         font.italic:    br._isUnbound 
                         
                         color: br._isUnbound 
@@ -503,7 +503,7 @@ Item {
                         Text {
                             id: _capT
                             anchors.centerIn: parent
-                            font.pixelSize: 10; font.family: "JetBrains Mono"
+                            font.pixelSize: 10; font.family: "JetBrainsMono Nerd Font"
                             color: br._hasConflict
                                 ? "#f87171"
                                 : br.capturedKey !== ""

@@ -399,7 +399,7 @@ Item {
 								text:           ClockState.timerDisplay
 								font.pixelSize: 15
 								font.weight:    Font.Bold
-								font.family:    "JetBrains Mono"
+								font.family:    "JetBrainsMono Nerd Font"
 								horizontalAlignment: Text.AlignHCenter
 								color:          root.timerUrgent ? "#ff5555" : Theme.text
 								Behavior on color { ColorAnimation { duration: 200 } }
@@ -491,7 +491,7 @@ Item {
 								text:           ClockState.swDisplay
 								font.pixelSize: 15
 								font.weight:    Font.Bold
-								font.family:    "JetBrains Mono"
+								font.family:    "JetBrainsMono Nerd Font"
 								horizontalAlignment: Text.AlignHCenter
 								color:          Theme.text
 							}
@@ -753,7 +753,7 @@ Item {
 									anchors.verticalCenter: parent.verticalCenter
 									text:           ScreenRecService.elapsedDisplay
 									font.pixelSize: 13; font.weight: Font.Bold
-									font.family:    "JetBrains Mono"
+									font.family:    "JetBrainsMono Nerd Font"
 									color:          Theme.text
 								}
 							}

@@ -528,7 +528,7 @@ PanelWindow {
                                 verticalAlignment: TextInput.AlignVCenter
                                 color:             Theme.text
                                 font.pixelSize:    12
-                                font.family:       "JetBrains Mono"
+                                font.family:       "JetBrainsMono Nerd Font"
                                 selectionColor:    Qt.rgba(Theme.active.r, Theme.active.g, Theme.active.b, 0.35)
                                 clip:              true
                                 Keys.onReturnPressed: {

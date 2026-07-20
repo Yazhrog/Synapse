@@ -158,7 +158,7 @@ StatCard {
                         Behavior on color { ColorAnimation { duration: 80 } }
                         Text {
                             anchors.centerIn: parent; text: modelData.n
-                            font.pixelSize: 9; font.family: "JetBrains Mono"
+                            font.pixelSize: 9; font.family: "JetBrainsMono Nerd Font"
                             font.weight: isToday ? Font.Bold : Font.Normal
                             color: isToday ? Theme.active
                                    : modelData.cur ? Qt.rgba(205/255,214/255,244/255,0.55)

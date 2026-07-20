@@ -144,7 +144,7 @@ StatCard {
                 }
                 Text {
                     text: root._uptime; font.pixelSize: 12
-                    font.family: "JetBrains Mono"
+                    font.family: "JetBrainsMono Nerd Font"
                     color: Qt.rgba(205/255,214/255,244/255,0.55)
                     anchors.verticalCenter: parent.verticalCenter
                 }

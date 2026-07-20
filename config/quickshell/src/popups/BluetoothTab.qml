@@ -484,7 +484,7 @@ Item {
                                 id: pinInput
                                 anchors { fill: parent; leftMargin: 10; rightMargin: 10 }
                                 verticalAlignment: TextInput.AlignVCenter; color: Theme.text
-                                font.pixelSize: 12; font.family: "JetBrains Mono"
+                                font.pixelSize: 12; font.family: "JetBrainsMono Nerd Font"
                                 inputMethodHints: Qt.ImhDigitsOnly; maximumLength: 8
                                 selectionColor: Qt.rgba(Theme.active.r, Theme.active.g, Theme.active.b, 0.35); clip: true
                                 Keys.onReturnPressed: root._pair(dRow.device.mac, text)

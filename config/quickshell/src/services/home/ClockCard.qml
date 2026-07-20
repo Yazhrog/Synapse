@@ -249,7 +249,7 @@ StatCard {
                         anchors.top:  parent.top
                         text: root._hStr
                         font.pixelSize: 72; font.weight: Font.Bold
-                        font.family: "JetBrains Mono"; font.letterSpacing: -4
+                        font.family: "JetBrainsMono Nerd Font"; font.letterSpacing: -4
                         color: Theme.text
                     }
                     Text {
@@ -260,7 +260,7 @@ StatCard {
                         anchors.topMargin: -8
                         text: root._mStr
                         font.pixelSize: 72; font.weight: Font.Bold
-                        font.family: "JetBrains Mono"; font.letterSpacing: -4
+                        font.family: "JetBrainsMono Nerd Font"; font.letterSpacing: -4
                         color: Theme.active
                     }
                 }
@@ -270,7 +270,7 @@ StatCard {
                     anchors.verticalCenter: parent.verticalCenter
                     text: root._sec
                     font.pixelSize: 22; font.weight: Font.Medium
-                    font.family: "JetBrains Mono"
+                    font.family: "JetBrainsMono Nerd Font"
                     color: Qt.rgba(Theme.text.r, Theme.text.g, Theme.text.b, 0.45)
                 }
             }
@@ -346,7 +346,7 @@ StatCard {
                             anchors.horizontalCenter: parent.horizontalCenter
                             text: root._timerDisplay()
                             font.pixelSize: root._timerLeft >= 3600 ? 16 : 22
-                            font.weight: Font.Bold; font.family: "JetBrains Mono"
+                            font.weight: Font.Bold; font.family: "JetBrainsMono Nerd Font"
                             color: Qt.rgba(Theme.text.r, Theme.text.g, Theme.text.b, 0.9)
                         }
                         Text {
@@ -374,7 +374,7 @@ StatCard {
                             Text {
                                 anchors.centerIn: parent
                                 text: modelData < 60 ? modelData+"m" : "1h"
-                                font.pixelSize: 9; font.family: "JetBrains Mono"; font.weight: Font.Bold
+                                font.pixelSize: 9; font.family: "JetBrainsMono Nerd Font"; font.weight: Font.Bold
                                 color: Qt.rgba(1,1,1,0.45)
                             }
                             HoverHandler { id: _pH; cursorShape: Qt.PointingHandCursor }
@@ -643,7 +643,7 @@ StatCard {
                         Text {
                             anchors { left: parent.left; leftMargin: 10; verticalCenter: parent.verticalCenter }
                             text: root._zp(modelData.hour) + ":" + root._zp(modelData.minute)
-                            font.pixelSize: 15; font.weight: Font.Bold; font.family: "JetBrains Mono"
+                            font.pixelSize: 15; font.weight: Font.Bold; font.family: "JetBrainsMono Nerd Font"
                             color: modelData.enabled
                                    ? Qt.rgba(Theme.text.r, Theme.text.g, Theme.text.b, 0.9)
                                    : Qt.rgba(1,1,1,0.3)
@@ -709,7 +709,7 @@ StatCard {
                     anchors.horizontalCenter: parent.horizontalCenter
                     text: root._swDisplay()
                     font.pixelSize: 52; font.weight: Font.Bold
-                    font.family: "JetBrains Mono"; font.letterSpacing: -1
+                    font.family: "JetBrainsMono Nerd Font"; font.letterSpacing: -1
                     color: Qt.rgba(Theme.text.r, Theme.text.g, Theme.text.b, 0.9)
                 }
 
