@@ -155,6 +155,7 @@ The installer automatically:
 
 - **ttf-jetbrains-mono-nerd** – Primary font (Nerd Font variant)
 - **ttf-nerd-fonts-symbols-common** – Nerd Font icon glyphs used across the shell UI
+- **ttf-cascadia-mono-nerd** – Ghostty terminal font
 
 </details>
 

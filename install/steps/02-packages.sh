@@ -133,7 +133,7 @@ PACMAN_DEPS=(
     xdg-desktop-portal-hyprland
 
     # Fonts
-    ttf-jetbrains-mono-nerd ttf-nerd-fonts-symbols-common
+    ttf-jetbrains-mono-nerd ttf-nerd-fonts-symbols-common ttf-cascadia-mono-nerd
 
     # Other utilities
     starship fastfetch btop bat zsh exa fd ripgrep fzf
