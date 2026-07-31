@@ -55,6 +55,25 @@ hl.bind("SUPER + mouse_up",   hl.dsp.focus({ workspace = "e+1" }))
 hl.bind("SUPER + mouse:272", hl.dsp.window.drag(),   { mouse = true })
 hl.bind("SUPER + mouse:273", hl.dsp.window.resize(), { mouse = true })
 
+-- ── Plugins ───────────────────────────────────────────────────────────────────
+hl.bind("SUPER + G", function()
+    hl.plugin.scrolloverview.overview("toggle")
+end)
+hl.define_submap("scrolloverview", function()
+	hl.bind("left", hl.plugin.scrolloverview.navigate("left"))
+	hl.bind("right", hl.plugin.scrolloverview.navigate("right"))
+	hl.bind("up", hl.plugin.scrolloverview.navigate("up"))
+	hl.bind("down", hl.plugin.scrolloverview.navigate("down"))
+	hl.bind("return", hl.plugin.scrolloverview.overview("select"))
+	hl.bind("escape", hl.plugin.scrolloverview.overview("off"))
+	hl.bind("mouse:272", function()
+		-- Select the clicked window, or just the workspace if no window was clicked, then close the overview. This is the default behaviour if submap is not defined.
+		hl.plugin.scrolloverview.overview("select")
+		hl.plugin.scrolloverview.window("select")
+		hl.plugin.scrolloverview.overview("off")
+	end, { mouse = true })
+	hl.bind("mouse:274", hl.plugin.scrolloverview.window("close"), { mouse = true })
+end)
 -- ── Lock screen ───────────────────────────────────────────────────────────────
 hl.bind("SUPER + SHIFT + L",      hl.dsp.exec_cmd("hyprlock"))
 

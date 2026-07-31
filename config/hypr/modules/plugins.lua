@@ -2,13 +2,13 @@
 -- Plugins are loaded by hyprpm (see autostart.lua: hyprpm reload -n).
 --
 -- Required plugins (install via hyprpm):
---   hyprpm add https://github.com/gfhdhytghd/hymission
---   hyprpm enable hymission
+--   hyprpm add https://github.com/yayuuu/hyprland-scroll-overview.git
+--   hyprpm enable scrolloverview
 
 hl.on("config.reloaded", function()
     hl.config({
         plugin = {
-            hymission = {},
+            scrolloverview = {},
         },
     })
 end)

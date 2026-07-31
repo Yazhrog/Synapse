@@ -122,13 +122,13 @@ echo ""
 echo "── HYPRLAND PLUGINS ─────────────────────────────────────────────"
 if command -v hyprpm &>/dev/null; then
     plugin_list=$(hyprpm list 2>/dev/null)
-    if echo "$plugin_list" | grep -qi "hymission"; then
-        log_installed "plugin: hymission"
+    if echo "$plugin_list" | grep -qi "scrolloverview"; then
+        log_installed "plugin: scrolloverview"
     else
-        log_missing "plugin: hymission  (run: hyprpm add https://github.com/gfhdhytghd/hymission && hyprpm enable hymission)"
+        log_missing "plugin: scrolloverview  (run: hyprpm add https://github.com/yayuuu/hyprland-scroll-overview.git && hyprpm enable scrolloverview)"
     fi
 else
-    log_missing "hyprpm (needed to check hymission status)"
+    log_missing "hyprpm (needed to check scrolloverview status)"
 fi
 
 if [[ -f "$HOME/.config/hypr/plugin/hyprselect/hyprselect.so" ]]; then
