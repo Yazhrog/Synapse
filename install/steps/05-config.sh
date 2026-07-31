@@ -136,6 +136,17 @@ if [[ -f "$SUNSETR_SRC" ]]; then
     fi
 fi
 
+# Nvim config
+NVIM_SRC="$REPO_DIR/config/nvim"
+if [[ -d "$NVIM_SRC" ]]; then
+    mkdir -p "$HOME/.config/nvim"
+    if spin "  Copying nvim config..." cp -r -n "$NVIM_SRC/." "$HOME/.config/nvim/" 2>/dev/null; then
+        log_ok "nvim config → ~/.config/nvim/"
+    else
+        log_info "nvim config already exists — not overwritten"
+    fi
+fi
+
 # Qt6ct config
 QT6CT_SRC="$REPO_DIR/config/qt6ct/qt6ct.conf"
 if [[ -f "$QT6CT_SRC" ]]; then

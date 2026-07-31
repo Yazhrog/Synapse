@@ -1,7 +1,18 @@
 # Synapse — Deployment Map
 
 All filesystem locations touched by the installer or at runtime.
-`$REPO` = wherever you cloned Synapse (default `~/.local/src/Synapse`).
+`$REPO` = `~/.local/src/Synapse` — see "Repository clone" below for why this is fixed, not wherever you happen to `git clone` this yourself.
+
+---
+
+## Repository clone
+
+`boot.sh` is the entry point and always clones/pulls into a fixed path, `~/.local/src/Synapse` (`REPO_PARENT="$HOME/.local/src"`, `REPO_DIR="$REPO_PARENT/Synapse"`):
+
+- If `$REPO_DIR/.git` already exists, it runs `git -C "$REPO_DIR" pull origin main` (updates in place, always tracking `main`).
+- Otherwise it runs `git clone -b main <repo-url> "$REPO_DIR"`.
+
+`$REPO_DIR` is then passed down to `install/install.sh` and every step under `install/steps/`, so all install-time deployments below read from that path — regardless of where you originally ran `boot.sh` from or where any other working checkout of this repo lives on disk. `config/hypr/modules/autostart.lua` also hardcodes this same path when it launches quickshell (see "Run in place from the repo" below), so a local checkout elsewhere (e.g. a dev clone under `~/Projects/`) is invisible to the running shell until it's synced into `~/.local/src/Synapse`.
 
 ---
 
@@ -23,6 +34,7 @@ All filesystem locations touched by the installer or at runtime.
 | *(symlink created)*                            | `~/.config/starship/starship.toml` → `configs/config-default.toml` | No |
 | `config/zsh/.zshenv`                       | `~/.zshenv`                                  | No (`-n`)  |
 | `config/zsh/`                              | `~/.config/zsh/`                             | No (`-n`)  |
+| `config/nvim/` *(if present)*               | `~/.config/nvim/`                            | No (`-n`)  |
 | `config/sunsetr/sunsetr.toml` *(if present)*   | `~/.config/sunsetr/sunsetr.toml`             | No (`-n`)  |
 | `config/qt6ct/qt6ct.conf` *(if present)*       | `~/.config/qt6ct/qt6ct.conf`                 | No (`-n`)  |
 
@@ -79,7 +91,7 @@ It writes three outputs (defined in `matugen.toml`):
 
 `colors.lua` is `dofile()`'d by `~/.config/hypr/modules/appearance.lua` on Hyprland startup/reload — it's the only one of the three matugen outputs the Lua Hyprland config actually reads (`colors.conf` is sourced by `hyprlock.conf` instead).
 
-> `$SHELL_DIR` = the directory quickshell was launched from (typically `~/.config/quickshell`).
+> `$SHELL_DIR` = the directory quickshell was launched from — a fixed path hardcoded in `config/hypr/modules/autostart.lua`, `~/.local/src/Synapse/config/quickshell` (the same clone `boot.sh` manages), not `~/.config/quickshell`.
 
 ---
 
@@ -169,6 +181,7 @@ Synapse looks for shaders in these locations (in order):
 │   │   │   └── tokyo-night.toml
 │   │   └── starship.toml            ← symlink → configs/config-default.toml
 │   ├── zsh/
+│   ├── nvim/
 │   ├── sunsetr/
 │   │   └── sunsetr.toml
 │   └── qt6ct/
