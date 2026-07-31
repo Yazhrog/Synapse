@@ -13,3 +13,7 @@ output_path = "~/.config/hypr/modules/colors.lua"
 input_path = "./templates/nvim-colors.json"
 output_path = "~/.config/nvim/colors/nvim-colors.json"
 post_hook = "pkill -SIGUSR1 nvim"
+
+[templates.ghostty]
+input_path = './templates/ghostty.conf'
+output_path = '~/.config/ghostty/ghostty.colors.conf'

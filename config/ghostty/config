@@ -1,5 +1,8 @@
+# Dynamic theme colors
+config-file = ?"~/.config/ghostty/ghostty.colors.conf"
+
 # Font
-font-family = "CaskaydiaMono Nerd Font"
+font-family = "JetbrainsMono Nerd Font"
 font-style = Regular
 font-size = 12
 
