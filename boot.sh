@@ -142,7 +142,7 @@ if [[ -d "$REPO_DIR/.git" ]]; then
 else
     # TODO: update this URL once the Synapse repo is published
     spin "Cloning Synapse..." \
-        git clone -b main https://github.com/YOUR_USERNAME/Synapse.git "$REPO_DIR"
+        git clone -b main https://github.com/Yazhrog/Synapse.git "$REPO_DIR"
     log_ok "Repository cloned: $REPO_DIR"
 fi
 

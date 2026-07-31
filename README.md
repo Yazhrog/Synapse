@@ -11,9 +11,6 @@
   <img src="https://img.shields.io/badge/hyprland-v0.55+-5E81AC?style=for-the-badge&logoColor=D9E0EE&labelColor=252733" alt="Hyprland v0.55+" />
   <img src="https://img.shields.io/badge/quickshell-framework-A1C999?style=for-the-badge&logoColor=D9E0EE&labelColor=252733" alt="Quickshell Framework" />
   <br>
-  <a href="https://github.com/Brainitech/Synapse/blob/main/LICENSE">
-    <img src="https://img.shields.io/github/license/Brainitech/Synapse?style=for-the-badge&color=A1C999&logo=opensourceinitiative&logoColor=D9E0EE&labelColor=252733" alt="License" />
-  </a>
 </p>
 
 ---
@@ -46,13 +43,13 @@
 ### One line installer
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/Brainitech/Synapse/refs/heads/main/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/Yazhrog/Synapse/refs/heads/main/boot.sh | bash
 ```
 
 ### Manual installation
 
 ```bash
-git clone https://github.com/Brainitech/Synapse.git
+git clone https://github.com/Yazhrog/Synapse.git
 cd Synapse
 chmod +x install.sh
 ./install.sh
