@@ -28,11 +28,22 @@ else
         local name="$1"
         spin "Installing git + base-devel..." \
             sudo pacman -S --needed --noconfirm git base-devel
+        
         local tmp; tmp=$(mktemp -d)
         spin "Cloning $name from AUR..." \
             git clone "https://aur.archlinux.org/${name}.git" "$tmp/$name"
+        
+        # 1. Compile ONLY (-s = syncdeps, -c = clean up). No sudo needed here!
         spin "Building $name..." \
-            bash -c "cd '$tmp/$name' && makepkg -si --noconfirm"
+            makepkg -D "$tmp/$name" -sc --noconfirm
+        
+        # 2. Warm up sudo credentials in the open terminal before installing
+        sudo -v
+        
+        # 3. Install the freshly built package
+        spin "Installing $name..." \
+            sudo pacman -U --noconfirm "$tmp/$name"/*.pkg.tar.zst
+        
         rm -rf "$tmp"
         log_ok "$name installed."
     }
