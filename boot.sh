@@ -19,7 +19,12 @@ if ! command -v gum &>/dev/null; then
 fi
 
 # shellcheck source=install/utils.sh
-source "$SCRIPT_DIR/install/utils.sh"
+if [[ -f "$SCRIPT_DIR/install/utils.sh" ]]; then
+    source "$SCRIPT_DIR/install/utils.sh"
+else
+    # Fallback for the curl | bash bootstrap, which only downloads boot.sh.
+    source <(curl -fsSL https://raw.githubusercontent.com/Yazhrog/Synapse/refs/heads/main/install/utils.sh)
+fi
 
 TOTAL_STEPS=5
 
