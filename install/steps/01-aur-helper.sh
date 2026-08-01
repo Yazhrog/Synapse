@@ -26,6 +26,7 @@ else
 
     _bootstrap_aur_helper() {
         local name="$1"
+	sudo -v
         spin "Installing git + base-devel..." \
             sudo pacman -S --needed --noconfirm git base-devel
         
