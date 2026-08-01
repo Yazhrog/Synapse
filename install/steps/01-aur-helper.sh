@@ -6,9 +6,7 @@
 # Step 1 — AUR Helper
 # Detects yay or paru; offers to bootstrap one if neither is present.
 # Sets AUR_HELPER ("yay", "paru", or "none") for use by later steps.
-
 step 1 "AUR Helper"
-
 if command -v yay &>/dev/null; then
     AUR_HELPER="yay"
     log_ok "yay detected"
@@ -18,7 +16,6 @@ elif command -v paru &>/dev/null; then
 else
     log_warn "No AUR helper found (yay / paru)."
     echo ""
-
     _choice=$(choose "Select an AUR helper to install:" \
         "yay  — widely used, interactive" \
         "paru — faster builds, more features" \
@@ -26,25 +23,27 @@ else
 
     _bootstrap_aur_helper() {
         local name="$1"
-	sudo -v
+
+        # Warm up sudo BEFORE every privileged block, in the open,
+        # so the password prompt is never hidden behind spin().
+        sudo -v || die "sudo authentication failed."
         spin "Installing git + base-devel..." \
             sudo pacman -S --needed --noconfirm git base-devel
-        
+
         local tmp; tmp=$(mktemp -d)
         spin "Cloning $name from AUR..." \
             git clone "https://aur.archlinux.org/${name}.git" "$tmp/$name"
-        
-        # 1. Compile ONLY (-s = syncdeps, -c = clean up). No sudo needed here!
+
+        # No sudo needed for the build itself (-s = syncdeps, -c = clean up)
         spin "Building $name..." \
             makepkg -D "$tmp/$name" -sc --noconfirm
-        
-        # 2. Warm up sudo credentials in the open terminal before installing
-        sudo -v
-        
-        # 3. Install the freshly built package
+
+        # Refresh sudo again before the install step — a long build can
+        # outlast the cached credential, so don't assume it's still valid.
+        sudo -v || die "sudo authentication failed."
         spin "Installing $name..." \
             sudo pacman -U --noconfirm "$tmp/$name"/*.pkg.tar.zst
-        
+
         rm -rf "$tmp"
         log_ok "$name installed."
     }
