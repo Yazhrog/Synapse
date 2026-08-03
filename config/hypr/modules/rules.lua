@@ -37,9 +37,9 @@ hl.window_rule({
     size   = "1000 700",
 })
 
--- Synapse popup layer — enable blur
-hl.layer_rule({
-    name  = "quickshell-blur",
-    match = { namespace = "quickshell" },
-    blur  = true,
+-- Inhibit idle while any window is fullscreen (e.g. video playback)
+hl.window_rule({
+    name         = "idleinhibit-fullscreen",
+    match        = { class = ".*" },
+    idle_inhibit = "fullscreen",
 })
