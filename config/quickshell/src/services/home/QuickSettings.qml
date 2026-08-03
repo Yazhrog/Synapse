@@ -148,13 +148,13 @@ StatCard {
     property bool caffeineOn: false
 
     Process { id: caffeineCheck
-        command: ["bash", "-c", "pgrep -x wayland-idle-inhibitor"]; running: false
+        command: ["bash", "-c", "pgrep -f wayland-idle-inhibitor.py"]; running: false
         stdout: SplitParser { onRead: function(l) { if (l.trim() !== "") root.caffeineOn = true } } }
     Process { id: caffeineProc
-        command: ["wayland-idle-inhibitor"]
+        command: ["wayland-idle-inhibitor.py"]
         running: false }
     Process { id: caffeineKill
-        command: ["bash", "-c", "pkill -x wayland-idle-inhibitor"]; running: false
+        command: ["bash", "-c", "pkill -f wayland-idle-inhibitor.py"]; running: false
         onRunningChanged: if (!running) root.caffeineOn = false }
     function _caffeineToggle() {
         if (root.caffeineOn) {
