@@ -122,6 +122,20 @@ if [[ -d "$ZSH_SRC" ]]; then
     else
         log_info "zsh config already exists — not overwritten"
     fi
+
+    # Set zsh as the default login shell (skipped if already set)
+    ZSH_BIN="$(command -v zsh)"
+    CURRENT_SHELL="$(getent passwd "$USER" | cut -d: -f7)"
+    if [[ -n "$ZSH_BIN" && "$CURRENT_SHELL" != "$ZSH_BIN" ]]; then
+        log_info "Setting zsh as default shell..."
+        if sudo chsh -s "$ZSH_BIN" "$USER"; then
+            log_ok "Default shell → zsh (takes effect on next login)"
+        else
+            log_warn "Failed to set default shell — run manually: chsh -s $ZSH_BIN"
+        fi
+    else
+        log_info "zsh already the default shell"
+    fi
 fi
 
 # Sunsetr config (non-overwrite — preserves user-tuned geolocation)
