@@ -14,7 +14,7 @@ hl.config({
         focus_on_close     = 0,
         mouse_refocus      = true,
 
-        touchpad = {
+        touchpad           = {
             natural_scroll          = false,
             clickfinger_behavior    = false,
             tap_and_drag            = true,
@@ -54,3 +54,8 @@ hl.config({
         key_press_enables_dpms  = true,
     },
 })
+
+hl.gesture({ fingers = 3, direction = "vertical", action = "workspace" })
+hl.gesture({ fingers = 3, direction = "horizontal", action = "scroll_move" })
+hl.gesture({ fingers = 3, direction = "down", mods = "ALT", action = "close" })
+hl.gesture({ fingers = 3, direction = "up", mods = "SUPER", scale = 1.5, action = "fullscreen" })
