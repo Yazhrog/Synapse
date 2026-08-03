@@ -11,5 +11,4 @@
 --   hl.monitor({ output = "eDP-1",    mode = "1920x1080@60.0",  position = "0x0",    scale = 1 })
 
 -- TODO: Replace these with your actual monitor names and resolutions
-hl.monitor({ output = "DP-1",     mode = "2560x1440@144.0", position = "0x0",    scale = 1 })
-hl.monitor({ output = "HDMI-A-1", mode = "1920x1080@100.0", position = "2560x0", scale = 1 })
+hl.monitor({ output = "", mode = "1920x1080@60.0", position = "0x0",    scale = 1 })
