@@ -163,6 +163,7 @@ AUR_DEPS=(
     hyprshutdown     # power menu backend
     grimblast-git    # screenshot helper
     bibata-cursor-theme  # animated cursor themes
+    whitesur-icon-theme  # icon theme
     wayland-idle-inhibitor-git  # Wayland idle inhibitor for caffeine mode (inhibits hypridle)
     sunsetr                     # schedule-aware color temperature daemon (night light)
 )
@@ -179,39 +180,4 @@ fi
 
 if [[ "$AUR_HELPER" != "none" ]] && ! "$AUR_HELPER" -Q quickshell &>/dev/null 2>&1; then
     die "quickshell failed to install. Synapse cannot run without it."
-fi
-
-# ╭───────────────────────────────────────────────────────────────────────╮
-# │ Step 4 — Icon Theme                                                   │
-# ╰───────────────────────────────────────────────────────────────────────╯
-step 4 "Icon Theme"
-
-ICON_THEME_DIR="/usr/share/icons/Mkos-Big-Sur"
-
-if [[ -d "$ICON_THEME_DIR" ]]; then
-    log_ok "Mkos-Big-Sur already installed — skipping."
-else
-    if spin "Downloading Mkos-Big-Sur icon theme..." \
-            curl -fsSL https://github.com/zayronxio/Mkos-Big-Sur/archive/refs/heads/master.zip \
-            -o /tmp/mkos-big-sur.zip; then
-
-        if spin "Extracting to /usr/share/icons..." \
-                sudo unzip -q /tmp/mkos-big-sur.zip -d /usr/share/icons/; then
-
-            sudo mv /usr/share/icons/Mkos-Big-Sur-master "$ICON_THEME_DIR"
-            rm -f /tmp/mkos-big-sur.zip
-
-            spin "Updating icon cache..." \
-                sudo gtk-update-icon-cache -f -t "$ICON_THEME_DIR" || true
-
-            log_ok "Mkos-Big-Sur installed."
-        else
-            log_error "Failed to extract icon theme."
-            rm -f /tmp/mkos-big-sur.zip
-            FAILED_PKGS+=("icons:Mkos-Big-Sur")
-        fi
-    else
-        log_error "Failed to download Mkos-Big-Sur."
-        FAILED_PKGS+=("icons:Mkos-Big-Sur")
-    fi
 fi
