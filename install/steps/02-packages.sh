@@ -136,7 +136,7 @@ PACMAN_DEPS=(
     ttf-jetbrains-mono-nerd ttf-nerd-fonts-symbols-common ttf-cascadia-mono-nerd
 
     # Other utilities
-    starship fastfetch btop bat zsh exa fd ripgrep fzf zed cmake
+    starship fastfetch btop bat zsh exa fd ripgrep neovim fzf zed cmake
 
 )
 
