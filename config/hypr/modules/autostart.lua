@@ -18,7 +18,9 @@ hl.on("hyprland.start", function()
     -- Synapse visual layer
     hl.exec_cmd("awww-daemon")
     hl.exec_cmd("hypridle -c " .. os.getenv("HOME") .. "/.config/hypr/hypridle.conf")
-    hl.exec_cmd("quickshell -c " .. os.getenv("HOME") .. "/.local/src/Synapse/config/quickshell")
+    -- No -c: ~/.config/quickshell symlinks to the repo checkout, which makes
+    -- Synapse quickshell's "default" config. See install/lib/manifest.sh.
+    hl.exec_cmd("quickshell")
 
     -- Clipboard history (text + images)
     hl.exec_cmd("wl-paste --type text --watch cliphist store")
