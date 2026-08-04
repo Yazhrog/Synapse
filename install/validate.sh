@@ -148,40 +148,100 @@ fi
 echo ""
 echo "── CONFIGURATION FILES ──────────────────────────────────────────"
 
-if [[ -f "$HOME/.config/hypr/hyprland.lua" ]]; then
-    log_installed "~/.config/hypr/hyprland.lua"
+REPO_PATH_FILE="$HOME/.config/Synapse/repo-path"
+if [[ -f "$REPO_PATH_FILE" ]]; then
+    REPO_DIR="$(< "$REPO_PATH_FILE")"
+    if [[ -d "$REPO_DIR/config" ]]; then
+        log_installed "repo-path → $REPO_DIR"
+    else
+        log_missing "repo-path points at $REPO_DIR, which has no config/ — re-run boot.sh"
+        REPO_DIR=""
+    fi
 else
-    log_missing "~/.config/hypr/hyprland.lua"
-fi
-
-if [[ -d "$HOME/.config/hypr/modules" ]]; then
-    log_installed "~/.config/hypr/modules/"
-else
-    log_missing "~/.config/hypr/modules/"
-fi
-
-if [[ -d "$HOME/.config/hypr/scripts" ]]; then
-    log_installed "~/.config/hypr/scripts/"
-else
-    log_missing "~/.config/hypr/scripts/"
-fi
-
-if [[ -f "$HOME/.config/ghostty/config" ]]; then
-    log_installed "~/.config/ghostty/config"
-else
-    log_optional "~/.config/ghostty/config"
-fi
-
-if [[ -d "$HOME/.local/src/Synapse" ]]; then
-    log_installed "~/.local/src/Synapse  (source)"
-else
-    log_missing "~/.local/src/Synapse  (source)"
+    log_missing "~/.config/Synapse/repo-path  (run boot.sh to create it)"
+    REPO_DIR=""
 fi
 
 if [[ -d "$HOME/.config/Synapse" ]]; then
     log_installed "~/.config/Synapse  (user config)"
 else
     log_missing "~/.config/Synapse  (user config)"
+fi
+
+echo ""
+echo "── SYMLINK HEALTH ───────────────────────────────────────────────"
+
+# Every deployed config should be a symlink resolving into the repo. A plain
+# file here means the link was replaced by a copy, and `git pull` silently
+# stopped updating it — exactly the failure this deployment model exists to
+# prevent, so it is worth reporting loudly.
+if [[ -n "$REPO_DIR" && -f "$REPO_DIR/install/lib/manifest.sh" ]]; then
+    # shellcheck source=install/lib/manifest.sh
+    source "$REPO_DIR/install/lib/manifest.sh"
+
+    LINK_OK=0; LINK_BAD=0; LINK_GONE=0
+    declare -a LINK_PROBLEMS=()
+
+    _check_link() {
+        local dest="$HOME/$1"
+        if [[ -L "$dest" ]]; then
+            local tgt; tgt="$(readlink -f "$dest" 2>/dev/null)"
+            if [[ "$tgt" == "$(readlink -f "$REPO_DIR")"/* ]]; then
+                LINK_OK=$((LINK_OK + 1))
+            else
+                LINK_BAD=$((LINK_BAD + 1))
+                LINK_PROBLEMS+=("~/$1 → ${tgt:-<broken>} (outside the repo)")
+            fi
+        elif [[ -e "$dest" ]]; then
+            LINK_BAD=$((LINK_BAD + 1))
+            LINK_PROBLEMS+=("~/$1 is a real file, not a symlink — updates won't reach it")
+        else
+            LINK_GONE=$((LINK_GONE + 1))
+            LINK_PROBLEMS+=("~/$1 is missing")
+        fi
+    }
+
+    for _entry in "${SYNAPSE_LINK_DIRS[@]}"; do
+        _check_link "${_entry#*|}"
+    done
+    for _entry in "${SYNAPSE_LINK_FILES[@]}"; do
+        _src="${_entry%%|*}"; _dst="${_entry#*|}"
+        if [[ "$_src" == */ ]]; then
+            # Recursive entry: verify each file the repo currently ships, minus
+            # the ones the manifest deliberately hands over as copies.
+            while IFS= read -r _f; do
+                _rel="${_f#"$REPO_DIR/${_src%/}/"}"
+                _skip=0
+                for _ex in "${SYNAPSE_LINK_EXCLUDE[@]}"; do
+                    if [[ "${_src%/}/$_rel" == "$_ex" ]]; then _skip=1; break; fi
+                done
+                if [[ $_skip -eq 1 ]]; then continue; fi
+                _check_link "${_dst%/}/$_rel"
+            done < <(find "$REPO_DIR/${_src%/}" -type f 2>/dev/null)
+        else
+            _check_link "$_dst"
+        fi
+    done
+
+    if [[ $LINK_BAD -eq 0 && $LINK_GONE -eq 0 ]]; then
+        log_installed "$LINK_OK deployed path(s), all linked into the repo"
+    else
+        log_installed "$LINK_OK deployed path(s) correctly linked"
+        for _p in "${LINK_PROBLEMS[@]}"; do
+            log_missing "$_p"
+        done
+        log_info "Fix with:  $REPO_DIR/install/link.sh"
+    fi
+else
+    log_optional "manifest not available — skipping symlink checks"
+fi
+
+# Synapse should be quickshell's "default" config, which is what lets
+# `qs ipc call ...` work without -c in the generated keybinds.
+if [[ -f "$HOME/.config/quickshell/shell.qml" ]]; then
+    log_installed "quickshell 'default' config resolves"
+else
+    log_missing "~/.config/quickshell/shell.qml — keybinds calling 'qs ipc' will fail"
 fi
 
 echo ""
