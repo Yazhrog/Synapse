@@ -477,8 +477,10 @@ StatCard {
     property var    filterList:       []
     property bool   filterPickerOpen: false
     
-    // Add your standard shader directories here (space-separated)
-    property string shaderPaths: "~/.config/hypr/shaders ~/.local/share/hypr/shaders /usr/share/hyprshade/shaders ~/.local/src/Synapse/src/config/shaders ~/.config/quickshell/src/config/shaders"
+    // Add your standard shader directories here (space-separated).
+    // ~/.config/quickshell is a symlink to the repo, so the last entry reaches
+    // the shaders Synapse ships; ~/.config/hypr/shaders is for your own.
+    property string shaderPaths: "~/.config/hypr/shaders ~/.local/share/hypr/shaders /usr/share/hyprshade/shaders ~/.config/quickshell/src/config/shaders"
 
     // Check process stays exactly the same — it already reads cleanly from Hyprland!
     Process {
