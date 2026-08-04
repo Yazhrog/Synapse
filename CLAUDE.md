@@ -10,23 +10,29 @@ Synapse is a Wayland desktop shell for Hyprland: a Quickshell/QML shell UI (`con
 
 There is no build/lint/test tooling (no package.json, no CI). The only "commands" are the installer and manual verification on a running Hyprland+Quickshell session:
 
-- `./boot.sh` — top-level entry point. Detects distro, backs up `~/.config`, clones/updates the repo into `~/.local/src/Synapse`, then runs `install/install.sh`.
+- `./boot.sh` — top-level entry point. Detects distro, resolves the repo location, backs up every deploy destination, then runs `install/install.sh`.
 - `install/install.sh` — Arch-specific installer, sources `install/steps/01..06-*.sh` in order (AUR helper → pacman/AUR packages → services → Hyprland plugins → configs → shell config).
-- `install/validate.sh` — post-install sanity check; verifies required/optional CLI tools are on `PATH` (quickshell, hyprland, matugen, awww, etc.).
-- Testing a QML change: **`config/quickshell` is not copied anywhere** — Hyprland launches quickshell against a fixed, hardcoded path, `~/.local/src/Synapse/config/quickshell` (`quickshell -c ~/.local/src/Synapse/config/quickshell`, see `config/hypr/modules/autostart.lua`). That path is also where `boot.sh` clones/pulls the repo (`REPO_DIR="$HOME/.local/src/Synapse"`) — it is **not** "wherever you happen to have this repo checked out." If your working checkout lives elsewhere (e.g. `~/Projects/Synapse`, as it does here), quickshell will keep reading the old copy at `~/.local/src/Synapse` and won't see your edits at all, until that clone is brought up to date (symlink `~/.local/src/Synapse` to your working checkout, or push and re-run `boot.sh`/`git pull` inside `~/.local/src/Synapse`). Only once your working copy *is* the thing quickshell reads from does editing files under `config/quickshell/` and restarting quickshell (`pkill quickshell` then re-trigger autostart, or `hyprctl dispatch exit` to relaunch Hyprland) become enough to see the change with no separate install step.
-- Testing a Hyprland Lua change: `config/hypr/` files **are** copied to `~/.config/hypr/` by install step 5, so changes there require re-running that step (or manually `cp`'ing) before Hyprland will pick them up, since Hyprland reads from `~/.config/hypr`, not the repo.
+- `install/link.sh` — re-applies the deploy manifest and nothing else (no packages, no sudo). `--dry-run` to preview. Run it after adding a **new** config file; existing files need nothing.
+- `install/validate.sh` — post-install sanity check; verifies CLI tools are on `PATH` and that every manifest destination is still a symlink into the repo.
+- **Deployment is by symlink: your checkout is the live config.** `~/.config/hypr`, `~/.config/quickshell`, `~/.config/nvim` etc. are symlinks into this repo (see `install/lib/manifest.sh`), so editing a file here changes the running system with no install step.
+- Testing a QML change: edit under `config/quickshell/`, then restart quickshell (`pkill quickshell` and re-launch, or `hyprctl dispatch exit` to relaunch Hyprland). `~/.config/quickshell` symlinks here, which also makes Synapse quickshell's `default` config — so `quickshell` and `qs ipc call ...` work with no `-c`.
+- Testing a Hyprland Lua change: edit under `config/hypr/`, then `hyprctl reload`.
+- Adding a **new** file that should be deployed: add it to `install/lib/manifest.sh` (if it isn't covered by a recursive `dir/` entry), update `DEPLOY-MAP.md`, and run `install/link.sh`.
 - There's no automated way to exercise the QML UI outside a real Hyprland session; when asked to verify shell UI changes, say so explicitly rather than claiming to have tested them.
 
 ## Architecture
 
 ### Repo layout vs. deployed layout
 
-`DEPLOY-MAP.md` is the authoritative source→destination map — consult and update it whenever you add a new file that the installer should deploy. Two deployment models coexist:
+`install/lib/manifest.sh` is the machine-readable source→destination map and `DEPLOY-MAP.md` is its human-readable twin — **update both together** whenever you add a file the installer should deploy. Three tiers:
 
-1. **Copied at install time**: `config/hypr/`, `config/ghostty/`, `config/mpv/`, `config/fastfetch/`, `config/starship/`, `config/zsh/`, `config/nvim/` are copied into `~/.config/...` by `install/steps/05-config.sh` and `06-shell-config.sh`. Edits here require reinstalling/re-copying to take effect on a live system.
-2. **Run in place from the repo**: `config/quickshell/` is *not* copied — Quickshell is launched with `-c` pointing straight at the fixed path `~/.local/src/Synapse/config/quickshell`, hardcoded in `autostart.lua` rather than derived from wherever this repo happens to be checked out (see the "Testing a QML change" note above for what that means during local development). Only the wallpaper assets under `config/quickshell/src/assets/wallpapers/` get seeded into `~/Pictures/Wallpapers/`.
+1. **`dir`** — whole directory symlinked into the repo (`config/quickshell/`, `config/mpv/`, `config/fastfetch/`, `config/starship/configs/`). Only for directories nothing writes into at runtime.
+2. **`file`** — per-file symlinks inside a *real* directory (`config/hypr/`, `config/nvim/`, `config/ghostty/`, `config/zsh/`). Used wherever runtime output has to sit alongside repo files: matugen writes `~/.config/hypr/modules/colors.lua` and `~/.config/nvim/colors/nvim-colors.json`, zsh writes its history. Keeping those directories real is why no runtime path had to move.
+3. **`copy`** — copied once, never overwritten, because another tool rewrites it in place (`sunsetr.toml`, `qt6ct.conf`, `nvim/lazy-lock.json`).
 
-Runtime state (JSON files written by the running shell, not part of the repo) lives under `~/.config/Synapse/src/user_data/` — wallpaper config, clipboard pins, kanban tasks, keybind overrides, colors, etc. See the "Summary tree" at the bottom of `DEPLOY-MAP.md`.
+The repo location is resolved once by `boot.sh` and written to `~/.config/Synapse/repo-path`. Read that file rather than hardcoding a path — and note it **cannot** be derived from `Quickshell.shellDir`, because `~/.config/quickshell` is a symlink and quickshell reports the link path, not the checkout behind it.
+
+Runtime state lives under `~/.config/Synapse/` (never symlinked): `src/user_data/*.json` plus the generated `SynapseKeybinds.lua` and the user's own `monitors.lua`. See the "Summary tree" at the bottom of `DEPLOY-MAP.md`.
 
 ### Hyprland config (`config/hypr/`)
 
@@ -47,13 +53,18 @@ Global singletons are declared in `src/qmldir` (`singleton Name path`) and are t
 
 ### Theming pipeline (Material You via matugen)
 
-Wallpaper change → `WallpaperService.qml` runs `awww img` to set the wallpaper, symlinks `curr_wall`, then invokes `matugen` using `src/config/matugen.toml`. Matugen renders three templates:
+Wallpaper change → `WallpaperService.qml` runs `awww img` to set the wallpaper, symlinks `curr_wall`, then invokes `matugen` using `src/config/matugen.toml`. Matugen renders seven templates:
 
-- `synapse` template → `~/.config/Synapse/src/user_data/colors.json` (consumed by `ColorLoader.qml`/`Theme.qml` at runtime, hot-reloaded via `FileView.watchChanges`)
-- `hyprland_colors` template → `~/.config/hypr/colors.conf`
-- `hyprland_colors_lua` template → `~/.config/hypr/modules/colors.lua`
+- `synapse` → `~/.config/Synapse/src/user_data/colors.json` (consumed by `ColorLoader.qml`/`Theme.qml` at runtime, hot-reloaded via `FileView.watchChanges`)
+- `hyprland_colors_lua` → `~/.config/hypr/modules/colors.lua` (`dofile()`'d by `modules/appearance.lua`)
+- `hyprland_colors` → `~/.config/hypr/colors.conf` (sourced by `hyprlock.conf`)
+- `neovim` → `~/.config/nvim/colors/nvim-colors.json`, then `pkill -SIGUSR1 nvim`
+- `ghostty` → `~/.config/ghostty/ghostty.colors.conf`
+- `vscode-raw` / `vscode-json` → `~/.cache/matugen/vscode-colors*`
 
-So a full color scheme update touches both the running QML shell and the Hyprland config simultaneously, without a reinstall.
+So a full color scheme update touches the running QML shell, the Hyprland config, the lock screen, the terminal and the editor simultaneously, without a reinstall.
+
+**A template whose `input_path` is missing makes matugen abort the entire run** — every output is skipped, not just that one. This silently killed all theming between commits `b081c56` and the fix. If colors stop updating, first check that every `input_path` in `matugen.toml` exists under `src/config/templates/`.
 
 ### Keybinds (Synapse's own shell shortcuts, e.g. `SUPER+D` for the dashboard)
 

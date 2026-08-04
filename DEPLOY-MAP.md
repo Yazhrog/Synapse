@@ -1,193 +1,237 @@
 # Synapse — Deployment Map
 
 All filesystem locations touched by the installer or at runtime.
-`$REPO` = `~/.local/src/Synapse` — see "Repository clone" below for why this is fixed, not wherever you happen to `git clone` this yourself.
+
+`$REPO` = wherever your Synapse checkout lives. The machine-readable version of
+everything below is [`install/lib/manifest.sh`](install/lib/manifest.sh) —
+**update both together.**
 
 ---
 
-## Repository clone
+## Where the repo lives
 
-`boot.sh` is the entry point and always clones/pulls into a fixed path, `~/.local/src/Synapse` (`REPO_PARENT="$HOME/.local/src"`, `REPO_DIR="$REPO_PARENT/Synapse"`):
+Synapse deploys by **symlinking `~/.config` into the repo**, so the checkout is
+the live source: editing a file there changes the running desktop, and
+`git pull` ships updates without a reinstall.
 
-- If `$REPO_DIR/.git` already exists, it runs `git -C "$REPO_DIR" pull origin main` (updates in place, always tracking `main`).
-- Otherwise it runs `git clone -b main <repo-url> "$REPO_DIR"`.
+`boot.sh` picks the repo location once:
 
-`$REPO_DIR` is then passed down to `install/install.sh` and every step under `install/steps/`, so all install-time deployments below read from that path — regardless of where you originally ran `boot.sh` from or where any other working checkout of this repo lives on disk. `config/hypr/modules/autostart.lua` also hardcodes this same path when it launches quickshell (see "Run in place from the repo" below), so a local checkout elsewhere (e.g. a dev clone under `~/Projects/`) is invisible to the running shell until it's synced into `~/.local/src/Synapse`.
+- Run from a clone (`./boot.sh` inside a checkout) → **that checkout** becomes
+  the live source. It is never pulled on your behalf.
+- Run via `curl | bash` → clones/pulls `~/.local/src/Synapse`.
 
----
+The resolved path is written to **`~/.config/Synapse/repo-path`**, the single
+source of truth. `install/link.sh` and `UpdateService.qml` both read it.
 
-## Install-time deployments
-
-### `install/steps/05-config.sh`  (displayed as step 7/8, "Hyprland Config")
-
-| Source (repo)                              | Destination                                  | Overwrite? |
-|--------------------------------------------|----------------------------------------------|------------|
-| `config/hypr/hyprland.lua`                 | `~/.config/hypr/hyprland.lua`                | Yes        |
-| `config/hypr/modules/`                     | `~/.config/hypr/modules/`                    | Yes        |
-| `config/hypr/scripts/`                     | `~/.config/hypr/scripts/`                    | Yes        |
-| `config/hypr/hypridle.conf`                | `~/.config/hypr/hypridle.conf`               | Yes        |
-| `config/hypr/hyprlock.conf`                | `~/.config/hypr/hyprlock.conf`               | No (`-n`)  |
-| `config/ghostty/config` *(if present)*     | `~/.config/ghostty/config`                   | No (`-n`)  |
-| `config/mpv/` *(if present)*               | `~/.config/mpv/`                             | No (`-n`)  |
-| `config/fastfetch/` *(if present)*         | `~/.config/fastfetch/`                       | No (`-n`)  |
-| `config/starship/`                             | `~/.config/starship/`                        | No (`-n`)  |
-| *(symlink created)*                            | `~/.config/starship/starship.toml` → `configs/config-default.toml` | No |
-| `config/zsh/.zshenv`                       | `~/.zshenv`                                  | No (`-n`)  |
-| `config/zsh/`                              | `~/.config/zsh/`                             | No (`-n`)  |
-| `config/nvim/` *(if present)*               | `~/.config/nvim/`                            | No (`-n`)  |
-| `config/sunsetr/sunsetr.toml` *(if present)*   | `~/.config/sunsetr/sunsetr.toml`             | No (`-n`)  |
-| `config/qt6ct/qt6ct.conf` *(if present)*       | `~/.config/qt6ct/qt6ct.conf`                 | No (`-n`)  |
-
-Directories created unconditionally:
-- `~/.config/hypr/modules/`
-- `~/.config/hypr/scripts/`
-- `~/Pictures/Screenshots/`
+> It cannot be derived from `Quickshell.shellDir`: `~/.config/quickshell` is a
+> symlink and quickshell reports the link path, not the checkout behind it.
 
 ---
 
-### `install/steps/06-shell-config.sh`  (displayed as step 8/8, "Synapse Config")
+## Deployment tiers
 
-| Source (repo)                                       | Destination                                        | Overwrite? |
-|-----------------------------------------------------|----------------------------------------------------|------------|
-| `config/quickshell/src/assets/wallpapers/`          | `~/Pictures/Wallpapers/`                           | No (`-n`)  |
+| Tier | Meaning | Why |
+|------|---------|-----|
+| **dir** | Whole directory is a symlink into `$REPO` | Directory is 100% repo-owned; nothing writes into it at runtime |
+| **file** | Per-file symlinks inside a **real** directory | Runtime-generated files must sit alongside repo files |
+| **copy** | Copied once, never overwritten | You or another tool own the file after install |
 
-Directories created unconditionally:
-- `~/.config/Synapse/src/user_data/`
-- `~/.config/Synapse/src/user_data/wallpapers/`
-- `~/.config/hypr/shaders/`
-- `~/.config/matugen/templates/`
-- `~/Pictures/Wallpapers/`
+The **file** tier is why no runtime output had to move: `~/.config/hypr`,
+`~/.config/nvim`, `~/.config/ghostty` and `~/.config/zsh` stay real directories,
+so matugen output, lazy state and zsh history keep landing exactly where they did.
 
-Seed files written (overwritten by runtime on first wallpaper apply):
-- `~/.config/Synapse/src/user_data/config_Provider.json` — `{"configProvider": "lua"}`
-- `~/.config/Synapse/src/user_data/keybinds.json` — `{}`
-- `~/.config/Synapse/src/user_data/colors.json` — empty
-- `~/.config/hypr/colors.conf` — empty
+### Manifest
 
-After seeding, this step also runs a live `hyprctl binds -j` conflict check against Synapse's default keybind set. If any default collides with an existing Hyprland bind, that entry is immediately rewritten into `keybinds.json` as unbound (`{"mods": "", "key": ""}`) instead of staying `{}` — so a fresh install's `keybinds.json` is not always the empty-object seed shown above.
+| Source (`$REPO/`) | Destination | Tier |
+|---|---|---|
+| `config/quickshell/` | `~/.config/quickshell` | dir |
+| `config/mpv/` | `~/.config/mpv` | dir |
+| `config/fastfetch/` | `~/.config/fastfetch` | dir |
+| `config/starship/configs/` | `~/.config/starship/configs` | dir |
+| `config/hypr/hyprland.lua` | `~/.config/hypr/hyprland.lua` | file |
+| `config/hypr/hypridle.conf` | `~/.config/hypr/hypridle.conf` | file |
+| `config/hypr/hyprlock.conf` | `~/.config/hypr/hyprlock.conf` | file |
+| `config/hypr/modules/` *(recursive)* | `~/.config/hypr/modules/` | file |
+| `config/hypr/scripts/` *(recursive)* | `~/.config/hypr/scripts/` | file |
+| `config/ghostty/config` | `~/.config/ghostty/config` | file |
+| `config/zsh/.zshenv` | `~/.config/zsh/.zshenv` **and** `~/.zshenv` | file |
+| `config/zsh/.zshrc`, `aliasrc`, `functionrc` | `~/.config/zsh/` | file |
+| `config/nvim/` *(recursive, minus `lazy-lock.json`)* | `~/.config/nvim/` | file |
+| `config/nvim/lazy-lock.json` | `~/.config/nvim/lazy-lock.json` | copy — nvim rewrites on `:Lazy sync` |
+| `config/sunsetr/sunsetr.toml` | `~/.config/sunsetr/sunsetr.toml` | copy — `sunsetr geo` rewrites it |
+| `config/qt6ct/qt6ct.conf` | `~/.config/qt6ct/qt6ct.conf` | copy — the qt6ct GUI rewrites it |
+| `config/quickshell/src/assets/wallpapers/` | `~/Pictures/Wallpapers/` | copy — user media |
+| *(generated)* | `~/.config/starship/starship.toml` → `configs/config-default.toml` | copy — selects your theme |
+
+Directories created but never linked: `~/Pictures/Screenshots`,
+`~/Pictures/Wallpapers`, `~/.config/hypr/shaders`,
+`~/.config/Synapse/src/user_data/wallpapers`.
+
+### `~/.config/quickshell` is the `default` config
+
+Because `~/.config/quickshell/shell.qml` exists (through the symlink),
+quickshell registers Synapse as its **`default`** configuration. That is what
+lets `autostart.lua` run plain `quickshell`, and the generated keybinds call
+`qs ipc call <action> toggle` — both with no `-c` path.
+
+---
+
+## Install steps
+
+| Step | File | What it does |
+|---|---|---|
+| 1 | `01-aur-helper.sh` | Detects/bootstraps `yay` or `paru` |
+| 2–3 | `02-packages.sh` | pacman + AUR packages |
+| 4 | `03-services.sh` | Enables NetworkManager, bluetooth, upower, pipewire |
+| 5 | `04-plugins.sh` | `hyprpm` scrolloverview; clones + builds `hyprselect` into `~/.config/hypr/plugin/` |
+| 7 | `05-config.sh` | Runs the manifest through `install/lib/link.sh`; sets zsh as login shell |
+| 8 | `06-shell-config.sh` | Seeds `~/.config/Synapse`; live keybind conflict check |
+
+`install/link.sh` re-applies the manifest on its own — no packages, no sudo.
+Run it after a `git pull` that **adds** a file; existing links need nothing.
+`--dry-run` shows what it would do.
+
+Anything it displaces is moved to `~/.config.backup-<timestamp>-Synapse/`,
+and files that differed from the repo are listed explicitly at the end.
+`boot.sh` additionally snapshots every manifest destination into that same
+backup under `pre-install/`.
+
+### Seed files (`06-shell-config.sh`) — all seed-if-missing
+
+`~/.config/Synapse/src/user_data/config_Provider.json`, `keybinds.json`,
+`colors.json`, `~/.config/hypr/colors.conf`, and `~/.config/Synapse/monitors.lua`.
+
+The live `hyprctl binds -j` conflict check **merges** unbound entries into
+`keybinds.json`; it never replaces the file, and it skips actions you have
+already remapped.
 
 ---
 
 ## Runtime paths (written by Quickshell services)
 
-These are created/updated while Synapse is running, not during install.
-
-### Wallpaper & theming  (`WallpaperService.qml`)
+### Wallpaper & theming (`WallpaperService.qml`)
 
 | Path | What it is |
-|------|------------|
-| `~/.config/Synapse/src/user_data/wallpapers/curr_wall` | Symlink → current wallpaper file |
-| `~/.config/Synapse/src/user_data/wallpapers/curr_wall_static.jpg` | Static JPEG copy of current wall (for hyprlock background) |
-| `~/.config/Synapse/src/user_data/wallpaper.json` | Persisted wallpaper path + color scheme |
+|---|---|
+| `~/.config/Synapse/src/user_data/wallpapers/curr_wall` | Symlink → current wallpaper |
+| `~/.config/Synapse/src/user_data/wallpapers/curr_wall_static.jpg` | Static JPEG for the hyprlock background |
+| `~/.config/Synapse/src/user_data/wallpaper.json` | Wallpaper path + color scheme |
 
-Matugen is invoked at wallpaper-change time using `$SHELL_DIR/src/config/matugen.toml`.
-It writes three outputs (defined in `matugen.toml`):
+Matugen runs on every wallpaper change using
+`$REPO/config/quickshell/src/config/matugen.toml`, which defines **seven**
+outputs:
 
-| Matugen output | Path |
-|----------------|------|
-| `synapse` template | `~/.config/Synapse/src/user_data/colors.json` |
-| `hyprland_colors` template | `~/.config/hypr/colors.conf` |
-| `hyprland_colors_lua` template | `~/.config/hypr/modules/colors.lua` |
+| Template | Output |
+|---|---|
+| `synapse` | `~/.config/Synapse/src/user_data/colors.json` |
+| `hyprland_colors_lua` | `~/.config/hypr/modules/colors.lua` |
+| `hyprland_colors` | `~/.config/hypr/colors.conf` |
+| `neovim` | `~/.config/nvim/colors/nvim-colors.json` (+ `pkill -SIGUSR1 nvim`) |
+| `ghostty` | `~/.config/ghostty/ghostty.colors.conf` |
+| `vscode-raw` | `~/.cache/matugen/vscode-colors` |
+| `vscode-json` | `~/.cache/matugen/vscode-colors.json` |
 
-`colors.lua` is `dofile()`'d by `~/.config/hypr/modules/appearance.lua` on Hyprland startup/reload — it's the only one of the three matugen outputs the Lua Hyprland config actually reads (`colors.conf` is sourced by `hyprlock.conf` instead).
+`colors.lua` is `dofile()`'d by `modules/appearance.lua`; `colors.conf` is
+sourced by `hyprlock.conf`.
 
-> `$SHELL_DIR` = the directory quickshell was launched from — a fixed path hardcoded in `config/hypr/modules/autostart.lua`, `~/.local/src/Synapse/config/quickshell` (the same clone `boot.sh` manages), not `~/.config/quickshell`.
+> A template whose `input_path` is missing makes matugen abort the **entire**
+> run — no outputs at all. If theming stops updating, check that every
+> `input_path` in `matugen.toml` exists under `templates/`.
 
----
+### User data / persistent state
 
-### User data / persistent state  (various services)
+| Path | Service |
+|---|---|
+| `.../user_data/wallpaper.json` | WallpaperService |
+| `.../user_data/clipboard_pins.json` | ClipboardService |
+| `.../user_data/tasks.json` | KanbanBoard |
+| `.../user_data/hotspot.json` | QuickSettings / HotspotTab |
+| `.../user_data/update_prefs.json` | UpdateService |
+| `.../user_data/screenrec.json` | ScreenRecService |
+| `.../user_data/keybinds.json` | KeybindService |
+| `.../user_data/config_Provider.json` | Shell bootstrap |
+| `~/.config/Synapse/monitors.lua` | You — `dofile()`'d by `modules/monitors.lua` |
 
-| Path | Service | What it stores |
-|------|---------|----------------|
-| `~/.config/Synapse/src/user_data/wallpaper.json` | WallpaperService | Current wallpaper path + scheme |
-| `~/.config/Synapse/src/user_data/clipboard_pins.json` | ClipboardService | Pinned clipboard entries |
-| `~/.config/Synapse/src/user_data/tasks.json` | KanbanBoard | Kanban task cards |
-| `~/.config/Synapse/src/user_data/hotspot.json` | QuickSettings | Hotspot config |
-| `~/.config/Synapse/src/user_data/update_prefs.json` | UpdateService | Auto-update preferences |
-| `~/.config/Synapse/src/user_data/screenrec.json` | ScreenRecService | Screen recording settings |
-| `~/.config/Synapse/src/user_data/keybinds.json` | KeybindService | Custom keybind overrides |
-| `~/.config/Synapse/src/user_data/config_Provider.json` | Shell bootstrap | Config provider selection (`lua`) |
-
----
-
-### Keybinds  (`KeybindService.qml`)
+### Keybinds (`KeybindService.qml`)
 
 | Path | What it is |
-|------|------------|
-| `~/.config/Synapse/SynapseKeybinds.lua` | Generated Hyprland binds (all 18 shell actions, defaults ⊕ `keybinds.json` overrides). Rewritten on every save. |
-| `~/.config/Synapse/SynapseKeybinds.conf` | Same, `.conf` syntax. Written for parity but not sourced by anything the installer ships — `.conf`-provider users must add `source = ~/.config/Synapse/SynapseKeybinds.conf` to their own `hyprland.conf` manually. |
+|---|---|
+| `~/.config/Synapse/SynapseKeybinds.lua` | Generated binds (defaults ⊕ `keybinds.json`). Rewritten on every shell start and save. |
+| `~/.config/Synapse/SynapseKeybinds.conf` | Same in `.conf` syntax; parity only, sourced by nothing. |
 
-`SynapseKeybinds.lua` is loaded unconditionally by `~/.config/hypr/modules/synapse-keybinds.lua` (deployed by step 05 with the rest of `config/hypr/modules/`, `require()`'d from `hyprland.lua`) — via `pcall(dofile, ...)` since the generated file doesn't exist until Quickshell has run at least once. Nothing auto-edits `hyprland.lua`/`hyprland.conf` at runtime; the `require()` line ships as part of the repo like any other module.
+`SynapseKeybinds.lua` is loaded by `modules/synapse-keybinds.lua` via
+`pcall(dofile, ...)`. Defaults live in
+`config/quickshell/src/config/keybind-defaults.json`, shared with the
+installer's conflict check — one canonical copy.
 
-The default combos/labels/groups for those 18 actions live in `config/quickshell/src/config/keybind-defaults.json` — read directly by `KeybindService.qml` and by the install-time conflict check in `06-shell-config.sh` (see above), so there's one canonical copy instead of two hand-maintained ones.
+### Other runtime writes
 
----
+| Path | Written by |
+|---|---|
+| `~/.config/hypr/plugin/hyprselect/` | `04-plugins.sh` — git clone + `hyprselect.so` build |
+| `~/.config/systemd/user/cliphist-wipe.service` | `ClipboardService.qml` |
+| `~/Videos/screen_recordings/` | `ScreenRecService.qml` |
+| `~/.config/zsh/.zsh_history`, `.zcompdump` | zsh (both gitignored) |
+| `~/.cache/matugen/vscode-colors*` | matugen |
 
-### Shader search paths  (`QuickSettings.qml`)
+### Shader search paths (`QuickSettings.qml`)
 
-Synapse looks for shaders in these locations (in order):
-
-1. `~/.config/hypr/shaders/`
+1. `~/.config/hypr/shaders/` — yours
 2. `~/.local/share/hypr/shaders/`
 3. `/usr/share/hyprshade/shaders/`
-4. `~/.config/quickshell/src/config/shaders/`
-
----
-
-### Hyprland lock screen  (`hypridle.conf`)
-
-| Invocation | Config used |
-|------------|-------------|
-| `hyprlock` (via `SUPER+L` or hypridle `lock_cmd`) | `~/.config/hypr/hyprlock.conf` (default) |
+4. `~/.config/quickshell/src/config/shaders/` — the ones Synapse ships
 
 ---
 
 ## Summary tree
 
+Symlinks into `$REPO` are marked `→ repo`.
+
 ```
 ~/
 ├── .config/
+│   ├── quickshell/                  → repo  (the whole shell; "default" config)
 │   ├── hypr/
-│   │   ├── hyprland.lua
-│   │   ├── hypridle.conf
-│   │   ├── hyprlock.conf
-│   │   ├── modules/
+│   │   ├── hyprland.lua             → repo
+│   │   ├── hypridle.conf            → repo
+│   │   ├── hyprlock.conf            → repo
+│   │   ├── modules/*.lua            → repo
 │   │   │   └── colors.lua           ← matugen output (runtime)
-│   │   ├── scripts/
-│   │   ├── shaders/
+│   │   ├── scripts/*                → repo
+│   │   ├── plugin/hyprselect/       ← cloned + built by the installer
+│   │   ├── shaders/                 ← your shaders
 │   │   └── colors.conf              ← matugen output (runtime)
-│   ├── Synapse/src/user_data/
-│   │   ├── config_Provider.json
-│   │   ├── keybinds.json
-│   │   ├── wallpaper.json
-│   │   ├── clipboard_pins.json
-│   │   ├── tasks.json
-│   │   ├── hotspot.json
-│   │   ├── update_prefs.json
-│   │   ├── screenrec.json
-│   │   ├── colors.json              ← matugen output (runtime)
-│   │   └── wallpapers/
-│   │       ├── curr_wall            ← symlink (runtime)
-│   │       └── curr_wall_static.jpg ← jpeg copy (runtime)
-│   ├── matugen/templates/
-│   ├── ghostty/config
-│   ├── mpv/
-│   ├── fastfetch/
-│   ├── starship/
-│   │   ├── configs/
-│   │   │   ├── config-default.toml
-│   │   │   ├── catpuccin.toml
-│   │   │   ├── prezto.toml
-│   │   │   └── tokyo-night.toml
-│   │   └── starship.toml            ← symlink → configs/config-default.toml
-│   ├── zsh/
+│   ├── Synapse/                     ← never linked; Synapse owns this at runtime
+│   │   ├── repo-path                ← where the repo lives
+│   │   ├── monitors.lua             ← your display layout
+│   │   ├── SynapseKeybinds.lua      ← generated
+│   │   ├── SynapseKeybinds.conf     ← generated (parity)
+│   │   └── src/user_data/
+│   │       ├── *.json               ← runtime state (see table above)
+│   │       └── wallpapers/
+│   │           ├── curr_wall            ← symlink (runtime)
+│   │           └── curr_wall_static.jpg ← jpeg copy (runtime)
+│   ├── ghostty/
+│   │   ├── config                   → repo
+│   │   └── ghostty.colors.conf      ← matugen output (runtime)
 │   ├── nvim/
-│   ├── sunsetr/
-│   │   └── sunsetr.toml
-│   └── qt6ct/
-│       └── qt6ct.conf
-├── .zshenv
+│   │   ├── **/*.lua                 → repo
+│   │   ├── lazy-lock.json           ← copied once; nvim owns it
+│   │   └── colors/nvim-colors.json  ← matugen output (runtime)
+│   ├── zsh/
+│   │   ├── .zshrc, aliasrc, ...     → repo
+│   │   └── .zsh_history, .zcompdump ← runtime (gitignored)
+│   ├── mpv/                         → repo
+│   ├── fastfetch/                   → repo
+│   ├── starship/
+│   │   ├── configs/                 → repo
+│   │   └── starship.toml            ← symlink → configs/config-default.toml
+│   ├── sunsetr/sunsetr.toml         ← copied once; `sunsetr geo` owns it
+│   ├── qt6ct/qt6ct.conf             ← copied once; the qt6ct GUI owns it
+│   └── systemd/user/cliphist-wipe.service  ← written by ClipboardService
+├── .zshenv                          → repo
+├── .cache/matugen/                  ← matugen (vscode)
 └── Pictures/
-    ├── Wallpapers/
+    ├── Wallpapers/                  ← seeded, then yours
     └── Screenshots/
 ```

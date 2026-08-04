@@ -51,21 +51,39 @@ curl -fsSL https://raw.githubusercontent.com/Yazhrog/Synapse/refs/heads/main/boo
 ```bash
 git clone https://github.com/Yazhrog/Synapse.git
 cd Synapse
-chmod +x install.sh
-./install.sh
+./boot.sh
 ```
+
+Run this way, **the clone you just made becomes your live config** — keep it
+wherever you like it. The one-line installer instead clones to
+`~/.local/src/Synapse`.
 
 The installer automatically:
 
 - ✓ Detects your Linux distribution
-- ✓ Detects your Window Manager and Hyprland Config
-- ✓ Backs up your entire `~/.config`
 - ✓ Installs all required dependencies
-- ✓ Clones the repository to `~/.local/src/Synapse`
-- ✓ Updates your Hyprland config
-- ✓ Creates configuration directories
+- ✓ Backs up every config it is about to touch, to `~/.config.backup-<timestamp>-Synapse/`
+- ✓ Symlinks its configs into `~/.config`, so the repo stays the single source
+- ✓ Creates configuration directories and seeds your user data
+- ✓ Sets zsh as your login shell
 
 **After installation, restart Hyprland for changes to take effect.**
+
+### Updating
+
+Because `~/.config` symlinks into your checkout, a pull *is* the update:
+
+```bash
+git -C <your-checkout> pull      # or use the in-shell update popup
+./install/link.sh                # only needed when an update adds a new file
+```
+
+Synapse also checks for updates 30s after login and offers to pull for you.
+Toggle that in **Dashboard → Config → Misc**.
+
+> Multi-monitor setups: put your layout in `~/.config/Synapse/monitors.lua`,
+> not in `config/hypr/modules/monitors.lua` — the latter is a symlink into the
+> repo, and editing it will conflict on your next pull.
 
 ---
 
