@@ -14,7 +14,7 @@ hl.bind("SUPER + B",      hl.dsp.exec_cmd("zen-browser"))
 -- ── Window management ─────────────────────────────────────────────────────────
 hl.bind("SUPER + W",          hl.dsp.window.close())
 hl.bind("SUPER + F",          hl.dsp.window.fullscreen({mode = "fullscreen"}))
-hl.bind("SUPER + M",          hl.dsp.window.fullscreen({ mode = "maximize" }))
+hl.bind("SUPER + M",          hl.dsp.window.fullscreen({ mode = "maximized" }))
 hl.bind("SUPER + T",          hl.dsp.window.float({ action = "toggle" }))
 
 -- ── Focus navigation ──────────────────────────────────────────────────────────
