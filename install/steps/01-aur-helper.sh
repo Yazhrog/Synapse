@@ -26,23 +26,30 @@ else
 
         # Warm up sudo BEFORE every privileged block, in the open,
         # so the password prompt is never hidden behind spin().
+        # Each step fails loudly with its own reason. Without these the ERR trap
+        # in boot.sh reports only "aborted unexpectedly (line N)", which tells a
+        # user nothing about which part of the AUR bootstrap actually broke.
         sudo -v || die "sudo authentication failed."
         spin "Installing git + base-devel..." \
-            sudo pacman -S --needed --noconfirm git base-devel
+            sudo pacman -S --needed --noconfirm git base-devel \
+            || die "Could not install git + base-devel. Check your network and pacman mirrors."
 
         local tmp; tmp=$(mktemp -d)
         spin "Cloning $name from AUR..." \
-            git clone "https://aur.archlinux.org/${name}.git" "$tmp/$name"
+            git clone "https://aur.archlinux.org/${name}.git" "$tmp/$name" \
+            || die "Could not clone $name from the AUR. Check your network."
 
         # No sudo needed for the build itself (-s = syncdeps, -c = clean up)
         spin "Building $name..." \
-            makepkg -D "$tmp/$name" -sc --noconfirm
+            makepkg -D "$tmp/$name" -sc --noconfirm \
+            || die "Building $name failed. Try manually: cd $tmp/$name && makepkg -si"
 
         # Refresh sudo again before the install step — a long build can
         # outlast the cached credential, so don't assume it's still valid.
         sudo -v || die "sudo authentication failed."
         spin "Installing $name..." \
-            sudo pacman -U --noconfirm "$tmp/$name"/*.pkg.tar.zst
+            sudo pacman -U --noconfirm "$tmp/$name"/*.pkg.tar.zst \
+            || die "Installing the built $name package failed."
 
         rm -rf "$tmp"
         log_ok "$name installed."
