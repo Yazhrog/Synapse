@@ -78,7 +78,7 @@ Item {
             Item {
                 anchors.fill: parent
                 visible: root._page === "misc"
-                Text { anchors.centerIn: parent; text: "Misc Coming Soon!"; font.pixelSize: 13; color: Qt.rgba(1,1,1,0.12) }
+                MiscPage { anchors.fill: parent }
             }
         }
     }
