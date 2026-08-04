@@ -1,14 +1,20 @@
 -- Monitor configuration
--- Run `hyprctl monitors` to get the names of your connected displays,
--- then update the output names and modes below.
+--
+-- This file is a symlink into the Synapse repo — editing it here puts your
+-- personal display layout in the repo's history and makes `git pull` conflict.
+-- Put your monitor setup in this file instead:
+--
+--     ~/.config/Synapse/monitors.lua
+--
+-- It is loaded last, so anything you declare there wins over the default
+-- below. The installer seeds it with commented examples to start from.
 --
 -- Format: hl.monitor({ output = "NAME", mode = "WxH@Hz", position = "XxY", scale = 1 })
--- Position is pixel offset from top-left. Set scale = 1 for 1:1, 2 for HiDPI.
---
--- Examples:
---   hl.monitor({ output = "DP-1",     mode = "2560x1440@144.0", position = "0x0",    scale = 1 })
---   hl.monitor({ output = "HDMI-A-1", mode = "1920x1080@60.0",  position = "2560x0", scale = 1 })
---   hl.monitor({ output = "eDP-1",    mode = "1920x1080@60.0",  position = "0x0",    scale = 1 })
+-- Run `hyprctl monitors` to see the names of your connected displays.
 
--- TODO: Replace these with your actual monitor names and resolutions
-hl.monitor({ output = "", mode = "1920x1080@60.0", position = "0x0",    scale = 1 })
+-- Default: every connected display at its preferred mode, laid out
+-- left-to-right automatically. Correct for a single monitor and for first boot.
+hl.monitor({ output = "", mode = "preferred", position = "auto", scale = 1 })
+
+-- Your overrides (see the note above).
+pcall(dofile, os.getenv("HOME") .. "/.config/Synapse/monitors.lua")
