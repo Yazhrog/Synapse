@@ -2,7 +2,7 @@ hl.config({
     input = {
         kb_layout          = "gb",
         kb_variant         = "",
-        kb_options         = "",
+        kb_options         = "compose:ralt",
         numlock_by_default = true,
         repeat_rate        = 25,
         repeat_delay       = 600,
@@ -15,7 +15,7 @@ hl.config({
         mouse_refocus      = true,
 
         touchpad           = {
-            natural_scroll          = false,
+            natural_scroll          = true,
             clickfinger_behavior    = false,
             tap_and_drag            = true,
             disable_while_typing    = true,
