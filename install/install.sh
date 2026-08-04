@@ -3,7 +3,7 @@
 #|--/ /-| Synapse             |--/ /-|#
 #|-/ /--| Arch Installer      |-/ /--|#
 #|/ /---+---------------------+/ /---|#
-#  Invoked by boot.sh:  $1=HYPRLAND_CONF  $2=BACKUP_DIR  $3=REPO_DIR
+#  Invoked by boot.sh:  $1=BACKUP_DIR  $2=REPO_DIR
 
 set -eo pipefail
 
@@ -11,9 +11,8 @@ set -eo pipefail
 # │ Arguments                                                             │
 # ╰───────────────────────────────────────────────────────────────────────╯
 
-HYPRLAND_CONF="${1:?Missing arg: HYPRLAND_CONF path}"
-BACKUP_DIR="${2:?Missing arg: BACKUP_DIR}"
-REPO_DIR="${3:-$HOME/.local/src/Synapse}"
+BACKUP_DIR="${1:?Missing arg: BACKUP_DIR}"
+REPO_DIR="${2:-$HOME/.local/src/Synapse}"
 
 # ╭───────────────────────────────────────────────────────────────────────╮
 # │ Utilities                                                             │

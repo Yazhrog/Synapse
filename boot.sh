@@ -10,7 +10,20 @@ set -eo pipefail
 # │ Bootstrap                                                             │
 # ╰───────────────────────────────────────────────────────────────────────╯
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# Under `curl | bash` BASH_SOURCE[0] is empty, so this resolves to the working
+# directory rather than a checkout. That's fine — SYNAPSE_IS_CHECKOUT below is
+# what decides whether to trust it.
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]:-.}")" 2>/dev/null && pwd)" || SCRIPT_DIR="$PWD"
+
+# git is NOT part of Arch's `base`, and step 3 clones with it — on a fresh
+# install this is the difference between working and aborting on line one.
+if ! command -v git &>/dev/null; then
+    echo "  Installing git..."
+    sudo pacman -Sy --needed --noconfirm git || {
+        echo "  Could not install git — install it and re-run: sudo pacman -S git" >&2
+        exit 1
+    }
+fi
 
 # Best-effort gum install before utils.sh is sourced
 if ! command -v gum &>/dev/null; then
@@ -87,68 +100,105 @@ else
     log_ok "Hyprland session active"
 fi
 
-# Hyprland config
+# Hyprland config. Synapse deploys hyprland.lua itself, so a missing config is
+# a fresh install, not an error — only an existing hyprland.conf is worth a word.
 HYPR_DIR="$HOME/.config/hypr"
-HYPRLAND_CONF=""
-CONFIG_TYPE=""
 
-# Hyprland loads .lua first when both exist; mirror that priority here so
-# the installer always targets the file Hyprland is actually reading.
 if [[ -f "$HYPR_DIR/hyprland.lua" ]]; then
-    HYPRLAND_CONF="$HYPR_DIR/hyprland.lua"
-    CONFIG_TYPE="lua"
-    if [[ -f "$HYPR_DIR/hyprland.conf" ]]; then
-        log_ok "Hyprland config: hyprland.lua  ${DIM}(hyprland.conf also present but ignored by Hyprland)${NC}"
-    else
-        log_ok "Hyprland config: hyprland.lua"
-    fi
+    log_ok "Hyprland config: hyprland.lua"
 elif [[ -f "$HYPR_DIR/hyprland.conf" ]]; then
-    HYPRLAND_CONF="$HYPR_DIR/hyprland.conf"
-    CONFIG_TYPE="conf"
-    log_ok "Hyprland config: hyprland.conf"
-    log_warn "hyprland.conf support is deprecated as of 0.55 and will be removed in a future release."
-    log_info "Consider migrating to hyprland.lua — see https://wiki.hypr.land/Configuring/Start/"
+    log_warn "Found hyprland.conf — Synapse installs hyprland.lua, which Hyprland loads first."
+    log_info "Your hyprland.conf will be backed up and then ignored."
 else
-    die "No Hyprland config found in $HYPR_DIR. Set up Hyprland first."
+    log_info "No Hyprland config yet — Synapse will install one."
 fi
 
 # ╭───────────────────────────────────────────────────────────────────────╮
-# │ Step 2 — Backup                                                       │
+# │ Step 2 — Repository                                                   │
 # ╰───────────────────────────────────────────────────────────────────────╯
+# The repo checkout is the live source: ~/.config is symlinked into it, so
+# wherever this ends up is what the running desktop reads from.
 
-step 2 "Backup"
+step 2 "Repository"
+
+# Only adopt $SCRIPT_DIR when it is unmistakably a Synapse checkout. Under
+# `curl | bash` it is just the working directory, so checking for .git alone
+# would happily adopt whatever unrelated repo the user happened to be sitting in.
+if [[ -d "$SCRIPT_DIR/.git" \
+   && -f "$SCRIPT_DIR/boot.sh" \
+   && -f "$SCRIPT_DIR/install/lib/manifest.sh" \
+   && -f "$SCRIPT_DIR/config/quickshell/shell.qml" ]]; then
+    # Run from a clone the user manages themselves. Use it as-is and never pull
+    # on their behalf — they may be mid-work or on a branch.
+    REPO_DIR="$SCRIPT_DIR"
+    log_ok "Using this checkout: $REPO_DIR"
+    log_info "Synapse will run from here — 'git pull' updates your desktop directly."
+else
+    # curl | bash bootstrap: no local checkout to adopt.
+    REPO_PARENT="$HOME/.local/src"
+    REPO_DIR="$REPO_PARENT/Synapse"
+    mkdir -p "$REPO_PARENT"
+
+    if [[ -d "$REPO_DIR/.git" ]]; then
+        log_info "Existing clone found — updating..."
+        spin "Fetching latest changes..." \
+            git -C "$REPO_DIR" pull origin main
+        log_ok "Repository updated: $REPO_DIR"
+    else
+        # TODO: update this URL once the Synapse repo is published
+        spin "Cloning Synapse..." \
+            git clone -b main https://github.com/Yazhrog/Synapse.git "$REPO_DIR"
+        log_ok "Repository cloned: $REPO_DIR"
+    fi
+fi
+
+# The one place that records where the repo lives. autostart.lua, UpdateService
+# and install/link.sh all read this instead of hardcoding a path.
+mkdir -p "$HOME/.config/Synapse"
+printf '%s\n' "$REPO_DIR" > "$HOME/.config/Synapse/repo-path"
+
+# ╭───────────────────────────────────────────────────────────────────────╮
+# │ Step 3 — Backup                                                       │
+# ╰───────────────────────────────────────────────────────────────────────╯
+# Snapshot every directory the manifest is about to touch, before it changes.
+# The linker later files individually displaced files at the top level of the
+# same backup dir; these whole-directory copies live under pre-install/.
+
+step 3 "Backup"
 
 BACKUP_TS=$(date +%Y%m%d_%H%M%S)
 BACKUP_DIR="$HOME/.config.backup-${BACKUP_TS}-Synapse"
-mkdir -p "$BACKUP_DIR"
+mkdir -p "$BACKUP_DIR/pre-install"
 
-if [[ -d "$HYPR_DIR" ]]; then
-    spin "Backing up ~/.config/hypr..." cp -r "$HYPR_DIR" "$BACKUP_DIR/"
-    log_ok "Backed up: ~/.config/hypr → $BACKUP_DIR"
+# shellcheck source=install/lib/manifest.sh
+source "$REPO_DIR/install/lib/manifest.sh"
+
+# Every distinct destination directory named by the manifest, plus ~/.zshenv.
+_backup_targets=()
+for _entry in "${SYNAPSE_LINK_DIRS[@]}" "${SYNAPSE_LINK_FILES[@]}" "${SYNAPSE_COPY_ONCE[@]}"; do
+    _dest="${_entry#*|}"
+    case "$_dest" in
+        .config/*/*) _dest=".config/$(echo "$_dest" | cut -d/ -f2)" ;;  # collapse to ~/.config/<app>
+        .config/*)   _dest="${_dest%/}" ;;
+    esac
+    _backup_targets+=("$_dest")
+done
+_backup_targets+=(".zshenv")
+
+_backed_up=0
+while IFS= read -r _t; do
+    [[ -e "$HOME/$_t" ]] || continue
+    mkdir -p "$BACKUP_DIR/pre-install/$(dirname "$_t")"
+    # -a preserves symlinks as symlinks, so the snapshot records what was
+    # actually there rather than silently following links into the repo.
+    cp -a "$HOME/$_t" "$BACKUP_DIR/pre-install/$_t" 2>/dev/null || true
+    _backed_up=$((_backed_up + 1))
+done < <(printf '%s\n' "${_backup_targets[@]}" | sort -u)
+
+if [[ $_backed_up -gt 0 ]]; then
+    log_ok "Backed up $_backed_up path(s) → $BACKUP_DIR/pre-install"
 else
-    log_warn "~/.config/hypr not found — nothing to back up."
-fi
-
-# ╭───────────────────────────────────────────────────────────────────────╮
-# │ Step 3 — Repository                                                   │
-# ╰───────────────────────────────────────────────────────────────────────╯
-
-step 3 "Repository"
-
-REPO_PARENT="$HOME/.local/src"
-REPO_DIR="$REPO_PARENT/Synapse"
-mkdir -p "$REPO_PARENT"
-
-if [[ -d "$REPO_DIR/.git" ]]; then
-    log_info "Existing clone found — updating..."
-    spin "Fetching latest changes..." \
-        git -C "$REPO_DIR" pull origin main
-    log_ok "Repository updated: $REPO_DIR"
-else
-    # TODO: update this URL once the Synapse repo is published
-    spin "Cloning Synapse..." \
-        git clone -b main https://github.com/Yazhrog/Synapse.git "$REPO_DIR"
-    log_ok "Repository cloned: $REPO_DIR"
+    log_info "Nothing to back up — clean system."
 fi
 
 # ╭───────────────────────────────────────────────────────────────────────╮
@@ -162,7 +212,7 @@ DISTRO_INSTALLER="$REPO_DIR/install/install.sh"
 [[ -f "$DISTRO_INSTALLER" ]] || die "Installer not found: $DISTRO_INSTALLER"
 
 chmod +x "$DISTRO_INSTALLER"
-bash "$DISTRO_INSTALLER" "$HYPRLAND_CONF" "$BACKUP_DIR" "$REPO_DIR"
+bash "$DISTRO_INSTALLER" "$BACKUP_DIR" "$REPO_DIR"
 
 # ╭───────────────────────────────────────────────────────────────────────╮
 # │ Step 5 — Done                                                         │
@@ -179,13 +229,17 @@ log_info "hyprctl dispatch exit"
 log_info "Ctrl+Alt+Q               ${DIM}(if configured)${NC}"
 echo ""
 echo -e "  ${BOLD}First-run checklist:${NC}"
-log_info "Edit ~/.config/hypr/modules/monitors.lua — set your monitor names"
-log_info "Drop your ghostty config into ~/.config/ghostty/config if needed"
+log_info "Multi-monitor? Set your layout in ~/.config/Synapse/monitors.lua"
+log_info "${DIM}(a single display is auto-detected — nothing to do)${NC}"
+log_info "Set your night-light location:  sunsetr geo"
 echo ""
 echo -e "  ${BOLD}Paths:${NC}"
-log_info "Shell config:  ~/.config/Synapse"
-log_info "Hypr config:   ~/.config/hypr/"
-log_info "Source:        $REPO_DIR"
+log_info "Source repo:   $REPO_DIR   ${DIM}← ~/.config links here${NC}"
+log_info "Your settings: ~/.config/Synapse"
+echo ""
+echo -e "  ${BOLD}Updating:${NC}"
+log_info "git -C $REPO_DIR pull    ${DIM}(then reload — configs are symlinked)${NC}"
+log_info "$REPO_DIR/install/link.sh  ${DIM}(only if an update adds a new file)${NC}"
 echo ""
 
 exit 0
