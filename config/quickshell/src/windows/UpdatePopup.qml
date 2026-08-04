@@ -12,8 +12,8 @@ import "../"
 //   available     — commit list + Update / Skip / Disable buttons
 //   updating      — spinner, please wait text
 //   conflict      — pull failed due to local changes: Stash & Update / Cancel
-//   success       — Reload Shell / Dismiss, auto-dismiss after 10s
-//   error         — generic error text + Retry / Close
+//   success       — Reload Shell / Dismiss (stays up; reloading is the point)
+//   error         — classified error text + Retry / Close
 
 PanelWindow {
     id: root
@@ -45,12 +45,8 @@ PanelWindow {
         onTriggered: if (!UpdateService.showPopup) root.windowVisible = false
     }
 
-    // Auto-dismiss success state after 10s
-    Timer {
-        interval: 3000
-        running:  UpdateService.updateSuccess && root.windowVisible
-        onTriggered: UpdateService.dismiss()
-    }
+    // The success state is not auto-dismissed: it holds the Reload Shell button,
+    // which is the step that actually puts the update on screen.
 
     // ── Dim overlay ───────────────────────────────────────────────────────────
     Rectangle {
@@ -351,7 +347,9 @@ PanelWindow {
                 spacing: 12
 
                 Text {
-                    text: "Shell updated successfully.\nReload to apply the changes."
+                    text: UpdateService.needsFullInstall
+                        ? "Update applied.\nThis release changes packages or the deploy map — re-run ./boot.sh to finish."
+                        : "Update applied and re-linked.\nReload to see the changes."
                     font.pixelSize: 12
                     color:          Qt.rgba(Theme.text.r, Theme.text.g, Theme.text.b, 0.55)
                     wrapMode:       Text.WordWrap
@@ -359,22 +357,38 @@ PanelWindow {
                     lineHeight:     1.45
                 }
 
-                // Dismiss
-                Rectangle {
-                    width: 72; height: 30; radius: 8
-                    color:        dmH.hovered ? Qt.rgba(1,1,1,0.08) : Qt.rgba(1,1,1,0.04)
-                    border.color: Qt.rgba(1,1,1,0.09); border.width: 1
-                    Behavior on color { ColorAnimation { duration: 120 } }
-                    Text { anchors.centerIn: parent; text: "Dismiss"; font.pixelSize: 11; color: Qt.rgba(1,1,1,0.52) }
-                    HoverHandler { id: dmH; cursorShape: Qt.PointingHandCursor }
-                    MouseArea { anchors.fill: parent; onClicked: UpdateService.dismiss() }
-                }
+                Row {
+                    spacing: 8
 
+                    // Reload Shell — hyprctl reload + quickshell restart
+                    Rectangle {
+                        width: 108; height: 30; radius: 8
+                        color: rlH.hovered
+                            ? Qt.rgba(Theme.active.r, Theme.active.g, Theme.active.b, 0.26)
+                            : Qt.rgba(Theme.active.r, Theme.active.g, Theme.active.b, 0.13)
+                        border.color: Qt.rgba(Theme.active.r, Theme.active.g, Theme.active.b, 0.40)
+                        border.width: 1
+                        Behavior on color { ColorAnimation { duration: 120 } }
+                        Text {
+                            anchors.centerIn: parent
+                            text:           "Reload Shell"
+                            font.pixelSize: 11; font.weight: Font.Medium
+                            color:          Theme.active
+                        }
+                        HoverHandler { id: rlH; cursorShape: Qt.PointingHandCursor }
+                        MouseArea { anchors.fill: parent; onClicked: UpdateService.reloadShell() }
+                    }
 
-                Text {
-                    text:           "Auto-dismissing in a few seconds…"
-                    font.pixelSize: 10
-                    color:          Qt.rgba(1, 1, 1, 0.22)
+                    // Dismiss
+                    Rectangle {
+                        width: 72; height: 30; radius: 8
+                        color:        dmH.hovered ? Qt.rgba(1,1,1,0.08) : Qt.rgba(1,1,1,0.04)
+                        border.color: Qt.rgba(1,1,1,0.09); border.width: 1
+                        Behavior on color { ColorAnimation { duration: 120 } }
+                        Text { anchors.centerIn: parent; text: "Dismiss"; font.pixelSize: 11; color: Qt.rgba(1,1,1,0.52) }
+                        HoverHandler { id: dmH; cursorShape: Qt.PointingHandCursor }
+                        MouseArea { anchors.fill: parent; onClicked: UpdateService.dismiss() }
+                    }
                 }
             }
 
