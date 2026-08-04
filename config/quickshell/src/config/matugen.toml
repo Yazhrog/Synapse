@@ -9,6 +9,11 @@ output_path = '~/.config/Synapse/src/user_data/colors.json'
 input_path = "./templates/colors.lua.template"
 output_path = "~/.config/hypr/modules/colors.lua"
 
+# Sourced by hyprlock.conf — without this the lock screen has no themed colors.
+[templates.hyprland_colors]
+input_path = "./templates/colors.conf.template"
+output_path = "~/.config/hypr/colors.conf"
+
 [templates.neovim]
 input_path = "./templates/nvim-colors.json"
 output_path = "~/.config/nvim/colors/nvim-colors.json"
