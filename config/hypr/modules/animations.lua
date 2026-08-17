@@ -1,0 +1,21 @@
+hl.config({ animations = { enabled = true } })
+
+hl.curve("bounce", { type = "bezier", points = { { 0.05, 0.9 }, { 0.1, 1.35 } } })
+hl.curve("linear", { type = "bezier", points = { { 0.0, 0.0 }, { 1.0, 1.0 } } })
+hl.curve("overshot", { type = "bezier", points = { { 0.13, 0.99 }, { 0.29, 1.2 } } })
+
+hl.animation({ leaf = "windows", enabled = true, speed = 6, bezier = "bounce", style = "slide" })
+hl.animation({ leaf = "windowsOut", enabled = true, speed = 6, bezier = "bounce", style = "slide" })
+hl.animation({ leaf = "windowsMove", enabled = true, speed = 6, bezier = "bounce", style = "slide" })
+hl.animation({ leaf = "border", enabled = true, speed = 8, bezier = "linear" })
+hl.animation({ leaf = "fade", enabled = true, speed = 5, bezier = "linear" })
+hl.animation({ leaf = "fadeIn", enabled = true, speed = 4, bezier = "linear" })
+hl.animation({ leaf = "fadeOut", enabled = true, speed = 4, bezier = "linear" })
+hl.animation({ leaf = "fadeSwitch", enabled = true, speed = 5, bezier = "linear" })
+hl.animation({ leaf = "fadeDim", enabled = true, speed = 3, bezier = "linear" })
+hl.animation({ leaf = "fadeShadow", enabled = true, speed = 3, bezier = "linear" })
+hl.animation({ leaf = "workspaces", enabled = true, speed = 7, bezier = "overshot", style = "slidevert" })
+hl.animation({ leaf = "specialWorkspace", enabled = true, speed = 6, bezier = "bounce", style = "slidevert" })
+hl.animation({ leaf = "layers", enabled = true, speed = 4, bezier = "bounce", style = "slide top" })
+hl.animation({ leaf = "borderangle", enabled = true, speed = 22, bezier = "linear", style = "loop" })
+

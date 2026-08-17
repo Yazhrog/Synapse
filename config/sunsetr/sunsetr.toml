@@ -1,0 +1,29 @@
+#[Backend]
+backend = "auto"         # "auto", "hyprland", "hyprsunset" or "wayland"
+transition_mode = "geo"  # "geo", "finish_by", "start_at", "center", "static"
+
+#[Smoothing]
+smoothing = true
+startup_duration = 0.5   # seconds (0.1-60 | 0 = instant)
+shutdown_duration = 0.5  # seconds (0.1-60 | 0 = instant)
+adaptive_interval = 1    # ms (1-1000)
+
+#[Time-based config]
+night_temp = 3300        # Kelvin (1000-20000)
+day_temp = 6500          # Kelvin (1000-20000)
+night_gamma = 90         # % (10-200)
+day_gamma = 100          # % (10-200)
+update_interval = 60     # seconds (10-300)
+
+#[Static config]
+static_temp = 6500       # Kelvin (1000-20000)
+static_gamma = 100       # % (10-200)
+
+#[Manual transitions]
+sunset = "19:00:00"
+sunrise = "06:00:00"
+transition_duration = 45 # minutes (5-120)
+
+#[Geolocation]
+latitude = 48.853410     # auto-detected on first run; update with: sunsetr geo
+longitude = 2.348800

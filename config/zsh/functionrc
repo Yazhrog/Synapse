@@ -1,0 +1,78 @@
+# Extracts any archive(s) (if unp isn't installed)
+extract () {
+    for archive in $*; do
+        if [ -f $archive ] ; then
+            case $archive in
+                *.tar.bz2)   tar xvjf $archive    ;;
+                *.tar.gz)    tar xvzf $archive    ;;
+                *.bz2)       bunzip2 $archive     ;;
+                *.rar)       rar x $archive       ;;
+                *.gz)        gunzip $archive      ;;
+                *.tar)       tar xvf $archive     ;;
+                *.tbz2)      tar xvjf $archive    ;;
+                *.tgz)       tar xvzf $archive    ;;
+                *.zip)       unzip $archive       ;;
+                *.Z)         uncompress $archive  ;;
+                *.7z)        7z x $archive        ;;
+                *)           echo "don't know how to extract '$archive'..." ;;
+            esac
+        else
+            echo "'$archive' is not a valid file!"
+        fi
+    done
+}
+
+# Open Nvim
+v () {
+    if [ $# -eq 0 ]; then
+        nvim
+    else
+        nvim "$@"
+    fi
+}
+
+# Copy and go to the directory
+cpg () {
+    if [ -d "$2" ]; then
+        if [ -d "$1" ]; then
+            cp -r $1 $2 && cd $2
+        else
+            cp $1 $2 && cd $2
+        fi
+    else
+        cp $1 $b2
+    fi
+}
+
+# Move and go to the directory
+mvg () {
+    if [ -d "$2" ]; then
+        mv $1 $2 && cd $2
+    else
+        mv $1 $b2
+    fi
+}
+
+# Create and go to the directory
+mkg () {
+    mkdir -p $1
+    cd $1
+}
+
+ftext () {
+    grep -iIHrn --color=always "$1" . | less -r
+}
+
+# Goes up a specified number of directories  (i.e. up 4)
+up () {
+    local d=""
+    limit=$1
+    for ((i=1 ; i <= limit ; i++)); do
+        d=$d/..
+    done
+    d=$(echo $d | sed 's/^\///')
+    if [ -z "$d" ]; then
+        d=..
+    fi
+    cd $d
+}
