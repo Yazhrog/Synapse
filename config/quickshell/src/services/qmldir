@@ -1,7 +1,6 @@
 PowerMenu    PowerMenu.qml
 SystemStats  ./system/SystemStats.qml
 BatteryStatus  BatteryStatus.qml
-BatteryWarning BatteryWarning.qml
 EnvyControl ./system/EnvyControl.qml
 AudioControl AudioControl.qml
 MemService ./system/MemService.qml

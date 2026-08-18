@@ -62,6 +62,19 @@ QtObject {
         confirmGfxMode = ""
     }
 
+    // ── Critical battery dialog ──────────────────────────────────────────────
+    property bool batteryCriticalOpen:  false
+    property int  batteryCriticalLevel: 0
+
+    function showBatteryCritical(level) {
+        batteryCriticalLevel = level
+        batteryCriticalOpen  = true
+    }
+
+    function acknowledgeBatteryCritical() {
+        batteryCriticalOpen = false
+    }
+
     // ── Global state ──────────────────────────────────────────────────────────
     // quickOpen is deliberately excluded: it's a passive OSD (volume/brightness
     // keys), not an interactive popup, so it must never trigger PopupDismiss's
