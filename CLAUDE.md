@@ -6,6 +6,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Synapse is a Wayland desktop shell for Hyprland: a Quickshell/QML shell UI (`config/quickshell/`) paired with a Lua-based Hyprland configuration (`config/hypr/`), plus dotfiles for a few other apps (ghostty, mpv, starship, zsh, fastfetch, qt6ct, sunsetr) and a bash installer for Arch-based distros. There is no application build, package manager, or test suite — this is a configuration/dotfiles project deployed onto a live Linux desktop session.
 
+**This checkout (`~/Project/Synapse-Dev`) is a separate, unlinked dev copy — it is not the live deployment.** The actual deploy source that `~/.config/hypr`, `~/.config/quickshell`, etc. symlink into is `~/.local/src/Synapse` (see `~/.config/Synapse/repo-path`). Always make edits here in `~/Project/Synapse-Dev` and never touch `~/.local/src/Synapse` or the `~/.config/*` deploy paths directly — changes made there won't be reflected here, and this repo exists purely to give a simpler, non-live editing experience.
+
 ## Commands
 
 There is no build/lint/test tooling (no package.json, no CI). The only "commands" are the installer and manual verification on a running Hyprland+Quickshell session:
@@ -14,10 +16,10 @@ There is no build/lint/test tooling (no package.json, no CI). The only "commands
 - `install/install.sh` — Arch-specific installer, sources `install/steps/01..06-*.sh` in order (AUR helper → pacman/AUR packages → services → Hyprland plugins → configs → shell config).
 - `install/link.sh` — re-applies the deploy manifest and nothing else (no packages, no sudo). `--dry-run` to preview. Run it after adding a **new** config file; existing files need nothing.
 - `install/validate.sh` — post-install sanity check; verifies CLI tools are on `PATH` and that every manifest destination is still a symlink into the repo.
-- **Deployment is by symlink: your checkout is the live config.** `~/.config/hypr`, `~/.config/quickshell`, `~/.config/nvim` etc. are symlinks into this repo (see `install/lib/manifest.sh`), so editing a file here changes the running system with no install step.
-- Testing a QML change: edit under `config/quickshell/`, then restart quickshell (`pkill quickshell` and re-launch, or `hyprctl dispatch exit` to relaunch Hyprland). `~/.config/quickshell` symlinks here, which also makes Synapse quickshell's `default` config — so `quickshell` and `qs ipc call ...` work with no `-c`.
-- Testing a Hyprland Lua change: edit under `config/hypr/`, then `hyprctl reload`.
-- Adding a **new** file that should be deployed: add it to `install/lib/manifest.sh` (if it isn't covered by a recursive `dir/` entry), update `DEPLOY-MAP.md`, and run `install/link.sh`.
+- **Deployment is by symlink, but this checkout is not the deployed one.** In the live deployment, `~/.config/hypr`, `~/.config/quickshell`, `~/.config/nvim` etc. are symlinks into the repo at `~/.local/src/Synapse` (see `install/lib/manifest.sh` and `~/.config/Synapse/repo-path`), so editing a file *there* changes the running system with no install step. This checkout (`~/Project/Synapse-Dev`) is a separate, unlinked copy — editing here does **not** affect the running session.
+- Testing a QML change: apply/port the change in `~/.local/src/Synapse/config/quickshell/`, then restart quickshell (`pkill quickshell` and re-launch, or `hyprctl dispatch exit` to relaunch Hyprland). `~/.config/quickshell` symlinks to that checkout, which also makes it Synapse quickshell's `default` config — so `quickshell` and `qs ipc call ...` work with no `-c`.
+- Testing a Hyprland Lua change: apply/port the change in `~/.local/src/Synapse/config/hypr/`, then `hyprctl reload`.
+- Adding a **new** file that should be deployed: add it to `install/lib/manifest.sh` (if it isn't covered by a recursive `dir/` entry), update `DEPLOY-MAP.md`, and run `install/link.sh` from `~/.local/src/Synapse`.
 - There's no automated way to exercise the QML UI outside a real Hyprland session; when asked to verify shell UI changes, say so explicitly rather than claiming to have tested them.
 
 ## Architecture
