@@ -9,6 +9,7 @@ ShellRoot {
     property var _keybinds:   KeybindService
     property var _updater:    UpdateService
     property var _ipc:        IpcManager
+    property var _battery:    BatteryWarningService
 
     Variants {
         model: Quickshell.screens
