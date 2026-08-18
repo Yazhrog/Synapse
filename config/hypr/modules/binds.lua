@@ -87,13 +87,22 @@ hl.bind("Print",         hl.dsp.exec_cmd(rishot))
 hl.bind("SHIFT + Print", hl.dsp.exec_cmd(rishot .. " monitor"))
 
 -- ── Media controls (work on lock screen) ─────────────────────────────────────
-hl.bind("XF86AudioRaiseVolume", hl.dsp.exec_cmd("pamixer -i 5"), { locked = true, repeating = true })
-hl.bind("XF86AudioLowerVolume", hl.dsp.exec_cmd("pamixer -d 5"), { locked = true, repeating = true })
-hl.bind("XF86AudioMute",        hl.dsp.exec_cmd("pamixer -t"),   { locked = true })
+-- Volume/mute keys also reveal the QuickControl OSD popup (quickcontrols-show,
+-- see IpcManager.qml). hl.dsp.exec_cmd doesn't run its string through a shell,
+-- so chained commands need an explicit bash -c wrapper (same pattern already
+-- used elsewhere in this file for multi-step commands).
+local QUICK_OSD = "qs ipc call quickcontrols-show reveal"
+local function withOSD(cmd)
+    return "bash -c '" .. cmd .. " && " .. QUICK_OSD .. "'"
+end
+
+hl.bind("XF86AudioRaiseVolume", hl.dsp.exec_cmd(withOSD("pamixer -i 5")), { locked = true, repeating = true })
+hl.bind("XF86AudioLowerVolume", hl.dsp.exec_cmd(withOSD("pamixer -d 5")), { locked = true, repeating = true })
+hl.bind("XF86AudioMute",        hl.dsp.exec_cmd(withOSD("pamixer -t")),   { locked = true })
 hl.bind("XF86AudioPlay",        hl.dsp.exec_cmd("playerctl play-pause"), { locked = true })
 hl.bind("XF86AudioNext",        hl.dsp.exec_cmd("playerctl next"),       { locked = true })
 hl.bind("XF86AudioPrev",        hl.dsp.exec_cmd("playerctl previous"),   { locked = true })
 
 -- ── Brightness controls (work on lock screen) ────────────────────────────────
-hl.bind("XF86MonBrightnessUp",   hl.dsp.exec_cmd("brightnessctl set +5%"), { locked = true, repeating = true })
-hl.bind("XF86MonBrightnessDown", hl.dsp.exec_cmd("brightnessctl set 5%-"), { locked = true, repeating = true })
+hl.bind("XF86MonBrightnessUp",   hl.dsp.exec_cmd(withOSD("brightnessctl set +5%")), { locked = true, repeating = true })
+hl.bind("XF86MonBrightnessDown", hl.dsp.exec_cmd(withOSD("brightnessctl set 5%-")), { locked = true, repeating = true })
