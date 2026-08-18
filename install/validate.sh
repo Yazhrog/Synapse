@@ -78,15 +78,16 @@ check_cmd "pkexec"
 check_cmd "python"
 check_cmd "wl-copy"
 check_cmd "slurp"
-check_cmd "grim"
 check_cmd "rfkill"
 check_cmd "sensors"
 
 echo ""
 echo "── SCREENSHOT ───────────────────────────────────────────────────"
-check_cmd "grim"
-check_cmd "slurp"
-check_opt "satty"
+if [[ -x "$HOME/.local/share/rishot/bin/rishot" ]]; then
+    log_installed "rishot"
+else
+    log_missing "rishot  (installed by install step 4 — re-run the installer)"
+fi
 
 echo ""
 echo "── SCREEN RECORDING ─────────────────────────────────────────────"
