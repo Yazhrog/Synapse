@@ -40,7 +40,7 @@ NotificationServer {
 
         root.list = [n, ...root.list]
         
-        if (ShellState.dnd) return
+        if (ShellState.dnd && n.appName !== "Synapse Battery") return
         
         if (root._ready) {
             root.notificationAdded(n)
