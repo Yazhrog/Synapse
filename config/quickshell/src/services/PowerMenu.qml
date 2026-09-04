@@ -8,38 +8,46 @@ Column {
     id: root
     spacing: 4
     width: parent.width
+    focus: true
+
+    property int selIndex: 0
+
+    function reset() {
+        root.selIndex = 0
+        root.forceActiveFocus()
+    }
+
+    function activate(modelData) {
+        if (modelData.confirm) {
+            // Close menu first, then show confirm dialog
+            Popups.closeAll()
+            Popups.showConfirm(
+                modelData.title,
+                modelData.message,
+                modelData.label2,
+                modelData.action
+            )
+        } else {
+            root.runDirect(modelData.action)
+        }
+    }
+
+    Keys.onUpPressed:     root.selIndex = (root.selIndex <= 0) ? root.actions.length - 1 : root.selIndex - 1
+    Keys.onDownPressed:   root.selIndex = (root.selIndex >= root.actions.length - 1) ? 0 : root.selIndex + 1
+    Keys.onReturnPressed: root.activate(root.actions[root.selIndex])
+    Keys.onEnterPressed:  root.activate(root.actions[root.selIndex])
+    Keys.onEscapePressed: Popups.archMenuOpen = false
+    Keys.onPressed: function(event) {
+        if (event.key === Qt.Key_PageUp) {
+            root.selIndex = 0
+            event.accepted = true
+        } else if (event.key === Qt.Key_PageDown) {
+            root.selIndex = root.actions.length - 1
+            event.accepted = true
+        }
+    }
 
     readonly property var actions: [
-        {
-            label:   "Shutdown",
-            icon:    "⏻",
-            danger:  true,
-            confirm: true,
-            title:   "Shut Down?",
-            message: "Your computer will power off. Save your work before continuing.",
-            label2:  "Shut Down",
-            action:  "shutdown"
-        },
-        {
-            label:   "Reboot     ",
-            icon:    "↺",
-            danger:  true,
-            confirm: true,
-            title:   "Reboot?",
-            message: "Your computer will restart. Save your work before continuing.",
-            label2:  "Reboot",
-            action:  "reboot"
-        },
-        {
-            label:   "Log Out  ",
-            icon:    "󰍃",
-            danger:  true,
-            confirm: true,
-            title:   "Log Out?",
-            message: "You will be logged out of your session. Save your work before continuing.",
-            label2:  "Log Out",
-            action:  "logout" 
-        },
         {
             label:   "Lock        ",
             icon:    "󰌾",
@@ -53,6 +61,36 @@ Column {
             danger:  false,
             confirm: false,
             action:  "suspend"
+        },
+        {
+            label:   "Log Out  ",
+            icon:    "󰍃",
+            danger:  true,
+            confirm: true,
+            title:   "Log Out?",
+            message: "You will be logged out of your session. Save your work before continuing.",
+            label2:  "Log Out",
+            action:  "logout"
+        },
+        {
+            label:   "Reboot     ",
+            icon:    "↺",
+            danger:  true,
+            confirm: true,
+            title:   "Reboot?",
+            message: "Your computer will restart. Save your work before continuing.",
+            label2:  "Reboot",
+            action:  "reboot"
+        },
+        {
+            label:   "Shutdown",
+            icon:    "⏻",
+            danger:  true,
+            confirm: true,
+            title:   "Shut Down?",
+            message: "Your computer will power off. Save your work before continuing.",
+            label2:  "Shut Down",
+            action:  "shutdown"
         },
     ]
 
@@ -77,10 +115,15 @@ Column {
         model: root.actions
 
         delegate: Rectangle {
+            required property var modelData
+            required property int index
+            readonly property bool isSel: root.selIndex === index
+            readonly property bool highlighted: isSel || hov.hovered
+
             width:  root.width
             height: 44
             radius: Theme.cornerRadius
-            color:  hov.hovered
+            color:  highlighted
                         ? (modelData.danger ? "#4d2020" : Theme.active)
                         : "transparent"
 
@@ -93,14 +136,14 @@ Column {
                 Text {
                     text:           modelData.icon
                     font.pixelSize: 16
-                    color:          modelData.danger && hov.hovered ? "#ff6b6b" : hov.hovered?"#000000":Theme.text
+                    color:          modelData.danger && highlighted ? "#ff6b6b" : highlighted?"#000000":Theme.text
                     anchors.verticalCenter: parent.verticalCenter
                 }
 
                 Text {
                     text:           modelData.label
                     font.pixelSize: 13
-                    color:          modelData.danger && hov.hovered ? "#ff6b6b" : hov.hovered?"#000000":Theme.text
+                    color:          modelData.danger && highlighted ? "#ff6b6b" : highlighted?"#000000":Theme.text
                     anchors.verticalCenter: parent.verticalCenter
                 }
             }
@@ -109,20 +152,9 @@ Column {
 
             MouseArea {
                 anchors.fill: parent
-                onClicked: {
-                    if (modelData.confirm) {
-                        // Close menu first, then show confirm dialog
-                        Popups.closeAll()
-                        Popups.showConfirm(
-                            modelData.title,
-                            modelData.message,
-                            modelData.label2,
-                            modelData.action
-                        )
-                    } else {
-                        root.runDirect(modelData.action)
-                    }
-                }
+                hoverEnabled: true
+                onEntered: root.selIndex = index
+                onClicked: root.activate(modelData)
             }
         }
     }

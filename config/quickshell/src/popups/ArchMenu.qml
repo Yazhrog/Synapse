@@ -1,6 +1,7 @@
 import QtQuick
 import Quickshell
 import Quickshell.Io
+import Quickshell.Hyprland
 import "../shapes"
 import "../services"
 import "../components"
@@ -53,7 +54,44 @@ PopupWindow {
 		width:   sizer.width
 		height:  sizer.height
 	}
-	
+
+	// Hyprland-native keyboard grab — xdg-popup surfaces don't pick up
+	// keyboard focus on their own, and wlr-layer-shell's Exclusive focus
+	// mode isn't applicable to a PopupWindow. This grabs real keyboard
+	// input for as long as the menu is visible so PowerMenu's arrow-key
+	// navigation actually receives events.
+	//
+	// Activation is deliberately delayed a tick after the popup becomes
+	// visible: requesting the grab in the same frame the surface is mapped
+	// gets rejected (surface not committed yet), which fires `cleared`
+	// immediately. `cleared` is intentionally NOT wired to close the popup —
+	// PopupDismiss already owns click-outside/Escape dismissal, and closing
+	// here as well caused exactly that reject-then-immediately-close loop.
+	HyprlandFocusGrab {
+		id:      focusGrab
+		windows: [root]
+	}
+
+	Timer {
+		id: grabTimer
+		interval: 50
+		onTriggered: {
+			focusGrab.active = true
+			powerMenu.reset()
+		}
+	}
+
+	Connections {
+		target: Popups
+		function onArchMenuOpenChanged() {
+			if (Popups.archMenuOpen) {
+				grabTimer.restart()
+			} else {
+				focusGrab.active = false
+			}
+		}
+	}
+
 	PopupSlide {
 		id: slide
 		anchors.fill: parent
@@ -104,6 +142,7 @@ PopupWindow {
 							visible: root.page === "power"
 
 							PowerMenu {
+								id:    powerMenu
 								width: parent.width
 							}
 						}

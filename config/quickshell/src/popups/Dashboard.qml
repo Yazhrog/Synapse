@@ -59,6 +59,41 @@ PanelWindow {
 
     property bool windowVisible: false
 
+    // ── Cursor nudge ──────────────────────────────────────────────────────────
+    // Hyprland (follow_mouse=1) sometimes doesn't hand a newly-mapped exclusive-
+    // keyboard-focus layer surface real Wayland keyboard focus until a pointer
+    // motion event forces it to re-evaluate focus (hyprwm/Hyprland discussion
+    // #13116). Nudging the cursor 1px and back replicates the manual mouse
+    // movement that otherwise picks up focus, so the page's own
+    // forceActiveFocus() retry lands on a window that actually has it.
+    function nudgeCursor() {
+        cursorPosProc.running = false
+        cursorPosProc.running = true
+    }
+
+    Process {
+        id: cursorPosProc
+        command: ["hyprctl", "-j", "cursorpos"]
+        running: false
+        stdout: StdioCollector {
+            id: cursorPosBuf
+            onStreamFinished: {
+                try {
+                    var pos = JSON.parse(cursorPosBuf.text)
+                    cursorNudgeProc.command = ["sh", "-c",
+                        "hyprctl dispatch movecursor " + (pos.x + 1) + " " + pos.y +
+                        " && hyprctl dispatch movecursor " + pos.x + " " + pos.y]
+                    cursorNudgeProc.running = true
+                } catch (e) {}
+            }
+        }
+    }
+
+    Process {
+        id: cursorNudgeProc
+        running: false
+    }
+
     Connections {
         target: Popups
         function onDashboardOpenChanged() {
@@ -66,6 +101,7 @@ PanelWindow {
                 closeTimer.stop()
                 root.windowVisible = true
                 root._applyPageWidth(root.page)
+                root.nudgeCursor()
             } else {
                 closeTimer.restart()
             }
@@ -75,7 +111,7 @@ PanelWindow {
             root.page = Popups.dashboardPage
         }
     }
-    
+
     Timer {
         id: closeTimer
         interval: root.animDuration + 20

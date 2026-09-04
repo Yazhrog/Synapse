@@ -6,8 +6,9 @@ import "../"
 
 // AppLauncher — scrollable app list + bottom search bar.
 // Lives inside Dashboard.qml on the "launcher" page.
-// Dashboard is PanelWindow with WlrKeyboardFocus.OnDemand,
-// so TextInput receives keys without extra wiring.
+// Dashboard is PanelWindow with WlrKeyboardFocus.Exclusive; searchInput still
+// needs its own forceActiveFocus() retry below since Exclusive doesn't imply
+// any particular item has Qt-level active focus.
 
 Item {
     id: root
