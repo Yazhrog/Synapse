@@ -60,6 +60,8 @@ so matugen output, lazy state and zsh history keep landing exactly where they di
 | `config/nvim/lazy-lock.json` | `~/.config/nvim/lazy-lock.json` | copy — nvim rewrites on `:Lazy sync` |
 | `config/sunsetr/sunsetr.toml` | `~/.config/sunsetr/sunsetr.toml` | copy — `sunsetr geo` rewrites it |
 | `config/qt6ct/qt6ct.conf` | `~/.config/qt6ct/qt6ct.conf` | copy — the qt6ct GUI rewrites it |
+| `config/gtk-3.0/settings.ini` | `~/.config/gtk-3.0/settings.ini` | copy — the nwg-look GUI rewrites it |
+| `config/gtk-4.0/settings.ini` | `~/.config/gtk-4.0/settings.ini` | copy — the nwg-look GUI rewrites it |
 | `config/quickshell/src/assets/wallpapers/` | `~/Pictures/Wallpapers/` | copy — user media |
 | *(generated)* | `~/.config/starship/starship.toml` → `configs/config-default.toml` | copy — selects your theme |
 
@@ -228,6 +230,8 @@ Symlinks into `$REPO` are marked `→ repo`.
 │   │   └── starship.toml            ← symlink → configs/config-default.toml
 │   ├── sunsetr/sunsetr.toml         ← copied once; `sunsetr geo` owns it
 │   ├── qt6ct/qt6ct.conf             ← copied once; the qt6ct GUI owns it
+│   ├── gtk-3.0/settings.ini         ← copied once; the nwg-look GUI owns it
+│   ├── gtk-4.0/settings.ini         ← copied once; the nwg-look GUI owns it
 │   └── systemd/user/cliphist-wipe.service  ← written by ClipboardService
 ├── .zshenv                          → repo
 ├── .cache/matugen/                  ← matugen (vscode)

@@ -9,6 +9,7 @@ ShellRoot {
     property var _keybinds:   KeybindService
     property var _updater:    UpdateService
     property var _ipc:        IpcManager
+    property var _battery:    BatteryWarningService
 
     Variants {
         model: Quickshell.screens
@@ -30,6 +31,9 @@ ShellRoot {
 
                 // GPU mode change confirmation modal
                 ConfirmDialog { screen: modelData }
+
+                // Critical battery — blocking, must be acknowledged
+                BatteryCriticalDialog { screen: modelData }
 
                 // Shell update notification
                 UpdatePopup { screen: modelData }

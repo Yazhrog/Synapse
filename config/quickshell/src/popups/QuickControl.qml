@@ -87,7 +87,12 @@ PopupWindow {
     }
 
     Timer {
-        interval: 1000; running: true; repeat: true
+        // Poll fast while the OSD is actually visible (e.g. holding the
+        // brightness key) so the slider tracks external changes without
+        // a laggy catch-up; idle otherwise to avoid needless polling.
+        interval: root.visible ? 100 : 1000
+        running:  true
+        repeat:   true
         onTriggered: if (!root._bBusy) brightRead.running = true
     }
 

@@ -59,56 +59,36 @@ hl.bind("SUPER + mouse:273", hl.dsp.window.resize(), { mouse = true })
 hl.bind("SUPER + G", function()
     hl.plugin.scrolloverview.overview("toggle")
 end)
-hl.define_submap("scrolloverview", function()
-	hl.bind("left", hl.plugin.scrolloverview.navigate("left"))
-	hl.bind("right", hl.plugin.scrolloverview.navigate("right"))
-	hl.bind("up", hl.plugin.scrolloverview.navigate("up"))
-	hl.bind("down", hl.plugin.scrolloverview.navigate("down"))
-	hl.bind("return", hl.plugin.scrolloverview.overview("select"))
-	hl.bind("escape", hl.plugin.scrolloverview.overview("off"))
-	hl.bind("mouse:272", function()
-		-- Select the clicked window, or just the workspace if no window was clicked, then close the overview. This is the default behaviour if submap is not defined.
-		hl.plugin.scrolloverview.overview("select")
-		hl.plugin.scrolloverview.window("select")
-		hl.plugin.scrolloverview.overview("off")
-	end, { mouse = true })
-	hl.bind("mouse:274", hl.plugin.scrolloverview.window("close"), { mouse = true })
-end)
+
 -- ── Lock screen ───────────────────────────────────────────────────────────────
 hl.bind("SUPER + SHIFT + L",      hl.dsp.exec_cmd("hyprlock"))
 
--- ── Screenshots ───────────────────────────────────────────────────────────────
--- Print         → region capture with 1s delay, save + copy
--- CTRL + Print  → region capture immediately, save + copy
--- SHIFT + Print → region capture with annotation (satty)
--- local ss_dir = os.getenv("HOME") .. "/Pictures/Screenshots"
--- hl.bind("Print", hl.dsp.exec_cmd(
---     "bash -c 'mkdir -p \"" .. ss_dir .. "\"; " ..
---     "FILE=\"" .. ss_dir .. "/screenshot_$(date +%Y-%m-%d_%H-%M-%S).png\"; " ..
---     "COORDS=$(slurp -f \"%x,%y %wx%h\"); sleep 1; " ..
---     "grim -g \"$COORDS\" \"$FILE\" && wl-copy < \"$FILE\"'"
--- ))
--- hl.bind("CTRL + Print", hl.dsp.exec_cmd(
---     "bash -c 'mkdir -p \"" .. ss_dir .. "\"; " ..
---     "FILE=\"" .. ss_dir .. "/screenshot_$(date +%Y-%m-%d_%H-%M-%S).png\"; " ..
---     "COORDS=$(slurp -f \"%x,%y %wx%h\"); " ..
---     "grim -g \"$COORDS\" \"$FILE\" && wl-copy < \"$FILE\"'"
--- ))
--- hl.bind("SHIFT + Print", hl.dsp.exec_cmd(
---     "bash -c 'mkdir -p \"" .. ss_dir .. "\"; " ..
---     "FILE=\"" .. ss_dir .. "/screenshot_$(date +%Y-%m-%d_%H-%M-%S).png\"; " ..
---     "COORDS=$(slurp -f \"%x,%y %wx%h\"); sleep 1; " ..
---     "grim -g \"$COORDS\" \"$FILE\" && satty -f \"$FILE\"'"
--- ))
+-- ── Screenshots (rishot) ──────────────────────────────────────────────────────
+-- Print         → region capture or click a window; annotate, then copy/save/upload
+-- SHIFT + Print → whole monitor capture
+-- Installed by install/steps/02-packages.sh (step 4) into ~/.local/share/rishot;
+-- called by full path since ~/.local/bin isn't guaranteed on Hyprland's exec PATH.
+local rishot = os.getenv("HOME") .. "/.local/share/rishot/bin/rishot"
+hl.bind("Print",         hl.dsp.exec_cmd(rishot))
+hl.bind("SHIFT + Print", hl.dsp.exec_cmd(rishot .. " monitor"))
 
 -- ── Media controls (work on lock screen) ─────────────────────────────────────
-hl.bind("XF86AudioRaiseVolume", hl.dsp.exec_cmd("pamixer -i 5"), { locked = true, repeating = true })
-hl.bind("XF86AudioLowerVolume", hl.dsp.exec_cmd("pamixer -d 5"), { locked = true, repeating = true })
-hl.bind("XF86AudioMute",        hl.dsp.exec_cmd("pamixer -t"),   { locked = true })
+-- Volume/mute keys also reveal the QuickControl OSD popup (quickcontrols-show,
+-- see IpcManager.qml). hl.dsp.exec_cmd doesn't run its string through a shell,
+-- so chained commands need an explicit bash -c wrapper (same pattern already
+-- used elsewhere in this file for multi-step commands).
+local QUICK_OSD = "qs ipc call quickcontrols-show reveal"
+local function withOSD(cmd)
+    return "bash -c '" .. cmd .. " && " .. QUICK_OSD .. "'"
+end
+
+hl.bind("XF86AudioRaiseVolume", hl.dsp.exec_cmd(withOSD("pamixer -i 5")), { locked = true, repeating = true })
+hl.bind("XF86AudioLowerVolume", hl.dsp.exec_cmd(withOSD("pamixer -d 5")), { locked = true, repeating = true })
+hl.bind("XF86AudioMute",        hl.dsp.exec_cmd(withOSD("pamixer -t")),   { locked = true })
 hl.bind("XF86AudioPlay",        hl.dsp.exec_cmd("playerctl play-pause"), { locked = true })
 hl.bind("XF86AudioNext",        hl.dsp.exec_cmd("playerctl next"),       { locked = true })
 hl.bind("XF86AudioPrev",        hl.dsp.exec_cmd("playerctl previous"),   { locked = true })
 
 -- ── Brightness controls (work on lock screen) ────────────────────────────────
-hl.bind("XF86MonBrightnessUp",   hl.dsp.exec_cmd("brightnessctl set +5%"), { locked = true, repeating = true })
-hl.bind("XF86MonBrightnessDown", hl.dsp.exec_cmd("brightnessctl set 5%-"), { locked = true, repeating = true })
+hl.bind("XF86MonBrightnessUp",   hl.dsp.exec_cmd(withOSD("brightnessctl set +5%")), { locked = true, repeating = true })
+hl.bind("XF86MonBrightnessDown", hl.dsp.exec_cmd(withOSD("brightnessctl set 5%-")), { locked = true, repeating = true })

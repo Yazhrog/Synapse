@@ -78,15 +78,16 @@ check_cmd "pkexec"
 check_cmd "python"
 check_cmd "wl-copy"
 check_cmd "slurp"
-check_cmd "grim"
 check_cmd "rfkill"
 check_cmd "sensors"
 
 echo ""
 echo "── SCREENSHOT ───────────────────────────────────────────────────"
-check_cmd "grim"
-check_cmd "slurp"
-check_opt "satty"
+if [[ -x "$HOME/.local/share/rishot/bin/rishot" ]]; then
+    log_installed "rishot"
+else
+    log_missing "rishot  (installed by install step 4 — re-run the installer)"
+fi
 
 echo ""
 echo "── SCREEN RECORDING ─────────────────────────────────────────────"
@@ -242,6 +243,68 @@ if [[ -f "$HOME/.config/quickshell/shell.qml" ]]; then
     log_installed "quickshell 'default' config resolves"
 else
     log_missing "~/.config/quickshell/shell.qml — keybinds calling 'qs ipc' will fail"
+fi
+
+echo ""
+echo "── PACKAGES (from install/steps/02-packages.sh) ────────────────"
+
+# Read PACMAN_DEPS/AUR_DEPS straight out of 02-packages.sh as plain text rather
+# than sourcing it — that script installs packages at the top level (pacman -Syu,
+# pacman_install, aur_install), which is not something a validator should trigger.
+extract_array() {  # $1=file $2=ARRAY_NAME -> newline-separated package names
+    awk -v n="$2" '$0 ~ "^"n"=\\(" {f=1; next} f && /^\)/{f=0} f' "$1" \
+      | sed -e 's/#.*$//' | tr -s ' \t' '\n' | sed '/^[[:space:]]*$/d'
+}
+
+if [[ -n "$REPO_DIR" && -f "$REPO_DIR/install/steps/02-packages.sh" ]]; then
+    PKG_FILE="$REPO_DIR/install/steps/02-packages.sh"
+    mapfile -t PACMAN_PKGS < <(extract_array "$PKG_FILE" PACMAN_DEPS)
+    mapfile -t AUR_PKGS    < <(extract_array "$PKG_FILE" AUR_DEPS)
+
+    if command -v yay &>/dev/null; then
+        AUR_HELPER="yay"
+    elif command -v paru &>/dev/null; then
+        AUR_HELPER="paru"
+    else
+        AUR_HELPER=""
+    fi
+
+    # Packages already reported above via a CLI-based check — skip so they
+    # aren't flagged twice under two different names.
+    SKIP_PKG_CHECK=(quickshell ghostty hyprland hyprlock hypridle hyprpolkitagent
+        wf-recorder cava wtype brightnessctl upower playerctl rfkill sunsetr
+        awww matugen cliphist envycontrol auto-cpufreq nbfc-linux
+        wayland-idle-inhibitor-git bibata-cursor-theme whitesur-icon-theme)
+
+    _pkg_skipped() {
+        local p="$1"
+        for s in "${SKIP_PKG_CHECK[@]}"; do [[ "$p" == "$s" ]] && return 0; done
+        return 1
+    }
+
+    for pkg in "${PACMAN_PKGS[@]}"; do
+        _pkg_skipped "$pkg" && continue
+        if pacman -Qi "$pkg" &>/dev/null; then
+            log_installed "$pkg (pacman)"
+        else
+            log_missing "$pkg (pacman)"
+        fi
+    done
+
+    if [[ -n "$AUR_HELPER" ]]; then
+        for pkg in "${AUR_PKGS[@]}"; do
+            _pkg_skipped "$pkg" && continue
+            if "$AUR_HELPER" -Q "$pkg" &>/dev/null; then
+                log_installed "$pkg (AUR)"
+            else
+                log_missing "$pkg (AUR)"
+            fi
+        done
+    else
+        log_missing "no AUR helper (yay/paru) found — cannot verify ${#AUR_PKGS[@]} AUR package(s)"
+    fi
+else
+    log_optional "install/steps/02-packages.sh not available — skipping package checks"
 fi
 
 echo ""

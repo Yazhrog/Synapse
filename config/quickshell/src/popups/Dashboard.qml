@@ -59,6 +59,8 @@ PanelWindow {
 
     property bool windowVisible: false
 
+    CursorNudge { id: cursorNudge }
+
     Connections {
         target: Popups
         function onDashboardOpenChanged() {
@@ -66,6 +68,7 @@ PanelWindow {
                 closeTimer.stop()
                 root.windowVisible = true
                 root._applyPageWidth(root.page)
+                cursorNudge.nudge()
             } else {
                 closeTimer.restart()
             }
@@ -75,7 +78,7 @@ PanelWindow {
             root.page = Popups.dashboardPage
         }
     }
-    
+
     Timer {
         id: closeTimer
         interval: root.animDuration + 20

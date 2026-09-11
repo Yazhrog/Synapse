@@ -294,6 +294,26 @@ QtObject {
             root.focusToggleRequested()
         }
     }
-    
+
     signal focusToggleRequested()
+
+    // ── Quick Controls OSD (volume/brightness keys) ──────────
+    // Reveals the QuickControl popup briefly, then auto-hides — see
+    // Popups.anyOpen for why quickOpen stays out of the shared popup set.
+    // NOTE: the handler function must not be named "show" — that collides
+    // with quickshell's own "qs ipc show" introspection verb and silently
+    // no-ops instead of calling into this function.
+    property var quickControlsHideTimer: Timer {
+        id: quickControlsHideTimer
+        interval: 1800
+        onTriggered: Popups.quickOpen = false
+    }
+
+    property var quickControls: IpcHandler {
+        target: "quickcontrols-show"
+        function reveal() {
+            Popups.quickOpen = true
+            quickControlsHideTimer.restart()
+        }
+    }
 }

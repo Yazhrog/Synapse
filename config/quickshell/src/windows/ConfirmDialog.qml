@@ -3,6 +3,7 @@ import Quickshell
 import Quickshell.Wayland
 import Quickshell.Io
 import "../"
+import "../components/"
 import "../services/"
 
 // Unified confirmation modal — replaces GfxWarning.qml.
@@ -29,8 +30,37 @@ PanelWindow {
 
     visible: Popups.confirmOpen || Popups.confirmRunning
 
+    property int selIndex: 0   // 0 = Cancel, 1 = Confirm
+
     WlrLayershell.layer:         WlrLayer.Overlay
-    WlrLayershell.keyboardFocus: WlrKeyboardFocus.OnDemand
+    WlrLayershell.keyboardFocus: root.visible ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
+
+    CursorNudge { id: cursorNudge }
+
+    Timer {
+        id: focusTimer
+        interval: 80
+        onTriggered: keyHandler.forceActiveFocus()
+    }
+
+    Connections {
+        target: Popups
+        function onConfirmOpenChanged() {
+            if (Popups.confirmOpen) {
+                root.selIndex = 0
+                keyHandler.forceActiveFocus()
+                cursorNudge.nudge()
+                focusTimer.restart()
+            }
+        }
+        function onConfirmRunningChanged() {
+            if (Popups.confirmRunning) {
+                keyHandler.forceActiveFocus()
+                cursorNudge.nudge()
+                focusTimer.restart()
+            }
+        }
+    }
 
     // ── Processes ─────────────────────────────────────────────────────────────
     Process {
@@ -155,6 +185,7 @@ PanelWindow {
                         default:                return "⚠️"
                     }
                 }
+                color:          Theme.text
                 font.pixelSize: 32
             }
 
@@ -181,10 +212,15 @@ PanelWindow {
                 spacing: 10
 
                 Rectangle {
+                    readonly property bool isSel: root.selIndex === 0
+                    readonly property bool highlighted: isSel || cancelHov.hovered
+
                     width:  130
                     height: 38
                     radius: Theme.cornerRadius
-                    color:  cancelHov.hovered ? Qt.rgba(1, 1, 1, 0.1) : Qt.rgba(1, 1, 1, 0.05)
+                    color:  highlighted ? Qt.rgba(1, 1, 1, 0.15) : Qt.rgba(1, 1, 1, 0.05)
+                    border.width: isSel ? 1 : 0
+                    border.color: Qt.rgba(1, 1, 1, 0.4)
                     Behavior on color { ColorAnimation { duration: 120 } }
 
                     Text {
@@ -195,14 +231,24 @@ PanelWindow {
                     }
 
                     HoverHandler { id: cancelHov; cursorShape: Qt.PointingHandCursor }
-                    MouseArea { anchors.fill: parent; onClicked: root.cancel() }
+                    MouseArea {
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        onEntered: root.selIndex = 0
+                        onClicked: root.cancel()
+                    }
                 }
 
                 Rectangle {
+                    readonly property bool isSel: root.selIndex === 1
+                    readonly property bool highlighted: isSel || confirmHov.hovered
+
                     width:  130
                     height: 38
                     radius: Theme.cornerRadius
-                    color:  confirmHov.hovered ? "#cc3a3a" : "#993030"
+                    color:  highlighted ? "#cc3a3a" : "#993030"
+                    border.width: isSel ? 1 : 0
+                    border.color: "white"
                     Behavior on color { ColorAnimation { duration: 120 } }
 
                     Text {
@@ -214,7 +260,12 @@ PanelWindow {
                     }
 
                     HoverHandler { id: confirmHov; cursorShape: Qt.PointingHandCursor }
-                    MouseArea { anchors.fill: parent; onClicked: root.confirm() }
+                    MouseArea {
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        onEntered: root.selIndex = 1
+                        onClicked: root.confirm()
+                    }
                 }
             }
         }
@@ -320,9 +371,12 @@ PanelWindow {
 
     // Escape / Enter
     Item {
+        id: keyHandler
         anchors.fill: parent
         focus: root.visible
-        Keys.onReturnPressed: root.confirm()
+        Keys.onLeftPressed:   root.selIndex = 0
+        Keys.onRightPressed:  root.selIndex = 1
+        Keys.onReturnPressed: root.selIndex === 0 ? root.cancel() : root.confirm()
         Keys.onEscapePressed: root.cancel()
     }
 }

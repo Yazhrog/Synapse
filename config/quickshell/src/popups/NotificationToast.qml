@@ -16,7 +16,7 @@ PopupWindow {
 	readonly property int fh: Theme.notchRadius
 
 	implicitWidth:  toastWidth + fw
-	implicitHeight: 180
+	implicitHeight: 220
 
 	anchor.window: root.anchorWindow
 	anchor.rect: Qt.rect(
@@ -124,27 +124,6 @@ PopupWindow {
 			flareHeight:  root.fh
 		}
 
-		Rectangle {
-			anchors {
-				right:        parent.right
-				top:          parent.top
-				bottom:       parent.bottom
-				topMargin:    fh*1.2
-				bottomMargin: fh*1.2
-				rightMargin:  root.fw
-			}
-			width:  3
-			radius: 2
-			color: {
-				if (!root.current) return "#ABB2BF"
-				switch (root.current.urgency) {
-					case NotificationUrgency.Critical: return "#e06c75"
-					case NotificationUrgency.Low:      return Qt.rgba(1,1,1,0.25)
-					default:                           return "#ABB2BF"
-				}
-			}
-		}
-
 		Item {
 			anchors.fill: parent
 			opacity: root.showing ? 1 : 0
@@ -157,10 +136,17 @@ PopupWindow {
 					bottom:      cardCol.bottom
 					bottomMargin: -10
 				}
-				height:  2
-				radius:  1
-				color:   Theme.active
-				opacity: 0.5
+				height:  3
+				radius:  2
+				opacity: 0.8
+				color: {
+					if (!root.current) return "#ABB2BF"
+					switch (root.current.urgency) {
+						case NotificationUrgency.Critical: return "#e06c75"
+						case NotificationUrgency.Low:      return Qt.rgba(1,1,1,0.25)
+						default:                           return "#ABB2BF"
+					}
+				}
 
 				property bool running: false
 
@@ -194,7 +180,7 @@ PopupWindow {
 				id: cardCol
 				anchors {
 					left:       parent.left;  leftMargin:  14
-					right:      parent.right; rightMargin: root.fw + 6
+					right:      parent.right; rightMargin: root.fw
 
 				}
 				spacing: 2

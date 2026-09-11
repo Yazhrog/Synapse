@@ -61,6 +61,8 @@ PanelWindow {
         onTriggered: searchInput.forceActiveFocus()
     }
 
+    CursorNudge { id: cursorNudge }
+
     Connections {
         target: Popups
         function onWallpaperTriggerHoveredChanged() {
@@ -78,6 +80,7 @@ PanelWindow {
                         content.appliedScheme        = WallpaperService.scheme
                         searchInput.text             = ""
                         searchInput.forceActiveFocus()
+                        cursorNudge.nudge()
                         focusTimer.restart()
                     }
                 }
@@ -98,6 +101,7 @@ PanelWindow {
                 content.appliedScheme        = WallpaperService.scheme
                 searchInput.text             = ""
                 searchInput.forceActiveFocus()
+                cursorNudge.nudge()
                 focusTimer.restart()
             } else {
                 closeTimer.restart()

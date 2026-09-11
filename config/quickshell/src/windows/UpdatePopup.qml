@@ -75,22 +75,6 @@ PanelWindow {
         // Prevent clicks from hitting the dim MouseArea
         MouseArea { anchors.fill: parent }
 
-        // Left accent bar — color reflects state
-        Rectangle {
-            anchors {
-                left:        parent.left
-                top:         parent.top;    topMargin:    10
-                bottom:      parent.bottom; bottomMargin: 10
-            }
-            width:  3
-            radius: 2
-            color: UpdateService.updateSuccess      ? "#a6e3a1"
-                 : UpdateService.hasConflict        ? "#f5c47a"
-                 : (UpdateService.lastError !== "" &&
-                    !UpdateService.updating)        ? "#f38ba8"
-                 : Theme.active
-            Behavior on color { ColorAnimation { duration: 200 } }
-        }
         Item {
             visible: !UpdateService.updating
             anchors { top: parent.top; right: parent.right; topMargin: 8; rightMargin: 8 }
@@ -133,10 +117,11 @@ PanelWindow {
                         : UpdateService.hasConflict                        ? "󰙨"
                         : UpdateService.lastError !== ""                   ? "󰅙"
                         : "󰑓"
-                    color: UpdateService.updateSuccess      ? "#a6e3a1"
-                         : UpdateService.hasConflict        ? "#f5c47a"
-                         : (UpdateService.lastError !== "" &&
-                            !UpdateService.updating)        ? "#f38ba8"
+                    // Only the error state gets a distinct (destructive-style) color,
+                    // matching ConfirmDialog's convention of reserving red for the one
+                    // negative case rather than tinting every state a different hue.
+                    color: (UpdateService.lastError !== "" && !UpdateService.updating)
+                         ? "#cc3a3a"
                          : Theme.active
                     Behavior on color { ColorAnimation { duration: 200 } }
 
@@ -229,7 +214,7 @@ PanelWindow {
 
                     // Update Now
                     Rectangle {
-                        width: 108; height: 30; radius: 8
+                        width: 108; height: 30; radius: Theme.cornerRadius
                         color: uH.hovered
                             ? Qt.rgba(Theme.active.r, Theme.active.g, Theme.active.b, 0.26)
                             : Qt.rgba(Theme.active.r, Theme.active.g, Theme.active.b, 0.13)
@@ -248,7 +233,7 @@ PanelWindow {
 
                     // Skip (dismiss this check)
                     Rectangle {
-                        width: 58; height: 30; radius: 8
+                        width: 58; height: 30; radius: Theme.cornerRadius
                         color:        skH.hovered ? Qt.rgba(1,1,1,0.08) : Qt.rgba(1,1,1,0.04)
                         border.color: Qt.rgba(1,1,1,0.09); border.width: 1
                         Behavior on color { ColorAnimation { duration: 120 } }
@@ -259,7 +244,7 @@ PanelWindow {
 
                     // Disable auto-update
                     Rectangle {
-                        width: 82; height: 30; radius: 8
+                        width: 82; height: 30; radius: Theme.cornerRadius
                         color:        disH.hovered ? Qt.rgba(1,1,1,0.06) : "transparent"
                         border.color: Qt.rgba(1,1,1,0.07); border.width: 1
                         Behavior on color { ColorAnimation { duration: 120 } }
@@ -311,7 +296,7 @@ PanelWindow {
 
                     // Stash & Update
                     Rectangle {
-                        width: 128; height: 30; radius: 8
+                        width: 128; height: 30; radius: Theme.cornerRadius
                         color: saH.hovered
                             ? Qt.rgba(245/255, 196/255, 122/255, 0.22)
                             : Qt.rgba(245/255, 196/255, 122/255, 0.10)
@@ -329,7 +314,7 @@ PanelWindow {
 
                     // Cancel
                     Rectangle {
-                        width: 72; height: 30; radius: 8
+                        width: 72; height: 30; radius: Theme.cornerRadius
                         color:        cxH.hovered ? Qt.rgba(1,1,1,0.08) : Qt.rgba(1,1,1,0.04)
                         border.color: Qt.rgba(1,1,1,0.09); border.width: 1
                         Behavior on color { ColorAnimation { duration: 120 } }
@@ -347,9 +332,19 @@ PanelWindow {
                 spacing: 12
 
                 Text {
-                    text: UpdateService.needsFullInstall
-                        ? "Update applied.\nThis release changes packages or the deploy map — re-run ./boot.sh to finish."
-                        : "Update applied and re-linked.\nReload to see the changes."
+                    text: {
+                        var hasPkgList = UpdateService.needsFullInstall &&
+                            (UpdateService.newPackages.length > 0 || UpdateService.removedPackages.length > 0)
+                        if (hasPkgList) {
+                            var msg = "New packages required: " + UpdateService.newPackages.join(", ")
+                            if (UpdateService.removedPackages.length > 0)
+                                msg += "\n(no longer needed: " + UpdateService.removedPackages.join(", ") + ")"
+                            return msg + "\nRe-run ./boot.sh to finish."
+                        }
+                        return UpdateService.needsFullInstall
+                            ? "Update applied.\nThis release changes packages or the deploy map — re-run ./boot.sh to finish."
+                            : "Update applied and re-linked.\nReload to see the changes."
+                    }
                     font.pixelSize: 12
                     color:          Qt.rgba(Theme.text.r, Theme.text.g, Theme.text.b, 0.55)
                     wrapMode:       Text.WordWrap
@@ -362,7 +357,7 @@ PanelWindow {
 
                     // Reload Shell — hyprctl reload + quickshell restart
                     Rectangle {
-                        width: 108; height: 30; radius: 8
+                        width: 108; height: 30; radius: Theme.cornerRadius
                         color: rlH.hovered
                             ? Qt.rgba(Theme.active.r, Theme.active.g, Theme.active.b, 0.26)
                             : Qt.rgba(Theme.active.r, Theme.active.g, Theme.active.b, 0.13)
@@ -381,7 +376,7 @@ PanelWindow {
 
                     // Dismiss
                     Rectangle {
-                        width: 72; height: 30; radius: 8
+                        width: 72; height: 30; radius: Theme.cornerRadius
                         color:        dmH.hovered ? Qt.rgba(1,1,1,0.08) : Qt.rgba(1,1,1,0.04)
                         border.color: Qt.rgba(1,1,1,0.09); border.width: 1
                         Behavior on color { ColorAnimation { duration: 120 } }
@@ -413,7 +408,7 @@ PanelWindow {
 
                     // Retry
                     Rectangle {
-                        width: 72; height: 30; radius: 8
+                        width: 72; height: 30; radius: Theme.cornerRadius
                         color: rtH.hovered
                             ? Qt.rgba(Theme.active.r, Theme.active.g, Theme.active.b, 0.22)
                             : Qt.rgba(Theme.active.r, Theme.active.g, Theme.active.b, 0.09)
@@ -427,7 +422,7 @@ PanelWindow {
 
                     // Close
                     Rectangle {
-                        width: 72; height: 30; radius: 8
+                        width: 72; height: 30; radius: Theme.cornerRadius
                         color:        clH.hovered ? Qt.rgba(1,1,1,0.08) : Qt.rgba(1,1,1,0.04)
                         border.color: Qt.rgba(1,1,1,0.09); border.width: 1
                         Behavior on color { ColorAnimation { duration: 120 } }

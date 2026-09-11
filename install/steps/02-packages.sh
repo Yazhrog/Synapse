@@ -101,7 +101,7 @@ PACMAN_DEPS=(
     gum
 
     # Qt6 runtime
-    qt6-base qt6-declarative qt6-multimedia qt6-5compat qt6ct
+    qt6-base qt6-declarative qt6-multimedia qt6-5compat qt6-svg qt6-wayland qt6ct
 
     # Audio / PipeWire
     pipewire pipewire-pulse wireplumber
@@ -114,7 +114,7 @@ PACMAN_DEPS=(
 
     # System services
     brightnessctl upower libnotify polkit
-    python wl-clipboard slurp xdg-user-dirs
+    python wl-clipboard slurp xdg-user-dirs curl
 
     # Screen recording
     wf-recorder cava
@@ -136,7 +136,7 @@ PACMAN_DEPS=(
     ttf-jetbrains-mono-nerd ttf-nerd-fonts-symbols-common ttf-cascadia-mono-nerd
 
     # Other utilities
-    starship fastfetch btop bat zsh exa fd ripgrep neovim fzf zed cmake
+    starship fastfetch btop bat zsh exa fd ripgrep neovim fzf zed cmake nwg-look
 
 )
 
@@ -161,9 +161,9 @@ AUR_DEPS=(
     nbfc-linux       # fan control (optional, for supported laptops)
     cliphist         # clipboard history
     hyprshutdown     # power menu backend
-    grimblast-git    # screenshot helper
     bibata-cursor-theme  # animated cursor themes
     whitesur-icon-theme  # icon theme
+    mactahoe-icon-theme  # icon theme
     wayland-idle-inhibitor-git  # Wayland idle inhibitor for caffeine mode (inhibits hypridle)
     sunsetr                     # schedule-aware color temperature daemon (night light)
 )
@@ -180,4 +180,51 @@ fi
 
 if [[ "$AUR_HELPER" != "none" ]] && ! "$AUR_HELPER" -Q quickshell &>/dev/null 2>&1; then
     die "quickshell failed to install. Synapse cannot run without it."
+fi
+
+# ╭───────────────────────────────────────────────────────────────────────╮
+# │ Step 4 — rishot (Screenshot Tool)                                     │
+# ╰───────────────────────────────────────────────────────────────────────╯
+# rishot (https://github.com/Gakuseei/rishot) has no AUR package yet, so it's
+# vendored the same way as hyprselect in 04-plugins.sh: git clone/pull straight
+# from upstream. No build step — it's a shell launcher next to QML that
+# quickshell reads directly. Its required deps (quickshell, wl-clipboard,
+# qt6-declarative/svg/5compat/wayland) are already covered above; its default
+# save dir (~/Pictures/Screenshots) is the one SYNAPSE_USER_DIRS already seeds.
+step 4 "rishot (Screenshot Tool)"
+
+RISHOT_DIR="$HOME/.local/share/rishot"
+RISHOT_BINDIR="$HOME/.local/bin"
+
+mkdir -p "$RISHOT_BINDIR"
+
+if [[ -d "$RISHOT_DIR/.git" ]]; then
+    if ! spin "  Updating rishot..." git -C "$RISHOT_DIR" pull --ff-only; then
+        log_warn "rishot update failed — keeping the existing checkout."
+    fi
+elif [[ -d "$RISHOT_DIR" ]]; then
+    log_warn "$RISHOT_DIR exists but is not a git clone — leaving it alone."
+else
+    if ! spin "  Cloning rishot..." git clone https://github.com/Gakuseei/rishot.git "$RISHOT_DIR"; then
+        log_warn "rishot clone failed — skipping (screenshot tool will be unavailable)."
+    fi
+fi
+
+if [[ -f "$RISHOT_DIR/bin/rishot" ]]; then
+    chmod +x "$RISHOT_DIR/bin/rishot"
+    ln -sf "$RISHOT_DIR/bin/rishot" "$RISHOT_BINDIR/rishot"
+    log_ok "rishot ready → $RISHOT_DIR  (launcher: $RISHOT_BINDIR/rishot)"
+
+    # App-launcher integration, mirroring upstream's own installer.
+    DATA_HOME="${XDG_DATA_HOME:-$HOME/.local/share}"
+    if [[ -f "$RISHOT_DIR/packaging/rishot.svg" ]]; then
+        mkdir -p "$DATA_HOME/icons/hicolor/scalable/apps"
+        cp "$RISHOT_DIR/packaging/rishot.svg" "$DATA_HOME/icons/hicolor/scalable/apps/rishot.svg"
+    fi
+    if [[ -f "$RISHOT_DIR/rishot.desktop" ]]; then
+        mkdir -p "$DATA_HOME/applications"
+        cp "$RISHOT_DIR/rishot.desktop" "$DATA_HOME/applications/rishot.desktop"
+    fi
+else
+    log_warn "rishot binary not found after clone — skipping."
 fi
