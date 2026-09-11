@@ -6,7 +6,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-0.1.0-8D748C?style=for-the-badge&logoColor=D9E0EE&labelColor=252733" alt="Version 0.1.0" />
+  <img src="https://img.shields.io/badge/version-0.2.0-8D748C?style=for-the-badge&logoColor=D9E0EE&labelColor=252733" alt="Version 0.2.0" />
   <br>
   <img src="https://img.shields.io/badge/hyprland-v0.55+-5E81AC?style=for-the-badge&logoColor=D9E0EE&labelColor=252733" alt="Hyprland v0.55+" />
   <img src="https://img.shields.io/badge/quickshell-framework-A1C999?style=for-the-badge&logoColor=D9E0EE&labelColor=252733" alt="Quickshell Framework" />
@@ -32,7 +32,7 @@
 - **Clipboard Manager** — Cliphist integration for history management
 - **Highly Customizable** — QML-based UI, easily extended
 
-> **Note:** Synapse is currently in its `v0.1.0` release. While the core architecture and theming pipeline are feature-complete, you may encounter bugs. Please report them on Discord or via GitHub Issues!
+> **Note:** Synapse is currently in its `v0.2.0` release. While the core architecture and theming pipeline are feature-complete, you may encounter bugs. Please report them on Discord or via GitHub Issues!
 
 ---
 
@@ -180,7 +180,7 @@ Toggle that in **Dashboard → Config → Misc**.
   Roadmap
 </h2>
 
-### Current (v0.1.0)
+### Current (v0.2.0)
 
 - [x] Core shell framework
 - [x] System monitoring dashboard
@@ -193,8 +193,14 @@ Toggle that in **Dashboard → Config → Misc**.
 - [x] Lua config generation
 - [x] Professional installer (Arch/NixOS)
 - [x] Auto-update mechanism
+- [x] Volume/brightness on-screen display (OSD)
+- [x] Low-battery warning & critical shutdown dialog
+- [x] Redesigned notification toasts
+- [x] Built-in screenshot tool (rishot)
+- [x] GTK theming via nwg-look
+- [x] Smarter update flow (package-diff aware, keybind-conflict re-checks)
 
-### Upcoming (Post-v0.1.0)
+### Upcoming (Post-v0.2.0)
 
 - [ ] Scaling on Different Screen-Sizes
 - [ ] Config Pages for Shell Customization
@@ -215,8 +221,6 @@ Known Issues
 
 - **Multi-Monitor Scaling:** Global scaling across mixed-resolution monitors (e.g., 4K paired with 1080p) is currently inconsistent. UI elements may appear misproportioned or poorly sized on non-1080p screens.
 
-- **Input Focus Delays:** The App Launcher and Wallpaper popups occasionally fail to capture keyboard focus immediately upon opening. A slight mouse movement is currently required to force focus activation.
-
 - **Top Bar Clipping:** Elements within the right notch may become visually clipped if the system tray is expanded and contains an excessive number of active items.
 
 - **Shutdown Menu (Hyprshutdown) State:** Canceling a shutdown or logout action can sometimes leave the Hyprland session in an empty state with most applications unintentionally closed. It may also occasionally struggle to terminate all running apps smoothly.
@@ -229,8 +233,8 @@ Known Issues
 
 Synapse is actively developed and welcomes contributions!
 
-- Found a bug? → [Open an issue](https://github.com/Brainitech/Synapse/issues)
-- Have an idea? → [Start a discussion](https://github.com/Brainitech/Synapse/discussions)
+- Found a bug? → [Open an issue](https://github.com/Yazhrog/Synapse/issues)
+- Have an idea? → [Start a discussion](https://github.com/Yazhrog/Synapse/discussions)
 - Want to contribute? → Fork, branch, and submit a pull request
 
 ---
