@@ -65,24 +65,23 @@ log_ok "Wallpapers initialised"
 # ╰───────────────────────────────────────────────────────────────────────╯
 echo ""
 
-# Only meaningful before Synapse's own binds are loaded. Under the Lua config
-# provider every bind — ours and the user's — reports as dispatcher "__lua" with
-# an opaque numeric arg, so on a system that already has SynapseKeybinds.lua
-# live, our own binds are indistinguishable from a real conflict and every
-# action would be flagged against itself.
-if [[ -s "$HOME/.config/Synapse/SynapseKeybinds.lua" ]]; then
-
-log_info "Synapse keybinds already installed — skipping conflict check."
-log_info "Re-assign any bind in: Dashboard → Config → Keybinds"
-
-else
-
-log_info "Checking for keybind conflicts with the active Hyprland session..."
+# Runs on every install AND every re-run/update — not just the first one — so
+# a default keybind added by a later update still gets checked against the
+# user's own Hyprland binds. The catch: once Synapse's own binds are loaded,
+# `hyprctl binds -j` reports ours and the user's identically as dispatcher
+# "__lua" with an opaque numeric arg, so the usual "qs ipc" substring check
+# can't tell them apart anymore. The Python script below works around this by
+# only evaluating actions that are NEW since the last generated
+# SynapseKeybinds.lua (never bound by Synapse before, so any hyprctl bind at
+# that mod+key can't be one of Synapse's own), and by treating any mod+key
+# combo already occupied by the old SynapseKeybinds.lua as "ours" rather than
+# a real conflict.
+log_info "Checking new keybind actions for conflicts with the active Hyprland session..."
 
 export SYNAPSE_DEFAULTS_JSON="$REPO_DIR/config/quickshell/src/config/keybind-defaults.json"
 
 python3 << 'PYEOF' || log_warn "Keybind check skipped (Python error or no Hyprland session)."
-import subprocess, json, os, sys
+import re, subprocess, json, os, sys
 
 # Single source of truth, shared with KeybindService.qml — keeps the action
 # names here in sync with the IpcHandler targets in IpcManager.qml.
@@ -120,12 +119,36 @@ try:
 except Exception:
     existing = {}
 
+# What Synapse already generated last time — empty on a fresh install, which
+# makes "new_actions" reduce to "every action not already in existing", i.e.
+# today's first-install behavior, unchanged.
+lua_path = os.path.expanduser("~/.config/Synapse/SynapseKeybinds.lua")
+try:
+    with open(lua_path) as f:
+        old_lua = f.read()
+except FileNotFoundError:
+    old_lua = ""
+
+old_actions = set(re.findall(r'qs ipc call (\S+) toggle', old_lua))
+
+ours_combos = set()
+for mods_key in re.findall(r'hl\.bind\(\s*"([^"]+)"', old_lua):
+    parts = [p.strip() for p in mods_key.split("+")]
+    ours_combos.add((mods_to_mask("+".join(parts[:-1])), parts[-1].lower()))
+
+new_actions = [a for a in DEFAULTS if a not in existing and a not in old_actions]
+
+if not new_actions:
+    print("  \033[2m(no new keybind actions to check)\033[0m")
+    sys.exit(0)
+
 conflicts = {}
-for action, data in DEFAULTS.items():
-    if action in existing:
-        continue
+for action in new_actions:
+    data = DEFAULTS[action]
     mask = mods_to_mask(data["mods"])
     key  = data["key"].lower()
+    if (mask, key) in ours_combos:
+        continue
     for hb in hypr_binds:
         if hb.get("submap", "") or hb.get("mouse"):
             continue
@@ -141,7 +164,7 @@ for action, data in DEFAULTS.items():
             break
 
 if not conflicts:
-    print("  \033[0;32m✓\033[0m  No keybind conflicts detected.")
+    print(f"  \033[0;32m✓\033[0m  {len(new_actions)} new action(s) checked — no keybind conflicts detected.")
     sys.exit(0)
 
 print(f"\n  \033[0;31m✗\033[0m  {len(conflicts)} conflict(s) found:\n")
@@ -157,5 +180,3 @@ with open(config_path, "w") as f:
 print("  \033[1;33m⚠\033[0m  Conflicting binds left unbound.")
 print("       Re-assign them: Dashboard → Config → Keybinds\n")
 PYEOF
-
-fi
