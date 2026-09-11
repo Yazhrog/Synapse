@@ -347,9 +347,19 @@ PanelWindow {
                 spacing: 12
 
                 Text {
-                    text: UpdateService.needsFullInstall
-                        ? "Update applied.\nThis release changes packages or the deploy map — re-run ./boot.sh to finish."
-                        : "Update applied and re-linked.\nReload to see the changes."
+                    text: {
+                        var hasPkgList = UpdateService.needsFullInstall &&
+                            (UpdateService.newPackages.length > 0 || UpdateService.removedPackages.length > 0)
+                        if (hasPkgList) {
+                            var msg = "New packages required: " + UpdateService.newPackages.join(", ")
+                            if (UpdateService.removedPackages.length > 0)
+                                msg += "\n(no longer needed: " + UpdateService.removedPackages.join(", ") + ")"
+                            return msg + "\nRe-run ./boot.sh to finish."
+                        }
+                        return UpdateService.needsFullInstall
+                            ? "Update applied.\nThis release changes packages or the deploy map — re-run ./boot.sh to finish."
+                            : "Update applied and re-linked.\nReload to see the changes."
+                    }
                     font.pixelSize: 12
                     color:          Qt.rgba(Theme.text.r, Theme.text.g, Theme.text.b, 0.55)
                     wrapMode:       Text.WordWrap
