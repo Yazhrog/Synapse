@@ -46,8 +46,6 @@ tag_symbol = '  '
 [nodejs]
 symbol = " "
 
-Arch = " "
-
 [package]
 symbol = "󰏗 "
 
