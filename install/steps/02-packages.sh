@@ -136,7 +136,7 @@ PACMAN_DEPS=(
     ttf-jetbrains-mono-nerd ttf-nerd-fonts-symbols-common ttf-cascadia-mono-nerd
 
     # Other utilities
-    starship fastfetch btop bat zsh exa fd ripgrep neovim fzf zed cmake
+    starship fastfetch btop bat zsh exa fd ripgrep neovim fzf zed cmake nwg-look
 
 )
 
@@ -163,6 +163,7 @@ AUR_DEPS=(
     hyprshutdown     # power menu backend
     bibata-cursor-theme  # animated cursor themes
     whitesur-icon-theme  # icon theme
+    mactahoe-icon-theme  # icon theme
     wayland-idle-inhibitor-git  # Wayland idle inhibitor for caffeine mode (inhibits hypridle)
     sunsetr                     # schedule-aware color temperature daemon (night light)
 )

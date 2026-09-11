@@ -12,9 +12,6 @@ hl.on("hyprland.start", function()
     hl.exec_cmd("hyprpm reload -n")
     hl.exec_cmd("hyprctl plugin load " .. os.getenv("HOME") .. "/.config/hypr/plugin/hyprselect/hyprselect.so")
 
-    -- GTK theme
-    hl.exec_cmd(os.getenv("HOME") .. "/.config/hypr/scripts/gtk.sh")
-
     -- Synapse visual layer
     hl.exec_cmd("awww-daemon")
     hl.exec_cmd("hypridle -c " .. os.getenv("HOME") .. "/.config/hypr/hypridle.conf")

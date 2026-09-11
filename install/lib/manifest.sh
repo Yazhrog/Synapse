@@ -85,6 +85,8 @@ SYNAPSE_COPY_ONCE=(
     "config/nvim/lazy-lock.json|.config/nvim/lazy-lock.json"  # nvim rewrites on :Lazy sync
     "config/sunsetr/sunsetr.toml|.config/sunsetr/sunsetr.toml" # `sunsetr geo` rewrites it
     "config/qt6ct/qt6ct.conf|.config/qt6ct/qt6ct.conf"         # the qt6ct GUI rewrites it
+    "config/gtk-3.0/settings.ini|.config/gtk-3.0/settings.ini" # the nwg-look GUI rewrites it
+    "config/gtk-4.0/settings.ini|.config/gtk-4.0/settings.ini" # the nwg-look GUI rewrites it
 )
 
 # ╭───────────────────────────────────────────────────────────────────────╮
