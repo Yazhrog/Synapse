@@ -79,3 +79,19 @@ These are a *different* mechanism from `binds.lua` and are generated at runtime,
 5. `install/steps/06-shell-config.sh` runs a live conflict check (`hyprctl binds -j`) against the same `keybind-defaults.json` at install time, and pre-unbinds (in `keybinds.json`) any default that collides with an existing Hyprland bind.
 
 If you add/rename a shell action: update `keybind-defaults.json` and the matching `IpcHandler` target in `IpcManager.qml` together — they're the two ends of the same string and nothing type-checks the match between them.
+
+## Commit conventions for Claude agents
+
+When making commits to this repository, follow these rules:
+
+- **Use conventional commit format**: `<type>(<scope>): <subject>` (one-liner, lowercase)
+  - `type`: `fix`, `feat`, `chore`, `refactor`, `docs`, `style`, `test`, etc.
+  - `scope`: (optional) affected area, e.g., `wallpaper`, `keybinds`, `colors`, `shell`
+  - `subject`: concise description of the change, imperative mood
+  - Examples: `fix(wallpaper): enable horizontal touchpad scroll in selector`, `feat(colors): add matugen integration`
+
+- **Do not include "Generated with Claude Code" or similar attribution tags** in commit messages or PR descriptions. These are automated platform messages and clutter the git history. The commit author/date is sufficient attribution.
+
+- **Commit messages should be one-liner** — avoid multi-line commit bodies unless absolutely necessary to explain a non-obvious design decision. Most changes are self-explanatory via the diff and PR description.
+
+- **PR descriptions** (when creating pull requests) should be similarly clean: a brief summary of what changed and why, without platform/tool attribution tags. Focus on the change, not the mechanism that produced it.
