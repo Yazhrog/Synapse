@@ -9,7 +9,8 @@ import '../services/'
 import "../"
 
 // Dashboard — PanelWindow required for TextInput keyboard focus on Wayland.
-// Uses WlrKeyboardFocus.Exclusive so TextInputs inside pages receive key events.
+// Keyboard focus comes from PopupFocusGrab; WlrKeyboardFocus.Exclusive is kept
+// so the layer surface accepts key events once it has focus.
 //
 // Positioning mirrors the original PopupWindow behaviour: the sizer's top sits
 // exactly at the notch-bar bottom (topMargin: Theme.notchHeight), so there is
@@ -20,6 +21,7 @@ PanelWindow {
 
     // Kept so existing instantiation sites that pass anchorWindow: … still compile.
     required property var anchorWindow
+    property var hostScreen: null
 
     readonly property int fw: Theme.notchRadius
     readonly property int fh: Theme.notchRadius
@@ -59,7 +61,13 @@ PanelWindow {
 
     property bool windowVisible: false
 
-    CursorNudge { id: cursorNudge }
+    PopupFocusGrab {
+        window:       root
+        screen:       root.hostScreen
+        active:       Popups.dashboardOpen
+        onFocused:    pageArea.forceActiveFocus()
+        onDismissed:  Popups.dashboardOpen = false
+    }
 
     Connections {
         target: Popups
@@ -68,7 +76,6 @@ PanelWindow {
                 closeTimer.stop()
                 root.windowVisible = true
                 root._applyPageWidth(root.page)
-                cursorNudge.nudge()
             } else {
                 closeTimer.restart()
             }
@@ -166,7 +173,10 @@ PanelWindow {
                 }
 
                 // ── Page area ─────────────────────────────────────────────────
-                Item {
+                // FocusScope so forceActiveFocus() from the focus grab restores
+                // whichever page item last held focus (e.g. the launcher search)
+                // instead of taking it for itself.
+                FocusScope {
                     id: pageArea
                     focus: true
                     
