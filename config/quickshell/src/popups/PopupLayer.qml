@@ -21,18 +21,23 @@ Item {
     required property var rightBorder  // right Border PanelWindow
     required property var bottomBorder // bottom Border PanelWindow
 
+    // Popups here don't set a screen of their own; their PopupFocusGrab uses
+    // this to only grab on the focused monitor's copy.
+    readonly property var hostScreen: topBar.screen
+
     // ── Border-anchored popups ───────────────────────────────
 
     // Left border → center
     ArchMenu {
         anchorWindow: root.leftBorder
+        hostScreen:   root.hostScreen
     }
 
     // Bottom border → slides up
-    WallpaperPopup {}
+    WallpaperPopup { hostScreen: root.hostScreen }
 
     // Bottom-right corner → clipboard history + emoji
-    ClipboardPopup {}
+    ClipboardPopup { hostScreen: root.hostScreen }
 
     // ── TopBar-anchored popups ───────────────────────────────
 
@@ -47,6 +52,7 @@ Item {
     // Center notch — dashboard (expands below the center notch)
     Dashboard {
         anchorWindow: root.topBar
+        hostScreen:   root.hostScreen
     }
 
     // Right notch
@@ -63,5 +69,5 @@ Item {
         anchorWindow: root.topBar
     }
 
-    NetworkPopup {}
+    NetworkPopup { hostScreen: root.hostScreen }
 }

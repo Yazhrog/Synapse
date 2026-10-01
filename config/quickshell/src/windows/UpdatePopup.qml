@@ -2,6 +2,7 @@ import QtQuick
 import Quickshell
 import Quickshell.Wayland
 import "../"
+import "../components"
 
 // UpdatePopup — centered overlay popup for shell update notifications.
 // Same structural pattern as ConfirmDialog: PanelWindow Overlay, dim background,
@@ -27,6 +28,13 @@ PanelWindow {
 
     property bool windowVisible: false
     visible: windowVisible
+
+    PopupFocusGrab {
+        window:         root
+        active:         UpdateService.showPopup
+        dismissOnClear: false
+        onFocused:      escHandler.forceActiveFocus()
+    }
     
     Connections {
         target: UpdateService
@@ -437,6 +445,7 @@ PanelWindow {
 
     // Escape to dismiss (same as ConfirmDialog)
     Item {
+        id:           escHandler
         anchors.fill: parent
         focus:        root.visible
         Keys.onEscapePressed: {

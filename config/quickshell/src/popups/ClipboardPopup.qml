@@ -35,8 +35,18 @@ PanelWindow {
         height: sizer.height
     }
 
+    property var hostScreen: null
+
     property bool windowVisible: false
     visible: windowVisible
+
+    PopupFocusGrab {
+        window:       root
+        screen:       root.hostScreen
+        active:       Popups.clipboardOpen
+        onFocused:    content.forceActiveFocus()
+        onDismissed:  Popups.clipboardOpen = false
+    }
 
     Connections {
         target: Popups
@@ -82,7 +92,9 @@ PanelWindow {
             flareHeight:  root.fh
         }
 
-        Item {
+        // FocusScope so it can take focus from the grab and handle Escape —
+        // PopupDismiss can't see keys while this popup holds the grab.
+        FocusScope {
             id: content
             anchors {
                 fill:         parent
@@ -97,6 +109,8 @@ PanelWindow {
                     duration: Popups.clipboardOpen ? Theme.animDuration * 0.5 : Theme.animDuration * 0.15
                 }
             }
+
+            Keys.onEscapePressed: Popups.clipboardOpen = false
 
             HistoryTab { anchors.fill: parent }
         }
