@@ -31,6 +31,7 @@ def main():
                     continue
 
                 apps.append({
+                    "id":         fname,
                     "name":       name,
                     "exec":       exec_,
                     "icon":       de.get("Icon", ""),
