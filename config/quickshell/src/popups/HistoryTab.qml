@@ -357,17 +357,17 @@ component ClipRow: Item {
                 wrapMode:         Text.WordWrap
             }
 
-            // ── Action buttons (appear on hover) ──────────────────────────────
+            // ── Action buttons (appear on hover; pin stays on when pinned) ────
             Row {
                 id: actionsRow
                 anchors.verticalCenter: parent.verticalCenter
                 spacing: 2
-                opacity: rHov.hovered ? 1 : 0
-                Behavior on opacity { NumberAnimation { duration: 160 } }
 
                 // Copy
                 ActionBtn {
                     icon: "󰆏"
+                    opacity: rHov.hovered ? 1 : 0
+                    Behavior on opacity { NumberAnimation { duration: 160 } }
                     onClicked: {
                         if (row.isPinned) ClipboardService.copyText(row.fullText || row.previewText)
                         else             ClipboardService.copyEntry(row.entryId)
@@ -375,23 +375,12 @@ component ClipRow: Item {
                     }
                 }
 
-                // Pin / Unpin  (hidden for image entries — images can't be pinned)
-                ActionBtn {
-                    icon:    row.isPinned ? "󰐄" : "󰐃"
-                    active:  row.isPinned
-                    visible: !row.isImage
-                    onClicked: {
-                        if (row.isPinned)
-                            ClipboardService.unpinAt(row.pinnedIndex)
-                        else
-                            ClipboardService.pinEntry(row.entryId, row.previewText)
-                    }
-                }
-
                 // Delete / fully remove
                 ActionBtn {
                     icon:   "󰩺"
                     danger: true
+                    opacity: rHov.hovered ? 1 : 0
+                    Behavior on opacity { NumberAnimation { duration: 160 } }
                     onClicked: {
                         row._removing = true
                         delayedAction.isPinned    = row.isPinned
@@ -400,24 +389,23 @@ component ClipRow: Item {
                         delayedAction.restart()
                     }
                 }
+
+                // Pin / Unpin  (hidden for image entries — images can't be pinned)
+                // Always shown on pinned rows (doubles as the pinned indicator)
+                ActionBtn {
+                    icon:    row.isPinned && rHov.hovered ? "󰐄" : "󰐃"
+                    active:  row.isPinned
+                    visible: !row.isImage
+                    opacity: row.isPinned || rHov.hovered ? 1 : 0
+                    Behavior on opacity { NumberAnimation { duration: 160 } }
+                    onClicked: {
+                        if (row.isPinned)
+                            ClipboardService.unpinAt(row.pinnedIndex)
+                        else
+                            ClipboardService.pinEntry(row.entryId, row.previewText)
+                    }
+                }
             }
-        }
-
-        // ── Pin badge: small circle in the top-right corner ───────────────────
-        Rectangle {
-            visible: row.isPinned
-            anchors { top: parent.top; right: parent.right; topMargin: 5; rightMargin: 4 }
-            width: 18; height: 18; radius: 8
-            color: Theme.active
-
-            Text {
-                anchors.centerIn: parent
-                text: " 󰐃"; font.pixelSize: 8; font.weight: Font.Bold
-                color: Qt.rgba(0, 0, 0, 0.65)
-            }
-
-            scale: row.isPinned ? 1.0 : 0.0
-            Behavior on scale { NumberAnimation { duration: 220; easing.type: Easing.OutBack } }
         }
     }
 
