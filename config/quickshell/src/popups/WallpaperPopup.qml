@@ -353,9 +353,12 @@ PanelWindow {
                 z:                    wallGrid.z + 1
                 acceptedButtons:      Qt.NoButton
                 onWheel: function(wheel) {
+                    const delta = (wheel.pixelDelta.x !== 0 || wheel.pixelDelta.y !== 0)
+                        ? (wheel.pixelDelta.x !== 0 ? wheel.pixelDelta.x : wheel.pixelDelta.y)
+                        : (wheel.angleDelta.x !== 0 ? wheel.angleDelta.x : wheel.angleDelta.y)
                     wallGrid.contentX = Math.max(0,
                         Math.min(wallGrid.contentWidth - wallGrid.width,
-                            wallGrid.contentX - wheel.angleDelta.y))
+                            wallGrid.contentX - delta))
                 }
             }
 
