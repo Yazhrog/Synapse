@@ -54,6 +54,9 @@ QtObject {
         confirmAction  = action
         confirmGfxMode = gfxMode ?? ""
         confirmOpen    = true
+        // Confirm dialog is Overlay-layer, same as Dashboard — close the
+        // dashboard so it can't cover the dialog and block input to it.
+        dashboardOpen  = false
     }
 
     function cancelConfirm() {
@@ -69,6 +72,9 @@ QtObject {
     function showBatteryCritical(level) {
         batteryCriticalLevel = level
         batteryCriticalOpen  = true
+        // Same reasoning as showConfirm(): Overlay-layer dialog must not be
+        // hidden behind an open dashboard.
+        dashboardOpen        = false
     }
 
     function acknowledgeBatteryCritical() {
