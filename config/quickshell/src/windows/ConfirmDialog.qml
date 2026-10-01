@@ -35,12 +35,12 @@ PanelWindow {
     WlrLayershell.layer:         WlrLayer.Overlay
     WlrLayershell.keyboardFocus: root.visible ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
 
-    CursorNudge { id: cursorNudge }
-
-    Timer {
-        id: focusTimer
-        interval: 80
-        onTriggered: keyHandler.forceActiveFocus()
+    // Modal: a click outside (e.g. on another monitor) must not dismiss it.
+    PopupFocusGrab {
+        window:         root
+        active:         root.visible
+        dismissOnClear: false
+        onFocused:      keyHandler.forceActiveFocus()
     }
 
     Connections {
@@ -49,15 +49,11 @@ PanelWindow {
             if (Popups.confirmOpen) {
                 root.selIndex = 0
                 keyHandler.forceActiveFocus()
-                cursorNudge.nudge()
-                focusTimer.restart()
             }
         }
         function onConfirmRunningChanged() {
             if (Popups.confirmRunning) {
                 keyHandler.forceActiveFocus()
-                cursorNudge.nudge()
-                focusTimer.restart()
             }
         }
     }
