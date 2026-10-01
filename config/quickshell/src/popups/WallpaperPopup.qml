@@ -29,6 +29,8 @@ PanelWindow {
     readonly property int fw:          Theme.notchRadius
     readonly property int fh:          Theme.notchRadius
 
+    property var hostScreen: null
+
     property bool windowVisible: false
     visible: windowVisible
 
@@ -55,13 +57,13 @@ PanelWindow {
         }
     }
 
-    Timer {
-        id: focusTimer
-        interval: 80
-        onTriggered: searchInput.forceActiveFocus()
+    PopupFocusGrab {
+        window:       root
+        screen:       root.hostScreen
+        active:       Popups.wallpaperOpen
+        onFocused:    searchInput.forceActiveFocus()
+        onDismissed:  Popups.wallpaperOpen = false
     }
-
-    CursorNudge { id: cursorNudge }
 
     Connections {
         target: Popups
@@ -80,8 +82,6 @@ PanelWindow {
                         content.appliedScheme        = WallpaperService.scheme
                         searchInput.text             = ""
                         searchInput.forceActiveFocus()
-                        cursorNudge.nudge()
-                        focusTimer.restart()
                     }
                 }
             } else {
@@ -101,8 +101,6 @@ PanelWindow {
                 content.appliedScheme        = WallpaperService.scheme
                 searchInput.text             = ""
                 searchInput.forceActiveFocus()
-                cursorNudge.nudge()
-                focusTimer.restart()
             } else {
                 closeTimer.restart()
             }
