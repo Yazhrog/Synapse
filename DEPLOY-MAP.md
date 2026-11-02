@@ -146,6 +146,7 @@ sourced by `hyprlock.conf`.
 |---|---|
 | `.../user_data/wallpaper.json` | WallpaperService |
 | `.../user_data/clipboard_pins.json` | ClipboardService |
+| `.../user_data/app_pins.json` | AppPinService |
 | `.../user_data/tasks.json` | KanbanBoard |
 | `.../user_data/hotspot.json` | QuickSettings / HotspotTab |
 | `.../user_data/update_prefs.json` | UpdateService |
