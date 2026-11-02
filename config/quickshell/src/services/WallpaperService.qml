@@ -22,6 +22,8 @@ QtObject {
     readonly property string _wallDir:        Quickshell.env("HOME") + "/.config/Synapse/src/user_data/wallpapers"
     readonly property string _currWall:       _wallDir + "/curr_wall"
     readonly property string _currWallStatic: _wallDir + "/curr_wall_static.jpg"
+    readonly property string _colorsPath:     Quickshell.env("HOME") + "/.config/Synapse/src/user_data/colors.json"
+    readonly property string _defaultWall:    Quickshell.shellDir + "/src/assets/wallpapers/synapse-default-0.png"
 
     // ── State ─────────────────────────────────────────────────────────────────
     property var    wallpapers:   []
@@ -81,11 +83,22 @@ QtObject {
                     if (obj.scheme       && obj.scheme       !== "") root.scheme       = obj.scheme
                 } catch(e) {}
             }
-            if (root.currentWall === "") {
-                var defaultWall = Quickshell.shellDir + "/src/assets/wallpapers/synapse-default-0.png"
-                root.apply(defaultWall)
-            }
+            colorsCheckProc.running = true
             root.refresh()
+        }
+    }
+
+    // ── Startup color check ───────────────────────────────────────────────────
+    // Applies the default wallpaper on first run, and re-applies the saved one
+    // when matugen never produced colors.json (e.g. a first apply that failed),
+    // so the shell doesn't stay on ColorLoader's fallback palette.
+    property var colorsCheckProc: Process {
+        command: ["bash", "-c", "grep -qs '\"active\"' '" + root._colorsPath + "'"]
+        onExited: function(exitCode) {
+            if (root.currentWall === "")
+                root.apply(root._defaultWall)
+            else if (exitCode !== 0)
+                root.apply(root.currentWall)
         }
     }
 
@@ -113,16 +126,24 @@ QtObject {
         if (root.applying || path === "") return
         root.applying    = true
         root.currentWall = path
+        // awww-daemon starts alongside quickshell, so on the first run it may
+        // not be up yet: wait for it (up to 5s). Colors are generated even if
+        // awww fails, but the apply then exits non-zero so the wallpaper isn't
+        // saved and is applied again on the next start.
         applyProc.command = [
             "bash", "-c",
-            "mkdir -p '" + root._wallDir + "' " +
-            "&& awww img --transition-type grow --transition-step 200 --transition-duration 1.2 --transition-fps 60 --transition-pos bottom \"" + path + "\" " +
-            "&& ln -sf \"" + path + "\" '" + root._currWall + "' " +
+            "mkdir -p '" + root._wallDir + "'; " +
+            "for _ in $(seq 1 50); do awww query >/dev/null 2>&1 && break; sleep 0.1; done; " +
+            "awww img --transition-type grow --transition-step 200 --transition-duration 1.2 --transition-fps 60 --transition-pos bottom \"" + path + "\"; " +
+            "wall=$?; " +
+            "ln -sf \"" + path + "\" '" + root._currWall + "' " +
             "&& (if [[ \"" + path + "\" == *.gif ]]; then " +
             "rm -f '" + root._currWallStatic + "'; magick \"" + path + "[0]\" '" + root._currWallStatic + "' || true; " +
             "else ln -sf \"" + path + "\" '" + root._currWallStatic + "'; fi) " +
             "&& matugen image \"$(readlink -f '" + root._currWallStatic + "')\" -c \"" + Quickshell.shellDir + "/src/config/matugen.toml\" --source-color-index 0 --type scheme-" + root.scheme + " " +
-            "&& matugen image \"$(readlink -f '" + root._currWallStatic + "')\" --source-color-index 0 --type scheme-" + root.scheme + " || true"
+            "|| exit 1; " +
+            "matugen image \"$(readlink -f '" + root._currWallStatic + "')\" --source-color-index 0 --type scheme-" + root.scheme + " || true; " +
+            "exit $wall"
         ]
         applyProc.running = true
     }
