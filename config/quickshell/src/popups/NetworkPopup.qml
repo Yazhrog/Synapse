@@ -41,8 +41,20 @@ PanelWindow {
     }
 
     // ── Visibility gate ───────────────────────────────────────────────────────
+    property var hostScreen: null
+
     property bool windowVisible: false
     visible: windowVisible
+
+    // sizer owns the Escape handler; tab inputs (Wi-Fi password, BT PIN,
+    // hotspot) take focus from it themselves once the grab is live.
+    PopupFocusGrab {
+        window:       root
+        screen:       root.hostScreen
+        active:       Popups.networkOpen
+        onFocused:    sizer.forceActiveFocus()
+        onDismissed:  Popups.networkOpen = false
+    }
 
     Connections {
         target: Popups

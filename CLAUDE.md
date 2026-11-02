@@ -52,6 +52,7 @@ Global singletons are declared in `src/qmldir` (`singleton Name path`) and are t
 - **`theme/Theme.qml`** — flattens `Colors.qml` (from `theme/ColorLoader.qml`, a `FileView` that watches `~/.config/Synapse/src/user_data/colors.json`) and `Metrics.qml` into one property surface. QML singletons can't alias another singleton's properties directly, hence the manual re-binding of every property.
 - **`services/`** — one QML object per external integration, mostly thin wrappers around CLI tools driven via `Quickshell.Io` `Process`/`SplitParser` (nmcli, bluetoothctl, playerctl, wf-recorder, cava, etc.). Some are qmldir singletons (audio/network/etc. don't need to be — check `src/qmldir` for which ones are global vs. instantiated per-use).
 - **`popups/`, `windows/`, `modules/`, `components/`** — the UI layer. New popups go through `popups/PopupLayer.qml` (per the comment in `shell.qml`); don't wire a new popup directly into `shell.qml`.
+- **Keyboard focus** — any popup/dialog that needs the keyboard uses `components/PopupFocusGrab.qml` (a delayed `HyprlandFocusGrab`, the pattern ArchMenu originally proved out): bind `active` to the popup's open flag, `forceActiveFocus()` the target item in `onFocused`, close the popup in `onDismissed`, and pass `hostScreen` as `screen` for PopupLayer popups. The grab must whitelist **only** the popup window — Hyprland gives the keyboard to an arbitrary whitelisted surface, so adding the bar windows sent focus to a bar. Don't rely on `WlrKeyboardFocus.Exclusive`/`OnDemand` alone — Hyprland doesn't reliably focus a freshly-mapped layer surface, which made focus intermittent. While a grab is live, clicks outside the whitelisted windows never reach `PopupDismiss`, and neither does Escape, so the popup has to handle Escape itself.
 
 ### Theming pipeline (Material You via matugen)
 
@@ -79,3 +80,19 @@ These are a *different* mechanism from `binds.lua` and are generated at runtime,
 5. `install/steps/06-shell-config.sh` runs a live conflict check (`hyprctl binds -j`) against the same `keybind-defaults.json` at install time, and pre-unbinds (in `keybinds.json`) any default that collides with an existing Hyprland bind.
 
 If you add/rename a shell action: update `keybind-defaults.json` and the matching `IpcHandler` target in `IpcManager.qml` together — they're the two ends of the same string and nothing type-checks the match between them.
+
+## Commit conventions for Claude agents
+
+When making commits to this repository, follow these rules:
+
+- **Use conventional commit format**: `<type>(<scope>): <subject>` (one-liner, lowercase)
+  - `type`: `fix`, `feat`, `chore`, `refactor`, `docs`, `style`, `test`, etc.
+  - `scope`: (optional) affected area, e.g., `wallpaper`, `keybinds`, `colors`, `shell`
+  - `subject`: concise description of the change, imperative mood
+  - Examples: `fix(wallpaper): enable horizontal touchpad scroll in selector`, `feat(colors): add matugen integration`
+
+- **Do not include "Generated with Claude Code" or similar attribution tags** in commit messages or PR descriptions. These are automated platform messages and clutter the git history. The commit author/date is sufficient attribution.
+
+- **Commit messages should be one-liner** — avoid multi-line commit bodies unless absolutely necessary to explain a non-obvious design decision. Most changes are self-explanatory via the diff and PR description.
+
+- **PR descriptions** (when creating pull requests) should be similarly clean: a brief summary of what changed and why, without platform/tool attribution tags. Focus on the change, not the mechanism that produced it.

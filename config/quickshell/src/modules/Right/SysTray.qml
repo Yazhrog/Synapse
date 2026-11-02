@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Layouts
 import QtQuick.Controls
+import Quickshell
 import Quickshell.Services.SystemTray
 import "../../components"
 import "../../windows"
@@ -28,6 +29,7 @@ RowLayout {
         Repeater {
             model: SystemTray.items
             delegate: Rectangle {
+                id: trayItem
                 // UX: Larger 28x28 hit-box makes it easier to click than a 16x16 icon
                 width: 26
                 height: 26
@@ -53,10 +55,20 @@ RowLayout {
                         if (mouse.button === Qt.LeftButton) {
                             modelData.activate()
                         } else if (mouse.button === Qt.RightButton) {
-                            // Support for native context menus if Quickshell exposes it
-                            if (typeof modelData.contextMenu === "function") {
-                                modelData.contextMenu() 
-                            }
+                            menuAnchor.open()
+                        }
+                    }
+
+                    QsMenuAnchor {
+                        id: menuAnchor
+                        menu: modelData.menu
+
+                        anchor.window: trayItem.QsWindow.window
+                        anchor.adjustment: PopupAdjustment.Flip
+
+                        anchor.onAnchoring: {
+                            const window = trayItem.QsWindow.window
+                            anchor.rect = window.contentItem.mapFromItem(trayItem, 0, trayItem.height, trayItem.width, trayItem.height)
                         }
                     }
                 }

@@ -2,6 +2,7 @@ import QtQuick
 import Quickshell
 import Quickshell.Wayland
 import "../"
+import "../components"
 
 // Blocking critical-battery modal — driven by Popups.batteryCritical*.
 // Unlike ConfirmDialog, this has NO click-outside or Escape dismiss: the
@@ -20,6 +21,13 @@ PanelWindow {
 
     WlrLayershell.layer:         WlrLayer.Overlay
     WlrLayershell.keyboardFocus: WlrKeyboardFocus.OnDemand
+
+    PopupFocusGrab {
+        window:         root
+        active:         Popups.batteryCriticalOpen
+        dismissOnClear: false
+        onFocused:      keySink.forceActiveFocus()
+    }
 
     // ── Dim overlay — no click-to-dismiss ────────────────────────────────────
     Rectangle {
@@ -98,9 +106,10 @@ PanelWindow {
         }
     }
 
-    // Keyboard focus is grabbed (OnDemand) but deliberately has no
+    // Keyboard focus is grabbed (PopupFocusGrab) but deliberately has no
     // Escape/Return handling — only the Acknowledge button dismisses this.
     Item {
+        id:           keySink
         anchors.fill: parent
         focus: root.visible
     }

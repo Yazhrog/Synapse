@@ -146,6 +146,7 @@ sourced by `hyprlock.conf`.
 |---|---|
 | `.../user_data/wallpaper.json` | WallpaperService |
 | `.../user_data/clipboard_pins.json` | ClipboardService |
+| `.../user_data/app_pins.json` | AppPinService |
 | `.../user_data/tasks.json` | KanbanBoard |
 | `.../user_data/hotspot.json` | QuickSettings / HotspotTab |
 | `.../user_data/update_prefs.json` | UpdateService |
@@ -153,6 +154,7 @@ sourced by `hyprlock.conf`.
 | `.../user_data/keybinds.json` | KeybindService |
 | `.../user_data/config_Provider.json` | Shell bootstrap |
 | `~/.config/Synapse/monitors.lua` | You — `dofile()`'d by `modules/monitors.lua` |
+| `~/.config/Synapse/local.zsh` | You — sourced at the end of `.zshrc` |
 
 ### Keybinds (`KeybindService.qml`)
 
@@ -206,6 +208,7 @@ Symlinks into `$REPO` are marked `→ repo`.
 │   ├── Synapse/                     ← never linked; Synapse owns this at runtime
 │   │   ├── repo-path                ← where the repo lives
 │   │   ├── monitors.lua             ← your display layout
+│   │   ├── local.zsh                ← your zsh env vars / hooks
 │   │   ├── SynapseKeybinds.lua      ← generated
 │   │   ├── SynapseKeybinds.conf     ← generated (parity)
 │   │   └── src/user_data/
