@@ -84,6 +84,9 @@ Toggle that in **Dashboard → Config → Misc**.
 > Multi-monitor setups: put your layout in `~/.config/Synapse/monitors.lua`,
 > not in `config/hypr/modules/monitors.lua` — the latter is a symlink into the
 > repo, and editing it will conflict on your next pull.
+>
+> The same goes for zsh: put your own env vars, PATH entries and hooks in
+> `~/.config/Synapse/local.zsh` instead of editing `~/.config/zsh/.zshrc`.
 
 ---
 

@@ -1,87 +1,79 @@
 -- Window and layer rules
 
--- Common floating dialogs
+-- Common floating dialogs (anchored classes)
 hl.window_rule({
-    name   = "float-nm",
-    match  = { class = "nm-connection-editor" },
-    float  = true,
+    name = "float-nm",
+    match = { class = "^(nm-connection-editor)$" },
+    float = true,
     center = true,
 })
 
 hl.window_rule({
-    name   = "float-blueman",
-    match  = { class = "blueman-manager" },
-    float  = true,
+    name = "float-blueman",
+    match = { class = "^(blueman-manager)$" },
+    float = true,
     center = true,
 })
 
 hl.window_rule({
-    name   = "float-preferences",
-    match  = { title = "Preferences" },
-    float  = true,
+    name = "float-preferences",
+    match = { title = "^(Preferences)$" },
+    float = true,
     center = true,
 })
 
 -- Web apps float centered
 hl.window_rule({
-    name   = "float-webapps",
-    match  = { class = "webapp-.*" },
-    float  = true,
+    name = "float-webapps",
+    match = { class = "^webapp-.*" },
+    float = true,
     center = true,
-    size   = "1000 700",
+    size = "1000 700",
 })
 
--- Inhibit idle while any window is fullscreen (e.g. video playback)
+-- Inhibit idle while any window is fullscreen
 hl.window_rule({
-    name         = "idleinhibit-fullscreen",
-    match        = { class = ".*" },
+    name = "idleinhibit-fullscreen",
+    match = { fullscreen = true },
     idle_inhibit = "fullscreen",
 })
 
--- Browser types
+-- Tag browsers
 hl.window_rule({
     match = {
-        class = "([cC]hrom(e|ium)|[bB]rave-browser|Microsoft-edge|Vivaldi-stable|helium-browser)",
+        class = "^([cC]hrom(e|ium)|[bB]rave-browser|Microsoft-edge|Vivaldi-stable|helium-browser)$",
     },
     tag = "+chromium-based-browser",
 })
 
 hl.window_rule({
     match = {
-        class = "([fF]irefox|zen|zen-browser|zen-bin|librewolf)",
+        class = "^([fF]irefox|zen.*|librewolf)$",
     },
     tag = "+firefox-based-browser",
 })
 
--- Force chromium-based browsers into a tile to deal with --app bug
+-- Subtle opacity for Chromium-based browsers
 hl.window_rule({
     match = {
-        tag = "chromium-based-browser",
+        tag = ".*chromium-based-browser.*",
     },
-    float = false,
-    opacity = "1 0.97",
+    opacity = "1.0 override 0.97 override",
 })
 
--- Only a subtle opacity change, but not for video sites
+-- Let Zen Browser manage internal alpha/transparency directly via CSS
 hl.window_rule({
     match = {
-        tag = "firefox-based-browser",
+        class = "^(zen.*)$",
     },
-    opacity = "1 0.97",
+    opacity = "1.0 override 1.0 override",
 })
 
--- Some video sites should never have opacity applied to them
-hl.window_rule({
-    match = {
-        initial_title = "((?i)(?:[a-z0-9-]+\\.)*youtube\\.com_/|app\\.zoom\\.us_/wc/home)",
-    },
-    opacity = "1.0 1.0",
-})
-
--- No transparency on media windows
+-- Disallow transparency and blur on media players and video apps
 hl.window_rule({
     match = {
         class = "^(zoom|vlc|mpv|org.kde.kdenlive|com.obsproject.Studio|com.github.PintaProject.Pinta|imv|org.gnome.NautilusPreviewer)$",
     },
-    opacity = "1 1",
+    opacity = "1.0 override 1.0 override",
+    no_blur = true,
 })

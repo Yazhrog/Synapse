@@ -58,6 +58,28 @@ else
     log_info "Monitor override already exists — kept"
 fi
 
+# ╭───────────────────────────────────────────────────────────────────────╮
+# │ Local zsh overrides                                                   │
+# ╰───────────────────────────────────────────────────────────────────────╯
+# .zshrc is a symlink into the repo and sources this at the end, so a user's
+# env vars and PATH entries stay out of the repo's history.
+
+ZSH_LOCAL="$HOME/.config/Synapse/local.zsh"
+if [[ ! -f "$ZSH_LOCAL" ]]; then
+    cat > "$ZSH_LOCAL" <<'ZSHEOF'
+# Your machine-specific zsh config. Sourced at the end of Synapse's .zshrc,
+# so anything set here wins. This file is never touched by updates.
+#
+# Examples:
+#   export PATH="$HOME/.local/bin:$PATH"
+#   export EDITOR=nvim
+#   eval "$(direnv hook zsh)"
+ZSHEOF
+    log_ok "Zsh overrides seeded → ~/.config/Synapse/local.zsh"
+else
+    log_info "Zsh overrides already exist — kept"
+fi
+
 log_ok "Wallpapers initialised"
 
 # ╭───────────────────────────────────────────────────────────────────────╮
