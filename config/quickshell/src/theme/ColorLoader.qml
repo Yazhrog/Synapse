@@ -12,14 +12,16 @@ import Quickshell.Io
 QtObject {
     id: root
 
-    // ── Parsed colors (with fallbacks matching original palette) ──────────────
-    property color background: "#1a282a"
-    property color active:     "#a6d0f7"
-    property color text:       "#cdd6f4"
-    property color subtext:    "#94e2d5"
-    property color icon:       "#cdd6f4"
-    property color border:     "#ffffff"
-    property color iconFont:   "#2f8d97"
+    // ── Parsed colors ─────────────────────────────────────────────────────────
+    // Fallbacks are matugen's scheme-content palette for the default wallpaper
+    // (synapse-default-0.png), so a missing colors.json looks like the default theme.
+    property color background: "#141311"
+    property color active:     "#f0e5bb"
+    property color text:       "#e6e2dd"
+    property color subtext:    "#ccc6b9"
+    property color icon:       "#e6e2dd"
+    property color border:     "#4a473c"
+    property color iconFont:   "#d3c9a1"
 
     // ── File watcher ──────────────────────────────────────────────────────────
     property var _file: FileView {
