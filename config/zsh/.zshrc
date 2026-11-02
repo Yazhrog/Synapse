@@ -73,3 +73,9 @@ export XCURSOR_SIZE=24
 
 # source <(ng completion script)
 # source /usr/share/nvm/init-nvm.sh
+
+#### Local Overrides ####
+# Machine-specific env vars, PATH entries and hooks (direnv, nvm, ...) go in
+# ~/.config/Synapse/local.zsh. It lives outside the repo, so it never conflicts
+# on pull. Sourced last, so anything set there wins.
+[ -f "$HOME/.config/Synapse/local.zsh" ] && source "$HOME/.config/Synapse/local.zsh"
