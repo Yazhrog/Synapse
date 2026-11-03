@@ -22,6 +22,7 @@ QtObject {
     // showToast()/hideToast().
     property bool notificationToastOpen: false
     property bool quickOpen:             false
+    property bool quickHeld:             false   // OSD hovered: don't auto-hide
 
     function showQuick()  { quickOpen = true }
     function hideQuick()  { quickOpen = false }
