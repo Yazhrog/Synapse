@@ -10,3 +10,4 @@ singleton KeybindService 1.0 services/config_tab/KeybindService.qml
 singleton UpdateService 1.0 services/UpdateService.qml
 singleton BatteryWarningService 1.0 services/BatteryWarningService.qml
 singleton AppPinService 1.0 services/AppPinService.qml
+singleton Paths 1.0 utils/Paths.qml
