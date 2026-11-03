@@ -35,8 +35,10 @@ Shape {
     property real centerBottom: notchBottom
     property real rightBottom:  notchBottom
 
-    // Right-center region: a bump growing inward from the middle of the right
-    // border (OSD, audio). depth 0 = closed.
+    // Side regions: bumps growing inward from the middle of the left border
+    // (power menu) and right border (OSD, audio). depth 0 = closed.
+    property real leftCenterDepth:   0
+    property real leftCenterHeight:  0
     property real rightCenterDepth:  0
     property real rightCenterHeight: 0
 
@@ -64,6 +66,14 @@ Shape {
     readonly property real _rcTop: height / 2 - _rcH / 2
     readonly property real _rcBot: height / 2 + _rcH / 2
     readonly property real _rcX:   width - _t - _rcD
+
+    readonly property real _lcD:   Math.max(0.001, leftCenterDepth)
+    readonly property real _lcH:   Math.max(0.002, leftCenterHeight)
+    readonly property real _lcF:   Math.max(0.0005, Math.min(cornerRadius, _lcD / 2))
+    readonly property real _lcC:   Math.max(0.0005, Math.min(cornerRadius, _lcD / 2, _lcH / 2))
+    readonly property real _lcTop: height / 2 - _lcH / 2
+    readonly property real _lcBot: height / 2 + _lcH / 2
+    readonly property real _lcX:   _t + _lcD
     readonly property real _cS:    width / 2 - centerWidth / 2
     readonly property real _cE:    width / 2 + centerWidth / 2
     readonly property real _rS:    width - rightWidth
@@ -85,7 +95,21 @@ Shape {
         // ── Inner loop: the hole, clockwise from the left border ─────────────
         PathMove { x: root._t; y: root.height - root._t - root._R }
 
-        // Left border, up to its flare under the left notch
+        // Left border, with the left-center bump halfway up
+        PathLine { x: root._t; y: root._lcBot + root._lcF }
+        PathArc  { x: root._t + root._lcF; y: root._lcBot
+                   radiusX: root._lcF; radiusY: root._lcF; direction: PathArc.Clockwise }
+        PathLine { x: root._lcX - root._lcC; y: root._lcBot }
+        PathArc  { x: root._lcX; y: root._lcBot - root._lcC
+                   radiusX: root._lcC; radiusY: root._lcC; direction: PathArc.Counterclockwise }
+        PathLine { x: root._lcX; y: root._lcTop + root._lcC }
+        PathArc  { x: root._lcX - root._lcC; y: root._lcTop
+                   radiusX: root._lcC; radiusY: root._lcC; direction: PathArc.Counterclockwise }
+        PathLine { x: root._t + root._lcF; y: root._lcTop }
+        PathArc  { x: root._t; y: root._lcTop - root._lcF
+                   radiusX: root._lcF; radiusY: root._lcF; direction: PathArc.Clockwise }
+
+        // ... up to its flare under the left notch
         PathLine { x: root._t; y: root._lh + root._Rl }
         PathArc  { x: root._t + root._Rl; y: root._lh
                    radiusX: root._Rl; radiusY: root._Rl; direction: PathArc.Clockwise }
