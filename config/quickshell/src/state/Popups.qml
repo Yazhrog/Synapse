@@ -10,7 +10,6 @@ QtObject {
     // close(), toggle() and togglePage() below, never by assigning these.
     readonly property bool audioOpen:         SurfaceState.activeContent === "audio"
     readonly property bool networkOpen:       SurfaceState.activeContent === "network"
-    readonly property bool batteryOpen:       SurfaceState.activeContent === "battery"
     readonly property bool notificationsOpen: SurfaceState.activeContent === "notifications"
     readonly property bool archMenuOpen:      SurfaceState.activeContent === "powerMenu"
     readonly property bool dashboardOpen:     SurfaceState.activeContent === "dashboard"
@@ -30,7 +29,7 @@ QtObject {
     function hideToast()  { notificationToastOpen = false }
 
     // ── Opening and closing ────────────────────────────────────────────────────
-    // Content keys: dashboard, network, notifications, battery, audio,
+    // Content keys: dashboard, network, notifications, audio,
     // powerMenu, wallpaper, clipboard (see SurfaceState.regionOf). The screen
     // defaults to the focused monitor.
     function open(content, screenName)   { return SurfaceState.open(content, screenName ?? "") }
@@ -79,7 +78,6 @@ QtObject {
     property bool archMenuTriggerHovered: false
     property bool audioTriggerHovered:         false
     property bool networkTriggerHovered:       false
-    property bool batteryTriggerHovered:       false
     property bool notificationsTriggerHovered: false
     property bool wallpaperTriggerHovered:     false
     property bool quickTriggerHovered: false
@@ -132,10 +130,8 @@ QtObject {
     }
 
     // ── Global state ──────────────────────────────────────────────────────────
-    // quickOpen is deliberately excluded: it's a passive OSD (volume/brightness
-    // keys), not an interactive popup, so it must never trigger PopupDismiss's
-    // fullscreen click-catcher/keyboard-focus grab — it should just fade in and
-    // back out on its own without disturbing whatever the user is doing.
+    // True while an interactive popup is open. The passive OSD and toast are
+    // excluded: they must never enable the click shield or take the keyboard.
     readonly property bool anyOpen: SurfaceState.anyOpen
 
     function closeAll() {

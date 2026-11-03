@@ -13,9 +13,9 @@ import "../"
 
 // DynamicSurface — one fullscreen, transparent layer surface per screen that
 // draws the whole frame (top notches + borders) as a single morphing shape
-// and hosts the bar content (#37, prototype phase #38) and the passive
-// content (#40): the notification toast grows the right notch, the Quick
-// Controls OSD opens the right-center region.
+// and hosts everything on it: the bar, the interactive popups (each grows a
+// region of the frame), the passive content (notification toast, Quick
+// Controls OSD), the click shield and the border triggers (#37).
 //
 // Space for tiled windows is reserved by StrutWindow, not here: this window
 // ignores exclusive zones. Clicks outside the visible frame pass through to
@@ -46,9 +46,31 @@ PanelWindow {
     exclusionMode: ExclusionMode.Ignore
     color:         "transparent"
 
-    WlrLayershell.layer:     WlrLayer.Top
+    // Overlay, like the legacy popups: Hyprland draws fullscreen windows above
+    // the Top layer, so popups and the OSD would be invisible (and the keyboard
+    // seemingly stuck) in a fullscreen app. On a screen showing a fullscreen
+    // window, the frame hides itself unless it has something to show.
+    WlrLayershell.layer:     WlrLayer.Overlay
     WlrLayershell.namespace: "synapse-frame"
     WlrLayershell.keyboardFocus: wantsKeyboard ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
+
+    // ── Fullscreen ───────────────────────────────────────────────────────────
+    readonly property var  _monitor: Hyprland.monitorFor(screen)
+    readonly property bool fullscreenHere: !!(_monitor && _monitor.activeWorkspace
+                                              && _monitor.activeWorkspace.hasFullscreen)
+    readonly property bool showingSomething: openContent !== "none" || quickShown || toastShown
+                                             || recOptions.visible
+    readonly property bool frameHidden: fullscreenHere && !showingSomething
+
+    Binding { target: root.contentItem; property: "opacity"; value: root.frameHidden ? 0 : 1 }
+
+    // hasFullscreen is only refreshed with the workspace list.
+    Connections {
+        target: Hyprland
+        function onRawEvent(event) {
+            if (event.name === "fullscreen") Hyprland.refreshWorkspaces()
+        }
+    }
 
     // ── Popup state for this screen (SurfaceState is global) ─────────────────
     readonly property string openRegion:
@@ -103,7 +125,7 @@ PanelWindow {
     // Notification toast: grows the right notch on the screen it was shown on.
     // An interactive popup in the right region wins and hides it.
     readonly property bool toastShown: ToastState.isOn(screenName) && ToastState.showing
-                                       && openRegion !== "right"
+                                       && openRegion !== "right" && _toastFits
     readonly property int  toastWidth: px(Theme.notificationToastWidth + Theme.notchRadius + Theme.notchPadding - 3)
 
     // Right region size: network and notifications grow the right notch;
@@ -112,26 +134,46 @@ PanelWindow {
     readonly property int networkBottom: px(648 - Theme.notchRadius)
     readonly property int notifWidth:    px(Theme.notificationsWidth + Theme.notchRadius) + borderWidth
 
-    property real _rGrow: openContent === "network"       ? networkWidth
-                        : openContent === "notifications" ? notifWidth
-                        : toastShown                      ? toastWidth : 0
+    // Targets (not animated) are kept separate so the collision checks below
+    // compare final sizes, not mid-animation ones.
+    readonly property real _rGrowTarget: openContent === "network"       ? networkWidth
+                                       : openContent === "notifications" ? notifWidth
+                                       : toastShown                      ? toastWidth : 0
+    readonly property real _rDropTarget: openContent === "network"       ? networkBottom - notchBottom
+                                       : openContent === "notifications" ? (notifLoader.item ? notifLoader.item.height : 0) + px(2 * Theme.popupPadding + 4)
+                                       : toastShown                      ? toastCard.implicitHeight + px(26) : 0
+    property real _rGrow: _rGrowTarget
     Behavior on _rGrow { NumberAnimation { duration: Theme.animDuration; easing.type: Easing.InOutCubic } }
-    property real _rDrop: openContent === "network"       ? networkBottom - notchBottom
-                        : openContent === "notifications" ? notifList.height + px(2 * Theme.popupPadding + 4)
-                        : toastShown                      ? toastCard.implicitHeight + px(26) : 0
+    property real _rDrop: _rDropTarget
     Behavior on _rDrop { NumberAnimation { duration: Theme.animDuration; easing.type: Easing.InOutCubic } }
+
+    // ── Region collisions ────────────────────────────────────────────────────
+    // Regions are bumps on one path: two that overlap make it self-intersect,
+    // and the odd-even fill then punches a hole. Interactive popups never
+    // overlap (one at a time); passive content yields when it would hit the
+    // open popup's region.
+    // Toast: the grown right notch must stay clear of the center notch.
+    readonly property bool _toastFits:
+        width - toastWidth - notchRadius > (width + cWidth) / 2 + notchRadius
+    // OSD: the right notch's final bottom (plus both flares) must stay above
+    // the right-center region.
+    // The clipboard panel (bottom-right) must not reach up into it either.
+    readonly property bool _quickFits:
+        notchBottom + _rDropTarget + 2 * cornerRadius < (height - quickHeight) / 2
+        && !(openContent === "clipboard"
+             && height - borderWidth - clipboardHeight - cornerRadius < (height + quickHeight) / 2 + cornerRadius)
 
     // Quick Controls OSD: right-center region, on the focused monitor, unless
     // an interactive popup (audio, #41) owns that region.
     // Also opens while the right-border trigger (or the OSD itself) is hovered.
     readonly property bool quickShown: ((Popups.quickOpen && _focusedHere) || _quickHoverOpen)
-                                       && openRegion !== "rightCenter"
+                                       && openRegion !== "rightCenter" && _quickFits
     readonly property int  quickDepth:  px(180)
     readonly property int  quickHeight: px(340 - 2 * Theme.cornerRadius)
 
     // Right-center region: the audio popup (width follows its page) or the OSD.
     readonly property var audioPageWidths: ({ output: 200, input: 200, mixer: 300 })
-    readonly property int audioWidth: px(audioPageWidths[audioControl.page] ?? 300)
+    readonly property int audioWidth: px(audioPageWidths[audioLoader.item ? audioLoader.item.page : Popups.audioPage] ?? 300)
 
     property real rightCenterDepth: openContent === "audio" ? audioWidth
                                   : quickShown              ? quickDepth : 0
@@ -164,9 +206,6 @@ PanelWindow {
     property real leftCenterDepth: openContent === "powerMenu" ? powerWidth + px(12) : 0
     Behavior on leftCenterDepth { NumberAnimation { duration: Theme.animDuration; easing.type: Easing.InOutCubic } }
 
-    Binding { target: ShellState; property: "topBarLWidth"; value: root.lWidth }
-    Binding { target: ShellState; property: "topBarCWidth"; value: root.cWidth }
-    Binding { target: ShellState; property: "topBarRWidth"; value: root.rWidth }
 
     // ── Click shield (#42) ───────────────────────────────────────────────────
     // While a popup is open (on any screen, like the legacy PopupDismiss), the
@@ -339,10 +378,12 @@ PanelWindow {
             opacity: root.openContent === "powerMenu" ? 1 : 0
             Behavior on opacity { NumberAnimation { duration: 150 } }
 
-            Item {
+            Loader {
+                id: powerLoader
                 x: root.px(4); y: root.px(6)
                 width: root.powerWidth; height: root.powerHeight
-                PowerMenu { id: powerMenu }
+                active: !!root._loaded.powerMenu
+                sourceComponent: Component { PowerMenu {} }
             }
         }
 
@@ -358,24 +399,26 @@ PanelWindow {
             opacity: root.openContent === "audio" ? 1 : 0
             Behavior on opacity { NumberAnimation { duration: 150 } }
 
-            AudioControl {
-                id: audioControl
+            Loader {
+                id: audioLoader
                 x: root.px(10); y: root.px(6)
                 width:  root.audioWidth - root.px(16)
                 height: parent.height - root.px(12)
+                active: !!root._loaded.audio
+                sourceComponent: Component { AudioControl {} }
             }
 
             // Back to the default page once the close animation is done.
             Timer {
                 id: audioResetTimer
                 interval: Theme.animDuration + 20
-                onTriggered: audioControl.reset()
+                onTriggered: if (audioLoader.item) audioLoader.item.reset()
             }
             Connections {
                 target: Popups
                 function onAudioOpenChanged() {
                     if (!Popups.audioOpen) audioResetTimer.restart()
-                    else audioControl.page = Popups.audioPage
+                    else if (audioLoader.item) audioLoader.item.page = Popups.audioPage
                 }
             }
         }
@@ -392,11 +435,13 @@ PanelWindow {
             opacity: root.openContent === "notifications" ? 1 : 0
             Behavior on opacity { NumberAnimation { duration: 150 } }
 
-            NotificationList {
-                id: notifList
+            Loader {
+                id: notifLoader
                 x:     root.px(Theme.notchRadius + 4)
                 y:     root.px(4)
                 width: root.notifWidth - root.borderWidth - root.px(Theme.notchRadius + 8)
+                active: !!root._loaded.notifications
+                sourceComponent: Component { NotificationList { width: notifLoader.width } }
             }
         }
 
@@ -412,11 +457,12 @@ PanelWindow {
             opacity: root.openContent === "network" ? 1 : 0
             Behavior on opacity { NumberAnimation { duration: 150 } }
 
-            NetworkContent {
+            Loader {
                 x:      root.px(Theme.notchRadius)
                 width:  root.networkWidth - root.borderWidth - root.px(Theme.notchRadius) - root.px(7)
                 height: root.networkBottom - root.notchHeight - root.px(Theme.cornerRadius)
-                page:   Popups.networkPage || "wifi"
+                active: !!root._loaded.network
+                sourceComponent: Component { NetworkContent { page: Popups.networkPage || "wifi" } }
             }
         }
     }
@@ -437,12 +483,14 @@ PanelWindow {
             opacity: root.openContent === "dashboard" ? 1 : 0
             Behavior on opacity { NumberAnimation { duration: 150 } }
 
-            DashboardContent {
-                id: dashboardContent
+            Loader {
+                id: dashboardLoader
                 x:      root.px(8)
                 y:      root.px(Theme.notchRadius + 8)
                 width:  root.px(Popups.dashboardPageWidth) - root.px(16)
                 height: root.dashboardBottom - root.px(Theme.notchRadius + 16)
+                active: !!root._loaded.dashboard
+                sourceComponent: Component { DashboardContent {} }
             }
         }
 
@@ -458,15 +506,20 @@ PanelWindow {
             opacity: root.openContent === "wallpaper" ? 1 : 0
             Behavior on opacity { NumberAnimation { duration: 150 } }
 
-            WallpaperContent {
-                id: wallpaperContent
+            Loader {
+                id: wallpaperLoader
                 anchors.horizontalCenter: parent.horizontalCenter
                 y:      0
                 width:  root.wallpaperWidth + 2 * root.notchRadius
                 height: root.wallpaperHeight
-                fw:     root.notchRadius
-                fh:     root.notchRadius
-                open:   root.openContent === "wallpaper"
+                active: !!root._loaded.wallpaper
+                sourceComponent: Component {
+                    WallpaperContent {
+                        fw:   root.notchRadius
+                        fh:   root.notchRadius
+                        open: root.openContent === "wallpaper"
+                    }
+                }
             }
         }
 
@@ -482,14 +535,19 @@ PanelWindow {
             opacity: root.openContent === "clipboard" ? 1 : 0
             Behavior on opacity { NumberAnimation { duration: 150 } }
 
-            FocusScope {
-                id: clipboardScope
+            Loader {
+                id: clipboardLoader
                 x:      root.px(10)
                 y:      root.px(8)
                 width:  root.clipboardWidth - root.px(10)
                 height: root.clipboardHeight - root.px(16)
-                Keys.onEscapePressed: Popups.close("clipboard")
-                HistoryTab { anchors.fill: parent }
+                active: !!root._loaded.clipboard
+                sourceComponent: Component {
+                    FocusScope {
+                        Keys.onEscapePressed: Popups.close("clipboard")
+                        HistoryTab { anchors.fill: parent }
+                    }
+                }
             }
         }
     }
@@ -498,7 +556,7 @@ PanelWindow {
     Timer {
         id: dashboardResetTimer
         interval: Theme.animDuration + 20
-        onTriggered: dashboardContent.reset()
+        onTriggered: if (dashboardLoader.item) dashboardLoader.item.reset()
     }
     Connections {
         target: Popups
@@ -507,17 +565,30 @@ PanelWindow {
 
     // Hand the keyboard to the opened popup once the compositor has given it
     // to the surface.
-    onOpenContentChanged: if (hostedOpen) focusTimer.restart()
+    // Popup contents are created on this screen the first time they open there,
+    // then kept (re-creating the dashboard on every open would be slow).
+    property var _loaded: ({})
+    // (hostedOpen may not be re-evaluated yet inside this handler, so the
+    // check is done on openContent directly.)
+    onOpenContentChanged: {
+        if (hostedContents.indexOf(openContent) < 0) return
+        if (!_loaded[openContent]) {
+            const loaded = Object.assign({}, _loaded)
+            loaded[openContent] = true
+            _loaded = loaded
+        }
+        focusTimer.restart()
+    }
     onWantsKeyboardChanged: if (wantsKeyboard && !hostedOpen) focusTimer.restart()
     Timer {
         id: focusTimer
         interval: 50
         onTriggered: {
             switch (root.openContent) {
-            case "powerMenu": powerMenu.reset(); break
-            case "dashboard": dashboardContent.focusPage(); break
-            case "wallpaper": wallpaperContent.focusSearch(); break
-            case "clipboard": clipboardScope.forceActiveFocus(); break
+            case "powerMenu": if (powerLoader.item)     powerLoader.item.reset();          break
+            case "dashboard": if (dashboardLoader.item) dashboardLoader.item.focusPage();  break
+            case "wallpaper": if (wallpaperLoader.item) wallpaperLoader.item.focusSearch(); break
+            case "clipboard": if (clipboardLoader.item) clipboardLoader.item.forceActiveFocus(); break
             default:          popupScope.forceActiveFocus()
             }
         }
@@ -593,7 +664,7 @@ PanelWindow {
         y:       root.notchHeight + 25
         width:   implicitWidth
         height:  implicitHeight
-        visible: ScreenRecService.openStrip !== "" && root._focusedHere
+        visible: ScreenRecService.openStrip !== "" && ScreenRecService.popupTargetScreen === root.screenName
 
         HoverHandler {
             onHoveredChanged: {
@@ -624,6 +695,7 @@ PanelWindow {
     Item { id: maskBottom; x: 0; y: root.height - root._edge; width: root.width; height: root._edge }
     Item { id: maskRecOptions; x: recOptions.x; y: recOptions.y
            width: recOptions.visible ? recOptions.width : 0; height: recOptions.visible ? recOptions.height : 0 }
+    Item { id: maskVisible; width: root.frameHidden ? 0 : root.width; height: root.frameHidden ? 0 : root.height }
     Item { id: maskShield; x: 0; y: 0; width: root.shieldActive ? root.width : 0; height: root.shieldActive ? root.height : 0 }
     Item { id: maskLeftNotch;   x: leftNotch.x;   y: 0; width: leftNotch.width;   height: root.notchBottom }
     Item { id: maskCenterNotch; x: centerNotch.x; y: 0; width: centerNotch.width; height: root.centerBottom }
@@ -651,5 +723,7 @@ PanelWindow {
         Region { item: cornerTrigger;   intersection: Intersection.Combine }
         Region { item: maskShield;      intersection: Intersection.Combine }
         Region { item: maskRecOptions;  intersection: Intersection.Combine }
+        // Hidden over a fullscreen window: take no input at all.
+        Region { item: maskVisible;     intersection: Intersection.Intersect }
     }
 }

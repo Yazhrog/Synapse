@@ -7,8 +7,8 @@ import "../"
 // ─────────────────────────────────────────────────────────────
 // IpcManager — centralized entry point for all external IPC signals.
 //
-// Moving handlers here ensures that on multi-monitor setups (where 
-// TopBar/PopupLayer are duplicated) only ONE handler reacts to a signal.
+// Handlers live in this singleton so that, with one surface per screen,
+// only ONE handler reacts to a signal.
 // ─────────────────────────────────────────────────────────────
 
 QtObject {

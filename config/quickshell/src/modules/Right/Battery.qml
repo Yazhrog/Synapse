@@ -16,10 +16,5 @@ Item {
         showPercentage:   parent.showPercentage
     }
 
-    MouseArea {
-        anchors.fill: parent
-        onClicked: {
-            Popups.toggle("battery")
-        }
-    }
+    // No click action: there is no battery popup yet (#17).
 }

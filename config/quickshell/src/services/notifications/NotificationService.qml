@@ -39,16 +39,18 @@ NotificationServer {
         if (root.list.includes(n)) return 
 
         root.list = [n, ...root.list]
-        
+
+        // Connected before the DND check, so a notification closed while DND
+        // is on still leaves the list.
+        n.onClosed.connect(function() {
+            root.list = root.list.filter(function(x) { return x !== n })
+        })
+
         if (ShellState.dnd && n.appName !== "Synapse Battery") return
-        
+
         if (root._ready) {
             root.notificationAdded(n)
         }
-
-         n.onClosed.connect(function() {
-            root.list = root.list.filter(function(x) { return x !== n })
-        })
     }
 
     function dismissAll() {

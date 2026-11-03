@@ -1,4 +1,5 @@
 import QtQuick
+import Quickshell
 import Quickshell.Io
 import "../../components"
 import "../../"
@@ -101,7 +102,7 @@ Item {
                 cursorShape: Qt.PointingHandCursor
                 onClicked: {
                     Popups.networkPage = "wifi"
-                    Popups.open("network")
+                    Popups.open("network", QsWindow.window?.screen?.name ?? "")
                 }
             }
         }
@@ -121,7 +122,7 @@ Item {
                 cursorShape: Qt.PointingHandCursor
                 onClicked: {
                     Popups.networkPage = "vpn"
-                    Popups.open("network")
+                    Popups.open("network", QsWindow.window?.screen?.name ?? "")
                 }
             }
         }
@@ -139,7 +140,7 @@ Item {
                 cursorShape: Qt.PointingHandCursor
                 onClicked: {
                     Popups.networkPage = "bluetooth"
-                    Popups.open("network")
+                    Popups.open("network", QsWindow.window?.screen?.name ?? "")
                 }
             }
         }
@@ -157,7 +158,7 @@ Item {
                 cursorShape: Qt.PointingHandCursor
                 onClicked: {
                     Popups.networkPage = "hotspot"
-                    Popups.open("network")
+                    Popups.open("network", QsWindow.window?.screen?.name ?? "")
                 }
             }
         }

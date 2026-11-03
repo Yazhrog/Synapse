@@ -22,7 +22,6 @@ Singleton {
     property string activeScreen:  ""       // screen name owning the open popup, "" = none
     property string activeRegion:  "none"
     property string activeContent: "none"
-    property real   lastCloseTime: 0        // ms timestamp, debounces hover re-open (#42)
 
     readonly property bool anyOpen: activeContent !== "none"
 
@@ -30,7 +29,6 @@ Singleton {
         dashboard:     "top",
         network:       "right",
         notifications: "right",
-        battery:       "right",
         audio:         "rightCenter",
         powerMenu:     "leftCenter",
         wallpaper:     "bottomCenter",
@@ -60,10 +58,6 @@ Singleton {
         return root.activeContent === content
     }
 
-    function isOpenOn(screenName: string, region: string): bool {
-        return root.activeScreen === screenName && root.activeRegion === region
-    }
-
     function open(content, screenName) {
         if (!(content in root.regionOf)) {
             console.warn("SurfaceState: unknown content", content)
@@ -84,7 +78,6 @@ Singleton {
         root.activeScreen  = ""
         root.activeRegion  = "none"
         root.activeContent = "none"
-        root.lastCloseTime = Date.now()
     }
 
     // Closes `content` if it's open on that screen, otherwise opens it there.

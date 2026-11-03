@@ -29,10 +29,8 @@ PanelWindow {
 
     color:         "transparent"
     mask:          Region {}
+    // Set directly, not animated: every change makes Hyprland re-tile.
     exclusiveZone: reserve
-    Behavior on exclusiveZone {
-        NumberAnimation { duration: Theme.animDuration; easing.type: Easing.InOutCubic }
-    }
 
     WlrLayershell.layer:     WlrLayer.Bottom
     WlrLayershell.namespace: "synapse-strut-" + edge
