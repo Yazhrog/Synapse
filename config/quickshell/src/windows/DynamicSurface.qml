@@ -13,9 +13,9 @@ import "../"
 
 // DynamicSurface — one fullscreen, transparent layer surface per screen that
 // draws the whole frame (top notches + borders) as a single morphing shape
-// and hosts the bar content (#37, prototype phase #38) and the passive
-// content (#40): the notification toast grows the right notch, the Quick
-// Controls OSD opens the right-center region.
+// and hosts everything on it: the bar, the interactive popups (each grows a
+// region of the frame), the passive content (notification toast, Quick
+// Controls OSD), the click shield and the border triggers (#37).
 //
 // Space for tiled windows is reserved by StrutWindow, not here: this window
 // ignores exclusive zones. Clicks outside the visible frame pass through to
