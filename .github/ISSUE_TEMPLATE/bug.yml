@@ -1,0 +1,30 @@
+name: Bug report
+description: Something in the shell, the Hyprland config or the installer doesn't work
+labels: [bug]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What happens, and what you expected instead.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Open the dashboard
+        2. ...
+  - type: input
+    id: version
+    attributes:
+      label: Synapse version
+      description: Shown in the README badge and the boot.sh banner, or run `git describe --tags` in your checkout.
+      placeholder: v0.2.1
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs
+      description: Relevant output of `qs log` or `hyprctl configerrors`.
+      render: text
