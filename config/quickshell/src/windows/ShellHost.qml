@@ -10,7 +10,7 @@ import "../"
 // don't open.
 //
 // Space reservation matches the legacy stack exactly: only the top reserves
-// Theme.exclusionGap (0 in focus mode); the side and bottom borders reserve
+// Theme.exclusionGap, scaled per screen (0 in focus mode); the side and bottom borders reserve
 // nothing and Hyprland's gaps_out keeps windows clear of them. Changing that
 // rule means adjusting gaps_out in config/hypr/modules/appearance.lua too.
 Scope {
@@ -26,7 +26,7 @@ Scope {
                 StrutWindow {
                     screen:  modelData
                     edge:    "top"
-                    reserve: ShellState.focusMode ? 0 : Theme.exclusionGap
+                    reserve: ShellState.focusMode ? 0 : Math.round(Theme.exclusionGap * SurfaceState.scaleFor(modelData))
                 }
 
                 DynamicSurface { screen: modelData }

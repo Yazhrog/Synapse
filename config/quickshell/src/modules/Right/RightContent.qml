@@ -5,6 +5,9 @@ import "../../windows"
 import "../../"
 
 Item {
+    // Set by the Dynamic Surface host (#39); contents adopt it progressively.
+    property real localScale: 1.0
+
     id: root
 
     // The TopBar State handles expanding the notch for notifications/network/toasts
