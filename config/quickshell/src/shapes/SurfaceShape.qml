@@ -29,6 +29,17 @@ Shape {
     property real centerWidth:  Theme.cNotchMinWidth
     property real rightWidth:   Theme.rNotchMinWidth
 
+    // Each top notch can grow down past the bar (e.g. the right notch for a
+    // notification toast). Default: all at notchBottom.
+    property real leftBottom:   notchBottom
+    property real centerBottom: notchBottom
+    property real rightBottom:  notchBottom
+
+    // Right-center region: a bump growing inward from the middle of the right
+    // border (OSD, audio). depth 0 = closed.
+    property real rightCenterDepth:  0
+    property real rightCenterHeight: 0
+
     property color color: Theme.background
 
     // ── Derived values ───────────────────────────────────────────────────────
@@ -38,7 +49,21 @@ Shape {
     readonly property real _t:     borderWidth
     readonly property real _h:     Math.max(_t + 0.001, notchBottom)
     readonly property real _r:     Math.max(0.001, Math.min(notchRadius, (_h - _t) / 2))
+    readonly property real _lh:    Math.max(_h, leftBottom)
+    readonly property real _ch:    Math.max(_h, centerBottom)
+    readonly property real _rh:    Math.max(_h, rightBottom)
+    readonly property real _Rl:    Math.max(0.001, Math.min(cornerRadius, (height - _lh - _t) / 2))
+    readonly property real _Rr:    Math.max(0.001, Math.min(cornerRadius, (height - _rh - _t) / 2))
     readonly property real _R:     Math.max(0.001, Math.min(cornerRadius, (height - _h - _t) / 2))
+
+    // Right-center bump: closed regions keep a tiny depth, radii shrink with it.
+    readonly property real _rcD:   Math.max(0.001, rightCenterDepth)
+    readonly property real _rcH:   Math.max(0.002, rightCenterHeight)
+    readonly property real _rcF:   Math.max(0.0005, Math.min(cornerRadius, _rcD / 2))   // flares into the border
+    readonly property real _rcC:   Math.max(0.0005, Math.min(cornerRadius, _rcD / 2, _rcH / 2))   // convex corners
+    readonly property real _rcTop: height / 2 - _rcH / 2
+    readonly property real _rcBot: height / 2 + _rcH / 2
+    readonly property real _rcX:   width - _t - _rcD
     readonly property real _cS:    width / 2 - centerWidth / 2
     readonly property real _cE:    width / 2 + centerWidth / 2
     readonly property real _rS:    width - rightWidth
@@ -61,13 +86,13 @@ Shape {
         PathMove { x: root._t; y: root.height - root._t - root._R }
 
         // Left border, up to its flare under the left notch
-        PathLine { x: root._t; y: root._h + root._R }
-        PathArc  { x: root._t + root._R; y: root._h
-                   radiusX: root._R; radiusY: root._R; direction: PathArc.Clockwise }
+        PathLine { x: root._t; y: root._lh + root._Rl }
+        PathArc  { x: root._t + root._Rl; y: root._lh
+                   radiusX: root._Rl; radiusY: root._Rl; direction: PathArc.Clockwise }
 
         // Left notch: bottom edge, convex corner, side, flare into the strip
-        PathLine { x: root.leftWidth - root._r; y: root._h }
-        PathArc  { x: root.leftWidth; y: root._h - root._r
+        PathLine { x: root.leftWidth - root._r; y: root._lh }
+        PathArc  { x: root.leftWidth; y: root._lh - root._r
                    radiusX: root._r; radiusY: root._r; direction: PathArc.Counterclockwise }
         PathLine { x: root.leftWidth; y: root._t + root._r }
         PathArc  { x: root.leftWidth + root._r; y: root._t
@@ -77,11 +102,11 @@ Shape {
         PathLine { x: root._cS - root._r; y: root._t }
         PathArc  { x: root._cS; y: root._t + root._r
                    radiusX: root._r; radiusY: root._r; direction: PathArc.Clockwise }
-        PathLine { x: root._cS; y: root._h - root._r }
-        PathArc  { x: root._cS + root._r; y: root._h
+        PathLine { x: root._cS; y: root._ch - root._r }
+        PathArc  { x: root._cS + root._r; y: root._ch
                    radiusX: root._r; radiusY: root._r; direction: PathArc.Counterclockwise }
-        PathLine { x: root._cE - root._r; y: root._h }
-        PathArc  { x: root._cE; y: root._h - root._r
+        PathLine { x: root._cE - root._r; y: root._ch }
+        PathArc  { x: root._cE; y: root._ch - root._r
                    radiusX: root._r; radiusY: root._r; direction: PathArc.Counterclockwise }
         PathLine { x: root._cE; y: root._t + root._r }
         PathArc  { x: root._cE + root._r; y: root._t
@@ -91,16 +116,30 @@ Shape {
         PathLine { x: root._rS - root._r; y: root._t }
         PathArc  { x: root._rS; y: root._t + root._r
                    radiusX: root._r; radiusY: root._r; direction: PathArc.Clockwise }
-        PathLine { x: root._rS; y: root._h - root._r }
-        PathArc  { x: root._rS + root._r; y: root._h
+        PathLine { x: root._rS; y: root._rh - root._r }
+        PathArc  { x: root._rS + root._r; y: root._rh
                    radiusX: root._r; radiusY: root._r; direction: PathArc.Counterclockwise }
 
         // Right notch bottom edge → flare into the right border
-        PathLine { x: root.width - root._t - root._R; y: root._h }
-        PathArc  { x: root.width - root._t; y: root._h + root._R
-                   radiusX: root._R; radiusY: root._R; direction: PathArc.Clockwise }
+        PathLine { x: root.width - root._t - root._Rr; y: root._rh }
+        PathArc  { x: root.width - root._t; y: root._rh + root._Rr
+                   radiusX: root._Rr; radiusY: root._Rr; direction: PathArc.Clockwise }
 
-        // Right border, bottom-right corner, bottom border, bottom-left corner
+        // Right border, with the right-center bump halfway down
+        PathLine { x: root.width - root._t; y: root._rcTop - root._rcF }
+        PathArc  { x: root.width - root._t - root._rcF; y: root._rcTop
+                   radiusX: root._rcF; radiusY: root._rcF; direction: PathArc.Clockwise }
+        PathLine { x: root._rcX + root._rcC; y: root._rcTop }
+        PathArc  { x: root._rcX; y: root._rcTop + root._rcC
+                   radiusX: root._rcC; radiusY: root._rcC; direction: PathArc.Counterclockwise }
+        PathLine { x: root._rcX; y: root._rcBot - root._rcC }
+        PathArc  { x: root._rcX + root._rcC; y: root._rcBot
+                   radiusX: root._rcC; radiusY: root._rcC; direction: PathArc.Counterclockwise }
+        PathLine { x: root.width - root._t - root._rcF; y: root._rcBot }
+        PathArc  { x: root.width - root._t; y: root._rcBot + root._rcF
+                   radiusX: root._rcF; radiusY: root._rcF; direction: PathArc.Clockwise }
+
+        // Bottom-right corner, bottom border, bottom-left corner
         PathLine { x: root.width - root._t; y: root.height - root._t - root._R }
         PathArc  { x: root.width - root._t - root._R; y: root.height - root._t
                    radiusX: root._R; radiusY: root._R; direction: PathArc.Clockwise }
