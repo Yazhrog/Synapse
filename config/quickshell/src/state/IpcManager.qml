@@ -166,7 +166,8 @@ QtObject {
     property var quickControlsHideTimer: Timer {
         id: quickControlsHideTimer
         interval: 1800
-        onTriggered: Popups.hideQuick()
+        // Hovering the OSD keeps it open; check again after another interval.
+        onTriggered: Popups.quickHeld ? quickControlsHideTimer.restart() : Popups.hideQuick()
     }
 
     property var quickControls: IpcHandler {

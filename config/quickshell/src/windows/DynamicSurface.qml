@@ -1,15 +1,19 @@
 import Quickshell
 import Quickshell.Wayland
+import Quickshell.Hyprland
 import QtQuick
 import "../modules/Center/"
 import "../modules/Right/"
 import "../modules/Left/"
 import "../shapes/"
+import "../components/"
 import "../"
 
 // DynamicSurface — one fullscreen, transparent layer surface per screen that
 // draws the whole frame (top notches + borders) as a single morphing shape
-// and hosts the bar content (#37, prototype phase #38).
+// and hosts the bar content (#37, prototype phase #38) and the passive
+// content (#40): the notification toast grows the right notch, the Quick
+// Controls OSD opens the right-center region.
 //
 // Space for tiled windows is reserved by StrutWindow, not here: this window
 // ignores exclusive zones. Clicks outside the visible frame pass through to
@@ -74,10 +78,37 @@ PanelWindow {
         NumberAnimation { duration: Theme.animDuration; easing.type: Easing.InOutCubic }
     }
 
-    property int rWidth: Math.max(
+    // Follows its content instantly, like TopBar; only the toast (and the
+    // popups, #41) morph it, through _rGrow/_rDrop.
+    readonly property int _rBase: Math.max(
         px(Theme.rNotchMinWidth),
         Math.min(px(Theme.rNotchMaxWidth), rightContent.implicitWidth + notchPadding * 2))
-    // Not animated, like TopBar: only popup states (#41) will animate it.
+    readonly property int rWidth: Math.max(_rBase, _rGrow)
+    readonly property real rightBottom: notchBottom + _rDrop
+
+    // ── Passive content (#40) ────────────────────────────────────────────────
+    readonly property string screenName: screen ? screen.name : ""
+    readonly property bool   _focusedHere: !Hyprland.focusedMonitor || Hyprland.focusedMonitor.name === screenName
+
+    // Notification toast: grows the right notch on the screen it was shown on.
+    // An interactive popup in the right region wins and hides it.
+    readonly property bool toastShown: ToastState.isOn(screenName) && ToastState.showing
+                                       && openRegion !== "right"
+    readonly property int  toastWidth: px(Theme.notificationToastWidth + Theme.notchRadius + Theme.notchPadding - 3)
+
+    property real _rGrow: toastShown ? toastWidth : 0
+    Behavior on _rGrow { NumberAnimation { duration: Theme.animDuration; easing.type: Easing.InOutCubic } }
+    property real _rDrop: toastShown ? toastCard.implicitHeight + px(26) : 0
+    Behavior on _rDrop { NumberAnimation { duration: Theme.animDuration; easing.type: Easing.InOutCubic } }
+
+    // Quick Controls OSD: right-center region, on the focused monitor, unless
+    // an interactive popup (audio, #41) owns that region.
+    readonly property bool quickShown: Popups.quickOpen && _focusedHere && openRegion !== "rightCenter"
+    readonly property int  quickDepth:  px(180)
+    readonly property int  quickHeight: px(340 - 2 * Theme.cornerRadius)
+
+    property real rightCenterDepth: quickShown ? quickDepth : 0
+    Behavior on rightCenterDepth { NumberAnimation { duration: Theme.animDuration; easing.type: Easing.InOutCubic } }
 
     Binding { target: ShellState; property: "topBarLWidth"; value: root.lWidth }
     Binding { target: ShellState; property: "topBarCWidth"; value: root.cWidth }
@@ -93,6 +124,9 @@ PanelWindow {
         leftWidth:    root.lWidth
         centerWidth:  root.cWidth
         rightWidth:   root.rWidth
+        rightBottom:  root.rightBottom
+        rightCenterDepth:  root.rightCenterDepth
+        rightCenterHeight: root.quickHeight
     }
 
     // ── Bar content (fades out in focus mode) ────────────────────────────────
@@ -146,6 +180,42 @@ PanelWindow {
         }
     }
 
+    // ── Toast, inside the grown right notch ──────────────────────────────────
+    ToastCard {
+        id: toastCard
+        x:        root.width - root.rWidth + root.px(14)
+        y:        root.notchHeight + root.px(4)
+        width:    root.toastWidth - root.px(14) - root.borderWidth - root.notchPadding
+        barWidth: width
+        visible:  opacity > 0
+        opacity:  root.toastShown ? 1 : 0
+        Behavior on opacity { NumberAnimation { duration: 150 } }
+    }
+
+    // ── Quick Controls OSD, inside the right-center region ───────────────────
+    Item {
+        id: quickRegion
+        x:      root.width - root.borderWidth - root.rightCenterDepth
+        y:      (root.height - root.quickHeight) / 2
+        width:  root.rightCenterDepth
+        height: root.quickHeight
+        clip:   true
+        visible: opacity > 0
+        opacity: root.quickShown ? 1 : 0
+        Behavior on opacity { NumberAnimation { duration: 150 } }
+
+        // Hovering keeps the OSD open (see IpcManager's hide timer).
+        HoverHandler { onHoveredChanged: Popups.quickHeld = hovered }
+
+        QuickControlContent {
+            x:        root.px(8)
+            y:        root.px(30)
+            width:    root.quickDepth - root.px(16)
+            height:   parent.height - root.px(30)
+            fastPoll: root.quickShown
+        }
+    }
+
     // ── Input mask: only the visible frame takes clicks ──────────────────────
     readonly property int _edge: Math.max(1, borderWidth)
 
@@ -155,7 +225,8 @@ PanelWindow {
     Item { id: maskBottom; x: 0; y: root.height - root._edge; width: root.width; height: root._edge }
     Item { id: maskLeftNotch;   x: leftNotch.x;   y: 0; width: leftNotch.width;   height: root.notchBottom }
     Item { id: maskCenterNotch; x: centerNotch.x; y: 0; width: centerNotch.width; height: root.notchBottom }
-    Item { id: maskRightNotch;  x: rightNotch.x;  y: 0; width: rightNotch.width;  height: root.notchBottom }
+    Item { id: maskRightNotch;  x: rightNotch.x;  y: 0; width: rightNotch.width;  height: root.rightBottom }
+    Item { id: maskQuick; x: quickRegion.x; y: quickRegion.y; width: quickRegion.width; height: quickRegion.height }
 
     mask: Region {
         Region { item: maskTop;         intersection: Intersection.Combine }
@@ -165,5 +236,6 @@ PanelWindow {
         Region { item: maskLeftNotch;   intersection: Intersection.Combine }
         Region { item: maskCenterNotch; intersection: Intersection.Combine }
         Region { item: maskRightNotch;  intersection: Intersection.Combine }
+        Region { item: maskQuick;       intersection: Intersection.Combine }
     }
 }
