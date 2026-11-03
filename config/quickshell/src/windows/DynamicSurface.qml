@@ -7,6 +7,8 @@ import "../modules/Right/"
 import "../modules/Left/"
 import "../shapes/"
 import "../components/"
+import "../services/"
+import "../popups/"
 import "../"
 
 // DynamicSurface — one fullscreen, transparent layer surface per screen that
@@ -27,7 +29,11 @@ import "../"
 PanelWindow {
     id: root
 
-    property bool wantsKeyboard: false
+    // Interactive popups hosted by the surface so far (#41). Others still only
+    // exist in the legacy host.
+    readonly property var hostedContents: ["powerMenu", "audio", "notifications", "network"]
+    readonly property bool hostedOpen: hostedContents.indexOf(openContent) >= 0
+    readonly property bool wantsKeyboard: hostedOpen
 
     anchors {
         top:    true
@@ -96,9 +102,19 @@ PanelWindow {
                                        && openRegion !== "right"
     readonly property int  toastWidth: px(Theme.notificationToastWidth + Theme.notchRadius + Theme.notchPadding - 3)
 
-    property real _rGrow: toastShown ? toastWidth : 0
+    // Right region size: network and notifications grow the right notch;
+    // otherwise a toast does.
+    readonly property int networkWidth:  px(Theme.networkPopupWidth + 9) + borderWidth
+    readonly property int networkBottom: px(648 - Theme.notchRadius)
+    readonly property int notifWidth:    px(Theme.notificationsWidth + Theme.notchRadius) + borderWidth
+
+    property real _rGrow: openContent === "network"       ? networkWidth
+                        : openContent === "notifications" ? notifWidth
+                        : toastShown                      ? toastWidth : 0
     Behavior on _rGrow { NumberAnimation { duration: Theme.animDuration; easing.type: Easing.InOutCubic } }
-    property real _rDrop: toastShown ? toastCard.implicitHeight + px(26) : 0
+    property real _rDrop: openContent === "network"       ? networkBottom - notchBottom
+                        : openContent === "notifications" ? notifList.height + px(2 * Theme.popupPadding + 4)
+                        : toastShown                      ? toastCard.implicitHeight + px(26) : 0
     Behavior on _rDrop { NumberAnimation { duration: Theme.animDuration; easing.type: Easing.InOutCubic } }
 
     // Quick Controls OSD: right-center region, on the focused monitor, unless
@@ -107,8 +123,19 @@ PanelWindow {
     readonly property int  quickDepth:  px(180)
     readonly property int  quickHeight: px(340 - 2 * Theme.cornerRadius)
 
-    property real rightCenterDepth: quickShown ? quickDepth : 0
+    // Right-center region: the audio popup (width follows its page) or the OSD.
+    readonly property var audioPageWidths: ({ output: 200, input: 200, mixer: 300 })
+    readonly property int audioWidth: px(audioPageWidths[audioControl.page] ?? 300)
+
+    property real rightCenterDepth: openContent === "audio" ? audioWidth
+                                  : quickShown              ? quickDepth : 0
     Behavior on rightCenterDepth { NumberAnimation { duration: Theme.animDuration; easing.type: Easing.InOutCubic } }
+
+    // Left-center region: the power menu.
+    readonly property int powerWidth:  px(216)
+    readonly property int powerHeight: px(258)
+    property real leftCenterDepth: openContent === "powerMenu" ? powerWidth + px(12) : 0
+    Behavior on leftCenterDepth { NumberAnimation { duration: Theme.animDuration; easing.type: Easing.InOutCubic } }
 
     Binding { target: ShellState; property: "topBarLWidth"; value: root.lWidth }
     Binding { target: ShellState; property: "topBarCWidth"; value: root.cWidth }
@@ -127,6 +154,8 @@ PanelWindow {
         rightBottom:  root.rightBottom
         rightCenterDepth:  root.rightCenterDepth
         rightCenterHeight: root.quickHeight
+        leftCenterDepth:   root.leftCenterDepth
+        leftCenterHeight:  root.powerHeight + px(12)
     }
 
     // ── Bar content (fades out in focus mode) ────────────────────────────────
@@ -216,6 +245,122 @@ PanelWindow {
         }
     }
 
+    // ── Interactive popups (#41) ─────────────────────────────────────────────
+    // Each content sits in a clip Item that follows its region's animated size,
+    // so it appears to grow out of the frame, and fades with its content flag.
+    // The scope gets keyboard focus while one is open (wantsKeyboard); Escape
+    // closes the popup from anywhere inside.
+    FocusScope {
+        id: popupScope
+        anchors.fill: parent
+        Keys.onEscapePressed: Popups.close()
+
+        // Power menu — left-center
+        Item {
+            id: powerRegion
+            x:      root.borderWidth
+            y:      (root.height - root.powerHeight - root.px(12)) / 2
+            width:  root.leftCenterDepth
+            height: root.powerHeight + root.px(12)
+            clip:   true
+            visible: opacity > 0
+            opacity: root.openContent === "powerMenu" ? 1 : 0
+            Behavior on opacity { NumberAnimation { duration: 150 } }
+
+            Item {
+                x: root.px(4); y: root.px(6)
+                width: root.powerWidth; height: root.powerHeight
+                PowerMenu { id: powerMenu }
+            }
+        }
+
+        // Audio — right-center (shares the region with the OSD)
+        Item {
+            id: audioRegion
+            x:      root.width - root.borderWidth - root.rightCenterDepth
+            y:      (root.height - root.quickHeight) / 2
+            width:  root.rightCenterDepth
+            height: root.quickHeight
+            clip:   true
+            visible: opacity > 0
+            opacity: root.openContent === "audio" ? 1 : 0
+            Behavior on opacity { NumberAnimation { duration: 150 } }
+
+            AudioControl {
+                id: audioControl
+                x: root.px(10); y: root.px(6)
+                width:  root.audioWidth - root.px(16)
+                height: parent.height - root.px(12)
+            }
+
+            // Back to the default page once the close animation is done.
+            Timer {
+                id: audioResetTimer
+                interval: Theme.animDuration + 20
+                onTriggered: audioControl.reset()
+            }
+            Connections {
+                target: Popups
+                function onAudioOpenChanged() {
+                    if (!Popups.audioOpen) audioResetTimer.restart()
+                    else audioControl.page = Popups.audioPage
+                }
+            }
+        }
+
+        // Notifications — right notch, below the bar
+        Item {
+            id: notifRegion
+            x:      root.width - root.rWidth
+            y:      root.notchHeight
+            width:  root.rWidth - root.borderWidth
+            height: Math.max(0, root.rightBottom - root.notchHeight)
+            clip:   true
+            visible: opacity > 0
+            opacity: root.openContent === "notifications" ? 1 : 0
+            Behavior on opacity { NumberAnimation { duration: 150 } }
+
+            NotificationList {
+                id: notifList
+                x:     root.px(Theme.notchRadius + 4)
+                y:     root.px(4)
+                width: root.notifWidth - root.borderWidth - root.px(Theme.notchRadius + 8)
+            }
+        }
+
+        // Network — right notch, below the bar
+        Item {
+            id: networkRegion
+            x:      root.width - root.rWidth
+            y:      root.notchHeight
+            width:  root.rWidth - root.borderWidth
+            height: Math.max(0, root.rightBottom - root.notchHeight)
+            clip:   true
+            visible: opacity > 0
+            opacity: root.openContent === "network" ? 1 : 0
+            Behavior on opacity { NumberAnimation { duration: 150 } }
+
+            NetworkContent {
+                x:      root.px(Theme.notchRadius)
+                width:  root.networkWidth - root.borderWidth - root.px(Theme.notchRadius) - root.px(7)
+                height: root.networkBottom - root.notchHeight - root.px(Theme.cornerRadius)
+                page:   Popups.networkPage || "wifi"
+            }
+        }
+    }
+
+    // Hand the keyboard to the opened popup once the compositor has given it
+    // to the surface.
+    onOpenContentChanged: if (hostedOpen) focusTimer.restart()
+    Timer {
+        id: focusTimer
+        interval: 50
+        onTriggered: {
+            if (root.openContent === "powerMenu") powerMenu.reset()
+            else popupScope.forceActiveFocus()
+        }
+    }
+
     // ── Input mask: only the visible frame takes clicks ──────────────────────
     readonly property int _edge: Math.max(1, borderWidth)
 
@@ -227,6 +372,7 @@ PanelWindow {
     Item { id: maskCenterNotch; x: centerNotch.x; y: 0; width: centerNotch.width; height: root.notchBottom }
     Item { id: maskRightNotch;  x: rightNotch.x;  y: 0; width: rightNotch.width;  height: root.rightBottom }
     Item { id: maskQuick; x: quickRegion.x; y: quickRegion.y; width: quickRegion.width; height: quickRegion.height }
+    Item { id: maskPower; x: powerRegion.x; y: powerRegion.y; width: powerRegion.width; height: powerRegion.height }
 
     mask: Region {
         Region { item: maskTop;         intersection: Intersection.Combine }
@@ -237,5 +383,6 @@ PanelWindow {
         Region { item: maskCenterNotch; intersection: Intersection.Combine }
         Region { item: maskRightNotch;  intersection: Intersection.Combine }
         Region { item: maskQuick;       intersection: Intersection.Combine }
+        Region { item: maskPower;       intersection: Intersection.Combine }
     }
 }
