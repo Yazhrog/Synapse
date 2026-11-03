@@ -30,7 +30,6 @@ Singleton {
         dashboard:     "top",
         network:       "right",
         notifications: "right",
-        battery:       "right",
         audio:         "rightCenter",
         powerMenu:     "leftCenter",
         wallpaper:     "bottomCenter",
