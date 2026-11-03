@@ -1,4 +1,5 @@
 import QtQuick
+import Quickshell
 import QtQuick.Effects
 import Quickshell.Hyprland
 import Quickshell.Services.Mpris
@@ -862,7 +863,7 @@ Item {
 				onTapped: {
 					// Do nothing during screen rec setup — ESC / cancel button handles it
 					if (ShellState.screenRecord && !ScreenRecService.recording) return
-					Popups.toggle("dashboard")
+					Popups.toggle("dashboard", QsWindow.window?.screen?.name ?? "")
 				}
 			}
 		}

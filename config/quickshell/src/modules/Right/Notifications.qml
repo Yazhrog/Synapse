@@ -1,4 +1,5 @@
 import QtQuick
+import Quickshell
 import Quickshell.Services.SystemTray
 import "../../components"
 import "../../windows"
@@ -11,6 +12,6 @@ IconBtn {
           : NotificationService.count > 0 ? "󰂚" : "󰂜"
 
     onClicked: {
-        Popups.toggle("notifications")
+        Popups.toggle("notifications", QsWindow.window?.screen?.name ?? "")
     }
 }
