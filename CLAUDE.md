@@ -32,7 +32,7 @@ There is no build/lint/test tooling (no package.json, no CI). The only "commands
 2. **`file`** — per-file symlinks inside a *real* directory (`config/hypr/`, `config/nvim/`, `config/ghostty/`, `config/zsh/`). Used wherever runtime output has to sit alongside repo files: matugen writes `~/.config/hypr/modules/colors.lua` and `~/.config/nvim/colors/nvim-colors.json`, zsh writes its history. Keeping those directories real is why no runtime path had to move.
 3. **`copy`** — copied once, never overwritten, because another tool rewrites it in place (`sunsetr.toml`, `qt6ct.conf`, `nvim/lazy-lock.json`).
 
-The repo location is resolved once by `boot.sh` and written to `~/.config/Synapse/repo-path`. Read that file rather than hardcoding a path — and note it **cannot** be derived from `Quickshell.shellDir`, because `~/.config/quickshell` is a symlink and quickshell reports the link path, not the checkout behind it.
+The repo location is resolved once by `boot.sh` and written to `~/.config/Synapse/repo-path`. In QML, use `Paths.repoDir`, which reads that file, rather than hardcoding a path — and note it **cannot** be derived from `Quickshell.shellDir`, because `~/.config/quickshell` is a symlink and quickshell reports the link path, not the checkout behind it.
 
 Runtime state lives under `~/.config/Synapse/` (never symlinked): `src/user_data/*.json` plus the generated `SynapseKeybinds.lua` and the user's own `monitors.lua`. See the "Summary tree" at the bottom of `DEPLOY-MAP.md`.
 
@@ -46,6 +46,7 @@ Entry point `shell.qml` instantiates windows/overlays once per screen (`Variants
 
 Global singletons are declared in `src/qmldir` (`singleton Name path`) and are the backbone of shared state — QML doesn't need imports to reach them, any file can reference `Theme`, `Popups`, `ShellState`, `IpcManager`, `ClockState`, `ScreenRecService`, `CavaService`, `ClipboardService`, `KeybindService`, `UpdateService` directly:
 
+- **`utils/Paths.qml`** — every directory the shell uses: `configDir`, `userDataDir` (with `Paths.userData("file.json")`), `wallpaperDir`, `shellDir`, `repoDir`, `cacheDir`. Never hardcode `~/.config/Synapse` in QML. Setting `SYNAPSE_CONFIG_DIR` points `configDir` somewhere else, so the dev checkout can run against throwaway data: `SYNAPSE_CONFIG_DIR=/tmp/synapse-test qs -p <checkout>/config/quickshell`. `matugen.toml` and the installer can't read it and keep their own paths. A file in a subdirectory of `src/` must import `src` itself (e.g. `import "../"`) to see the singletons.
 - **`state/Popups.qml`** — the single source of truth for which popup/dashboard page is open. All popups toggle through `Popups.closeAll()` + setting their own `xOpen` flag, so only one popup is ever open at a time.
 - **`state/ShellState.qml`** — misc global toggles owned by other components (wifi/bluetooth/DND/focus mode/etc — see the ownership comment at the top of the file) plus the Hyprland "submap" passthrough mechanism used while capturing a new keybind.
 - **`state/IpcManager.qml`** — centralizes every `IpcHandler` (external `hyprctl dispatch` / `qs ipc` entry point) in one place specifically so multi-monitor setups (where `TopBar`/`PopupLayer` are duplicated per-screen) only ever have one handler reacting to a given signal. New IPC-triggerable actions should be added here, not on a per-window component.

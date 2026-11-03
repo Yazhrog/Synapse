@@ -87,7 +87,7 @@ QtObject {
     }
 
     Component.onCompleted: {
-        var path = Quickshell.env("HOME") + "/.config/Synapse/src/user_data/screenrec.json"
+        var path = Paths.userData("screenrec.json")
         configView.path = path
         _initConfig.command = [
             "bash", "-c",
@@ -110,7 +110,7 @@ QtObject {
     }
 
     function saveConfig() {
-        var path = Quickshell.env("HOME") + "/.config/Synapse/src/user_data/screenrec.json"
+        var path = Paths.userData("screenrec.json")
         var data = JSON.stringify({
             captureTarget: root.captureTarget,
             audioMic:      root.audioMic,
