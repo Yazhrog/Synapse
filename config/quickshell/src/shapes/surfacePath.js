@@ -3,14 +3,14 @@
 // Pure JS, no QML: SurfaceShape feeds the result to PathSvg, and
 // tests/surface-path.test.mjs runs it under node.
 //
-// The path is filled with the non-zero winding rule and made of:
+// The path is exactly two loops, filled with the non-zero winding rule:
 //   1. the screen rectangle, clockwise (winding +1 → frame);
 //   2. the inner edge of the frame, counter-clockwise (winding back to 0 → the
-//      transparent hole), with the 3 top notches and the left/right-center
-//      bumps on it;
-//   3. the bottom panels (bottom-center, bottom-right), clockwise, as separate
-//      loops: where they overlap the frame the winding is 2, still filled once,
-//      so a translucent fill never shows double alpha.
+//      transparent hole), with every region on it: the 3 top notches, the
+//      left/right-center bumps, the bottom-center bump and the bottom-right
+//      panel. No subpath overlaps another, so every pixel is filled once (no
+//      double alpha with a translucent frame) and triangulating renderers
+//      (Shape.CurveRenderer) don't have to resolve overlaps.
 //
 // Closed regions keep a tiny size and every radius is clamped to the room it
 // has, so the path never degenerates while a region animates open or closed.
@@ -150,53 +150,50 @@ function build(geo) {
     _line(inner, W - t - rc.F, rc.bot)
     _arc(inner, W - t, rc.bot + rc.F, rc.F, true)
 
-    // Bottom-right corner, bottom border, bottom-left corner.
-    _line(inner, W - t, H - t - Rc)
-    _arc(inner, W - t - Rc, H - t, Rc, true)
-    _line(inner, t + Rc, H - t)
-    _arc(inner, t, H - t - Rc, Rc, true)
-
-    const loops = [outer, _reverse(inner)]
-
-    // 3. Bottom panels, clockwise. Skipped while closed.
-    const bc = geo.bottomCenter || {}
-    const bcW = _num(bc.width, 0), bcH = _num(bc.height, 0)
-    if (bcW >= 1 && bcH >= 1) {
-        const L = W / 2 - bcW / 2, Rx = W / 2 + bcW / 2, T = H - t - bcH
-        const F = Math.max(EPS / 2, Math.min(_num(geo.r, 0), bcH / 2))
-        const C = Math.max(EPS / 2, Math.min(Rm, bcW / 2, bcH / 2))
-        const p = _loop(L - F, H - t)
-        _arc(p, L, H - t - F, F, false)
-        _line(p, L, T + C)
-        _arc(p, L + C, T, C, true)
-        _line(p, Rx - C, T)
-        _arc(p, Rx, T + C, C, true)
-        _line(p, Rx, H - t - F)
-        _arc(p, Rx + F, H - t, F, false)
-        _line(p, Rx + F, H)
-        _line(p, L - F, H)
-        _line(p, L - F, H - t)
-        loops.push(p)
-    }
-
+    // Bottom-right corner, or the bottom-right panel (clipboard) growing out of
+    // it. Below 2 corner radii in either direction the panel isn't drawn and
+    // the corner stays round, so its flares and corner never collapse to a
+    // sharp point.
     const br = geo.bottomRight || {}
     const brW = _num(br.width, 0), brH = _num(br.height, 0)
-    if (brW >= 1 && brH >= 1) {
+    if (Rm > 0 && brW >= 2 * Rm && brH >= 2 * Rm) {
         const L = W - t - brW, T = H - t - brH
         const F = Math.max(EPS / 2, Math.min(Rm, brW / 2, brH / 2))
         const C = F
-        const p = _loop(W - t, T - F)
-        _arc(p, W - t - F, T, F, true)
-        _line(p, L + C, T)
-        _arc(p, L, T + C, C, false)
-        _line(p, L, H - t - F)
-        _arc(p, L - F, H - t, F, true)
-        _line(p, L - F, H)
-        _line(p, W, H)
-        _line(p, W, T - F)
-        _line(p, W - t, T - F)
-        loops.push(_reverse(p))   // traced counter-clockwise above; must wind like the frame
+        _line(inner, W - t, T - F)
+        _arc(inner, W - t - F, T, F, true)
+        _line(inner, L + C, T)
+        _arc(inner, L, T + C, C, false)
+        _line(inner, L, H - t - F)
+        _arc(inner, L - F, H - t, F, true)
+    } else {
+        _line(inner, W - t, H - t - Rc)
+        _arc(inner, W - t - Rc, H - t, Rc, true)
     }
+
+    // Bottom border with the bottom-center bump (wallpaper), then the
+    // bottom-left corner.
+    const bc = geo.bottomCenter || {}
+    const bcD  = Math.max(EPS, _num(bc.height, 0))
+    const bcW  = Math.max(2 * EPS, _num(bc.width, 0))
+    const bcF  = Math.max(EPS / 2, Math.min(_num(geo.r, 0), bcD / 2))
+    const bcC  = Math.max(EPS / 2, Math.min(Rm, bcD / 2, bcW / 2))
+    const bcL  = W / 2 - bcW / 2, bcR = W / 2 + bcW / 2, bcT = H - t - bcD
+    _line(inner, bcR + bcF, H - t)
+    _arc(inner, bcR, H - t - bcF, bcF, true)
+    _line(inner, bcR, bcT + bcC)
+    _arc(inner, bcR - bcC, bcT, bcC, false)
+    _line(inner, bcL + bcC, bcT)
+    _arc(inner, bcL, bcT + bcC, bcC, false)
+    _line(inner, bcL, H - t - bcF)
+    _arc(inner, bcL - bcF, H - t, bcF, true)
+
+    _line(inner, t + Rc, H - t)
+    _arc(inner, t, H - t - Rc, Rc, true)
+
+    // Exactly two loops, neither overlapping the other nor itself: renderers
+    // that triangulate (Shape.CurveRenderer) handle that reliably.
+    const loops = [outer, _reverse(inner)]
 
     return loops.map(_svg).join(" ")
 }
