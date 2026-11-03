@@ -57,4 +57,8 @@ QtObject {
 
     // -- Animations --
     property int animDuration: 320
+
+    // -- Settings widgets (components/Settings*.qml) --
+    property int settingsRowMinHeight: 44
+    property int settingsRowPadding:   14
 }
