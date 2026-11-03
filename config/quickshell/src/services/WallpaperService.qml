@@ -18,8 +18,8 @@ QtObject {
     id: root
 
     // ── Paths ─────────────────────────────────────────────────────────────────
-    readonly property string configPath:      Quickshell.env("HOME") + "/.config/Synapse/src/user_data/wallpaper.json"
-    readonly property string _wallDir:        Quickshell.env("HOME") + "/.config/Synapse/src/user_data/wallpapers"
+    readonly property string configPath:      Paths.userData("wallpaper.json")
+    readonly property string _wallDir:        Paths.wallpaperDir
     readonly property string _currWall:       _wallDir + "/curr_wall"
     readonly property string _currWallStatic: _wallDir + "/curr_wall_static.jpg"
 

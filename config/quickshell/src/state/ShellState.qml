@@ -75,7 +75,7 @@ QtObject {
     // Watch the JSON file written by the installer
     property var _providerFile: FileView {
         id: providerFile
-        path: Quickshell.env("HOME") + "/.config/Synapse/src/user_data/config_Provider.json"
+        path: Paths.userData("config_Provider.json")
         watchChanges: true
         
         onFileChanged: {

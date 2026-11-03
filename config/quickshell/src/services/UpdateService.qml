@@ -5,12 +5,12 @@ import Quickshell.Io
 import "../"
 
 // UpdateService — startup update checker (30s delay).
-// Persistent autoUpdate preference stored in src/user_data/update_prefs.json.
+// The autoUpdate preference lives in PrefsService.
 QtObject {
     id: root
 
     // ── Persistent preference ──────────────────────────────────────────────
-    property bool autoUpdate: true
+    readonly property bool autoUpdate: PrefsService.autoUpdate
 
     // ── Live state (drives UpdatePopup) ───────────────────────────────────
     property bool   checking:        false
@@ -82,12 +82,9 @@ QtObject {
         )
 
     // ── Paths ──────────────────────────────────────────────────────────────
-    // The repo location is written by boot.sh / install/link.sh. It can't be
-    // derived from Quickshell.shellDir: ~/.config/quickshell is a symlink and
-    // quickshell reports the link path, not the checkout behind it.
+    // The repo location comes from Paths.repoDir (see Paths.qml for why it
+    // can't be derived from Quickshell.shellDir).
     property string _dir: ""
-    readonly property string _repoPathFile: Quickshell.env("HOME") + "/.config/Synapse/repo-path"
-    readonly property string _cfgPath:      Quickshell.env("HOME") + "/.config/Synapse/src/user_data/update_prefs.json"
 
     // ── Startup: 30s delay ─────────────────────────────────────────────────
     property var _startTimer: Timer {
@@ -97,39 +94,21 @@ QtObject {
         onTriggered: root._startConnectivityCheck()
     }
 
-    // ── Config: init → read repo path + prefs → arm timer ─────────────────
-    // Emits the repo path on the first line, then the prefs JSON.
-    property var _initProc: Process {
-        command: ["bash", "-c",
-            "[ -f '" + root._cfgPath + "' ] || " +
-            "(mkdir -p \"$(dirname '" + root._cfgPath + "')\" && " +
-            "printf '%s' '{\"autoUpdate\":true}' > '" + root._cfgPath + "');\n" +
-            "cat '" + root._repoPathFile + "' 2>/dev/null || " +
-            "echo \"$HOME/.local/src/Synapse\";\n" +
-            "cat '" + root._cfgPath + "'"]
-        running: false
-        stdout: StdioCollector {
-            onStreamFinished: {
-                var lines = text.split("\n")
-                root._dir = (lines.shift() || "").trim()
-
-                try {
-                    var o = JSON.parse(lines.join("\n").trim())
-                    if (typeof o.autoUpdate === "boolean")
-                        root.autoUpdate = o.autoUpdate
-                } catch(e) {
-                    console.log("UpdateService: Failed to parse config JSON:", e)
-                }
-                console.log("UpdateService: repo=" + root._dir + " autoUpdate=" + root.autoUpdate)
-
-                if (root.autoUpdate) {
-                    console.log("UpdateService: Auto-update enabled. Starting 30s delay timer.")
-                    root._startTimer.start()
-                } else {
-                    console.log("UpdateService: Auto-update disabled.")
-                }
-            }
+    // ── Init: wait for prefs → arm timer ───────────────────────────────────
+    function _init() {
+        root._dir = Paths.repoDir
+        console.log("UpdateService: repo=" + root._dir + " autoUpdate=" + root.autoUpdate)
+        if (root.autoUpdate) {
+            console.log("UpdateService: Auto-update enabled. Starting 30s delay timer.")
+            root._startTimer.start()
+        } else {
+            console.log("UpdateService: Auto-update disabled.")
         }
+    }
+
+    property var _prefsConn: Connections {
+        target: PrefsService
+        function onLoaded() { root._init() }
     }
 
     // ── Preflight ──────────────────────────────────────────────────────────
@@ -161,19 +140,6 @@ QtObject {
                 else                       console.log("UpdateService: not on main (" + r + ") — skipping.")
             }
         }
-    }
-
-    // ── Config: save ──────────────────────────────────────────────────────
-    property var _saveProc: Process { command: []; running: false }
-
-    function _saveConfig() {
-        console.log("UpdateService: Saving config. autoUpdate=" + root.autoUpdate)
-        var json = JSON.stringify({ autoUpdate: root.autoUpdate })
-        _saveProc.command = ["bash", "-c",
-            "printf '%s' '" + json.replace(/'/g, "'\\''") +
-            "' > '" + root._cfgPath + "'"]
-        _saveProc.running = false
-        _saveProc.running = true
     }
 
     // ── Step 1: fetch origin/main ──────────────────────────────────────────
@@ -417,7 +383,7 @@ QtObject {
     // binds to this so a user can turn checks back on without editing JSON.
     function setAutoUpdate(enabled) {
         console.log("UpdateService: setAutoUpdate(" + enabled + ")")
-        root.autoUpdate = enabled
+        PrefsService.autoUpdate = enabled
         if (!enabled) {
             root.updateAvailable = false
             root.hasConflict     = false
@@ -425,12 +391,11 @@ QtObject {
             root.updateSuccess   = false
             root._startTimer.stop()
         }
-        _saveConfig()
     }
 
     function disableAutoUpdate() {
         setAutoUpdate(false)
     }
 
-    Component.onCompleted: _initProc.running = true
+    Component.onCompleted: if (PrefsService.ready) _init()
 }

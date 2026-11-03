@@ -64,4 +64,7 @@ QtObject {
     property int wsRadius:      Metrics.wsRadius
 
     property int animDuration: Metrics.animDuration
+
+    property int settingsRowMinHeight: Metrics.settingsRowMinHeight
+    property int settingsRowPadding:   Metrics.settingsRowPadding
 }

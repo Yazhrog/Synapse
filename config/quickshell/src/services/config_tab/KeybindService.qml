@@ -9,7 +9,7 @@ QtObject {
     id: root
 
     readonly property string _shellDir: Quickshell.shellDir
-    readonly property string _configDir: Quickshell.env("HOME") + "/.config/Synapse"
+    readonly property string _configDir: Paths.configDir
     // Loaded unconditionally by config/hypr/modules/synapse-keybinds.lua on every
     // Hyprland (re)parse — see that file. Not auto-included by this service.
     readonly property string _luaPath:  _configDir + "/SynapseKeybinds.lua"
@@ -17,7 +17,7 @@ QtObject {
     // shipped by this repo, so .conf-provider users must add
     // `source = ~/.config/Synapse/SynapseKeybinds.conf` to their own config.
     readonly property string _confPath: _configDir + "/SynapseKeybinds.conf"
-    readonly property string _jsonPath: _configDir + "/src/user_data/keybinds.json"
+    readonly property string _jsonPath: Paths.userData("keybinds.json")
     
     property string configProvider: ShellState.configProvider
 
