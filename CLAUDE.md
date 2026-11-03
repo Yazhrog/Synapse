@@ -42,7 +42,10 @@ Runtime state lives under `~/.config/Synapse/` (never symlinked): `src/user_data
 
 ### Quickshell shell (`config/quickshell/`)
 
-Entry point `shell.qml` instantiates windows/overlays once per screen (`Variants` over `Quickshell.screens`) and force-instantiates a few global singletons that need startup side effects (`KeybindService`, `UpdateService`, `IpcManager`).
+Entry point `shell.qml` force-instantiates a few global singletons that need startup side effects (`KeybindService`, `UpdateService`, `IpcManager`, `BatteryWarningService`) and loads one of two hosts, each instantiating its windows once per screen (`Variants` over `Quickshell.screens`):
+
+- `windows/LegacyHost.qml` (default) — today's window stack: `TopBar`, three `Border` windows, the overlays and `PopupLayer`.
+- `windows/ShellHost.qml` (`SYNAPSE_SURFACE=1`) — the Dynamic Surface being built in #37: one fullscreen `DynamicSurface` per screen draws the whole frame as a single `shapes/SurfaceShape.qml` path and hosts the bar, a top `StrutWindow` reserves the bar's space, and the centered modals stay separate windows. Popups aren't migrated yet. Try it without touching the live session's config: `SYNAPSE_SURFACE=1 qs -p <checkout>/config/quickshell`. Until #43 makes it the default, every change must keep the legacy host working.
 
 Global singletons are declared in `src/qmldir` (`singleton Name path`) and are the backbone of shared state — QML doesn't need imports to reach them, any file can reference `Theme`, `Popups`, `ShellState`, `IpcManager`, `ClockState`, `ScreenRecService`, `CavaService`, `ClipboardService`, `KeybindService`, `UpdateService` directly:
 
