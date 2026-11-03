@@ -80,11 +80,13 @@ Singleton {
         id: slideOutTimer
         interval: Theme.animDuration + 20
         onTriggered: {
-            if (root.queue.length > 0) {
-                const next = root.queue[0]
-                root.queue = root.queue.slice(1)
-                root._start(next)
+            // Skip notifications that were closed while waiting in the queue.
+            const queue = root.queue.filter(n => n && n.tracked)
+            if (queue.length > 0) {
+                root.queue = queue.slice(1)
+                root._start(queue[0])
             } else {
+                root.queue   = []
                 root.current = null
                 root.screen  = ""
             }
