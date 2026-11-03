@@ -111,7 +111,7 @@ PopupWindow {
         open:             Popups.quickOpen 
         hoverEnabled:     true
         triggerHovered:   Popups.quickTriggerHovered 
-        onCloseRequested: Popups.quickOpen = false
+        onCloseRequested: Popups.hideQuick()
 
         Item {
             id: sizer

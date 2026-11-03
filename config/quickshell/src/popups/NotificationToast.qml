@@ -53,13 +53,13 @@ PopupWindow {
 		root.showing       = false
 		root.windowVisible = true
 		slideInTimer.restart()
-		Popups.notificationToastOpen = false
+		Popups.hideToast()
 	}
 
 	function startDismiss() {
 		autoTimer.stop()
 		root.showing = false
-		Popups.notificationToastOpen = false
+		Popups.hideToast()
 		slideOutTimer.restart()
 	}
 
@@ -72,7 +72,7 @@ PopupWindow {
 	Timer {
 		id:          slideInTimer
 		interval:    30
-		onTriggered: { root.showing = true; Popups.notificationToastOpen = true; autoTimer.restart() }
+		onTriggered: { root.showing = true; Popups.showToast(); autoTimer.restart() }
 	}
 
 	Timer {

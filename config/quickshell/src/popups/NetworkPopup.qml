@@ -53,7 +53,7 @@ PanelWindow {
         screen:       root.hostScreen
         active:       Popups.networkOpen
         onFocused:    sizer.forceActiveFocus()
-        onDismissed:  Popups.networkOpen = false
+        onDismissed:  Popups.close("network")
     }
 
     Connections {
@@ -107,7 +107,7 @@ PanelWindow {
             flareHeight:  root.fh
         }
         
-        Keys.onEscapePressed: Popups.networkOpen = false
+        Keys.onEscapePressed: Popups.close("network")
 
         Item {
             id: contentArea

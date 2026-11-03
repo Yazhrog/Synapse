@@ -371,7 +371,7 @@ component ClipRow: Item {
                     onClicked: {
                         if (row.isPinned) ClipboardService.copyText(row.fullText || row.previewText)
                         else             ClipboardService.copyEntry(row.entryId)
-                        Popups.clipboardOpen = false
+                        Popups.close("clipboard")
                     }
                 }
 
@@ -416,7 +416,7 @@ component ClipRow: Item {
         onDoubleTapped: {
             if (row.isPinned) ClipboardService.copyText(row.fullText || row.previewText)
             else             ClipboardService.copyEntry(row.entryId)
-            Popups.clipboardOpen = false
+            Popups.close("clipboard")
             ClipboardService.typeFromClipboard()
         }
     }

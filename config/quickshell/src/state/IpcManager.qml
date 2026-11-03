@@ -19,90 +19,35 @@ QtObject {
     property var dashboardHome: IpcHandler {
         target: "dashboard-home"
         function toggle() {
-            if(Popups.anyOpen && !Popups.dashboardOpen){
-                Popups.closeAll()
-                Popups.dashboardOpen = true
-                Popups.dashboardPage = "home"
-            } else if(Popups.dashboardOpen && Popups.dashboardPage != "home") {
-                Popups.dashboardPage = "home"
-            } else {
-                var next = !Popups.dashboardOpen
-                Popups.closeAll()
-                Popups.dashboardOpen = next
-                if (next) Popups.dashboardPage = "home"
-            }
+            Popups.togglePage("dashboard", "home")
         }
     }
 
     property var dashboardStats: IpcHandler {
         target: "dashboard-stats"
         function toggle() {
-            if(Popups.anyOpen && !Popups.dashboardOpen){
-                Popups.closeAll()
-                Popups.dashboardOpen = true
-                Popups.dashboardPage = "stats"
-            } else if(Popups.dashboardOpen && Popups.dashboardPage != "stats") {
-                Popups.dashboardPage = "stats"
-            } else {
-                var next = !Popups.dashboardOpen
-                Popups.closeAll()
-                Popups.dashboardOpen = next
-                if (next) Popups.dashboardPage = "stats"
-            }
+            Popups.togglePage("dashboard", "stats")
         }
     }
 
     property var dashboardKanban: IpcHandler {
         target: "dashboard-kanban"
         function toggle() {
-            if(Popups.anyOpen && !Popups.dashboardOpen){
-                Popups.closeAll()
-                Popups.dashboardOpen = true
-                Popups.dashboardPage = "kanban"
-            } else if(Popups.dashboardOpen && Popups.dashboardPage != "kanban") {
-                Popups.dashboardPage = "kanban"
-            } else {
-                var next = !Popups.dashboardOpen
-                Popups.closeAll()
-                Popups.dashboardOpen = next
-                if (next) Popups.dashboardPage = "kanban"
-            }
+            Popups.togglePage("dashboard", "kanban")
         }
     }
 
     property var dashboardLauncher: IpcHandler {
         target: "dashboard-launcher"
         function toggle() {
-            if(Popups.anyOpen && !Popups.dashboardOpen){
-                Popups.closeAll()
-                Popups.dashboardOpen = true
-                Popups.dashboardPage = "launcher"
-            } else if(Popups.dashboardOpen && Popups.dashboardPage != "launcher") {
-                Popups.dashboardPage = "launcher"
-            } else {
-                var next = !Popups.dashboardOpen
-                Popups.closeAll()
-                Popups.dashboardOpen = next
-                if (next) Popups.dashboardPage = "launcher"
-            }
+            Popups.togglePage("dashboard", "launcher")
         }
     }
 
     property var dashboardConfig: IpcHandler {
         target: "dashboard-config"
         function toggle() {
-            if(Popups.anyOpen && !Popups.dashboardOpen){
-                Popups.closeAll()
-                Popups.dashboardOpen = true
-                Popups.dashboardPage = "config"
-            } else if(Popups.dashboardOpen && Popups.dashboardPage != "config") {
-                Popups.dashboardPage = "config"
-            } else {
-                var next = !Popups.dashboardOpen
-                Popups.closeAll()
-                Popups.dashboardOpen = next
-                if (next) Popups.dashboardPage = "config"
-            }
+            Popups.togglePage("dashboard", "config")
         }
     }
 
@@ -111,54 +56,21 @@ QtObject {
     property var audioOut: IpcHandler {
         target: "audioOut-toggle"
         function toggle() {
-            if(Popups.anyOpen && !Popups.audioOpen) {
-                Popups.closeAll()
-                Popups.audioPage = "output"
-                Popups.audioOpen = true
-            } else if (Popups.audioOpen && Popups.audioPage != "output") {
-                Popups.audioPage = "output"
-            } else {
-                var next = !Popups.audioOpen
-                Popups.closeAll()
-                Popups.audioOpen = next
-                if (next) Popups.audioPage = "output"
-            }
+            Popups.togglePage("audio", "output")
         }
     }
 
     property var audioMix: IpcHandler {
         target: "audioMix-toggle"
         function toggle() {
-            if(Popups.anyOpen && !Popups.audioOpen) {
-                Popups.closeAll()
-                Popups.audioPage = "mixer"
-                Popups.audioOpen = true
-            } else if (Popups.audioOpen && Popups.audioPage != "mixer") {
-                Popups.audioPage = "mixer"
-            } else {
-                var next = !Popups.audioOpen
-                Popups.closeAll()
-                Popups.audioOpen = next
-                if (next) Popups.audioPage = "mixer"
-            }
+            Popups.togglePage("audio", "mixer")
         }
     }
 
     property var audioIn: IpcHandler {
         target: "audioIn-toggle"
         function toggle() {
-            if(Popups.anyOpen && !Popups.audioOpen) {
-                Popups.closeAll()
-                Popups.audioPage = "input"
-                Popups.audioOpen = true
-            } else if (Popups.audioOpen && Popups.audioPage != "input") {
-                Popups.audioPage = "input"
-            } else {
-                var next = !Popups.audioOpen
-                Popups.closeAll()
-                Popups.audioOpen = next
-                if (next) Popups.audioPage = "input"
-            }
+            Popups.togglePage("audio", "input")
         }
     }
 
@@ -167,72 +79,28 @@ QtObject {
     property var wifiToggle: IpcHandler {
         target: "wifi-toggle"
         function toggle() {
-            if(Popups.anyOpen && !Popups.networkOpen) {
-                Popups.closeAll()
-                Popups.networkPage = "wifi"
-                Popups.networkOpen = true
-            } else if (Popups.networkOpen && Popups.networkPage != "wifi") {
-                Popups.networkPage = "wifi"
-            } else {
-                var next = !Popups.networkOpen
-                Popups.closeAll()
-                Popups.networkOpen = next
-                if (next) Popups.networkPage = "wifi"
-            }
+            Popups.togglePage("network", "wifi")
         }
     }
 
     property var btToggle: IpcHandler {
         target: "bt-toggle"
         function toggle() {
-            if(Popups.anyOpen && !Popups.networkOpen) {
-                Popups.closeAll()
-                Popups.networkPage = "bluetooth"
-                Popups.networkOpen = true
-            } else if (Popups.networkOpen && Popups.networkPage != "bluetooth") {
-                Popups.networkPage = "bluetooth"
-            } else {
-                var next = !Popups.networkOpen
-                Popups.closeAll()
-                Popups.networkOpen = next
-                if (next) Popups.networkPage = "bluetooth"
-            }
+            Popups.togglePage("network", "bluetooth")
         }
     }
 
     property var vpnToggle: IpcHandler {
         target: "vpn-toggle"
         function toggle() {
-            if(Popups.anyOpen && !Popups.networkOpen) {
-                Popups.closeAll()
-                Popups.networkPage = "vpn"
-                Popups.networkOpen = true
-            } else if (Popups.networkOpen && Popups.networkPage != "vpn") {
-                Popups.networkPage = "vpn"
-            } else {
-                var next = !Popups.networkOpen
-                Popups.closeAll()
-                Popups.networkOpen = next
-                if (next) Popups.networkPage = "vpn"
-            }
+            Popups.togglePage("network", "vpn")
         }
     }
 
     property var hotspotToggle: IpcHandler {
         target: "hotspot-toggle"
         function toggle() {
-            if(Popups.anyOpen && !Popups.networkOpen) {
-                Popups.closeAll()
-                Popups.networkPage = "hotspot"
-                Popups.networkOpen = true
-            } else if (Popups.networkOpen && Popups.networkPage != "hotspot") {
-                Popups.networkPage = "hotspot"
-            } else {
-                var next = !Popups.networkOpen
-                Popups.closeAll()
-                Popups.networkOpen = next
-                if (next) Popups.networkPage = "hotspot"
-            }
+            Popups.togglePage("network", "hotspot")
         }
     }
 
@@ -241,36 +109,28 @@ QtObject {
     property var notifications: IpcHandler {
         target: "notifications-toggle"
         function toggle() {
-            var next = !Popups.notificationsOpen
-            Popups.closeAll()
-            Popups.notificationsOpen = next
+            Popups.toggle("notifications")
         }
     }
 
     property var clipboard: IpcHandler {
         target: "clipboard-toggle"
         function toggle() {
-            var next = !Popups.clipboardOpen
-            Popups.closeAll()
-            Popups.clipboardOpen = next
+            Popups.toggle("clipboard")
         }
     }
 
     property var wallpaper: IpcHandler {
         target: "wallpaper-toggle"
         function toggle() {
-            var next = !Popups.wallpaperOpen
-            Popups.closeAll()
-            Popups.wallpaperOpen = next
+            Popups.toggle("wallpaper")
         }
     }
 
     property var archMenu: IpcHandler {
         target: "PowerMenu-toggle"
         function toggle() {
-            var next = !Popups.archMenuOpen
-            Popups.closeAll()
-            Popups.archMenuOpen = next
+            Popups.toggle("powerMenu")
         }
     }
 
@@ -306,13 +166,13 @@ QtObject {
     property var quickControlsHideTimer: Timer {
         id: quickControlsHideTimer
         interval: 1800
-        onTriggered: Popups.quickOpen = false
+        onTriggered: Popups.hideQuick()
     }
 
     property var quickControls: IpcHandler {
         target: "quickcontrols-show"
         function reveal() {
-            Popups.quickOpen = true
+            Popups.showQuick()
             quickControlsHideTimer.restart()
         }
     }

@@ -174,9 +174,7 @@ PanelWindow {
 
             TapHandler {
                 onTapped: {
-                    var next = !Popups.wallpaperOpen
-                    Popups.closeAll()
-                    Popups.wallpaperOpen = next
+                    Popups.toggle("wallpaper")
                 }
             }
         }
@@ -191,9 +189,7 @@ PanelWindow {
 
             TapHandler {
                 onTapped: {
-                    var next = !Popups.clipboardOpen
-                    Popups.closeAll()
-                    Popups.clipboardOpen = next
+                    Popups.toggle("clipboard")
                 }
             }
         }

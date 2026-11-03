@@ -5,6 +5,9 @@ import "../../windows"
 import "../../"
 
 Row {
+	// Set by the Dynamic Surface host (#39); contents adopt it progressively.
+	property real localScale: 1.0
+
 	spacing: 5
 	// Note: Do NOT add anchors.centerIn: parent here. TopBar handles that.
 

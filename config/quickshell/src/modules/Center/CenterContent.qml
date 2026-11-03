@@ -23,6 +23,9 @@ import "../../services/home/."
 // symmetrically. No center rounding artefact. 5px wide.
 
 Item {
+	// Set by the Dynamic Surface host (#39); contents adopt it progressively.
+	property real localScale: 1.0
+
 	id: root
 
 	width:  Theme.cNotchMinWidth
@@ -859,9 +862,7 @@ Item {
 				onTapped: {
 					// Do nothing during screen rec setup — ESC / cancel button handles it
 					if (ShellState.screenRecord && !ScreenRecService.recording) return
-					var next = !Popups.dashboardOpen
-					Popups.closeAll()
-					Popups.dashboardOpen = next
+					Popups.toggle("dashboard")
 				}
 			}
 		}

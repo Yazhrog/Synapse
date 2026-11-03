@@ -45,7 +45,7 @@ PanelWindow {
         screen:       root.hostScreen
         active:       Popups.clipboardOpen
         onFocused:    content.forceActiveFocus()
-        onDismissed:  Popups.clipboardOpen = false
+        onDismissed:  Popups.close("clipboard")
     }
 
     Connections {
@@ -110,7 +110,7 @@ PanelWindow {
                 }
             }
 
-            Keys.onEscapePressed: Popups.clipboardOpen = false
+            Keys.onEscapePressed: Popups.close("clipboard")
 
             HistoryTab { anchors.fill: parent }
         }

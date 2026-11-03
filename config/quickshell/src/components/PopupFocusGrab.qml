@@ -15,7 +15,7 @@ import Quickshell.Hyprland
 //       screen:       root.hostScreen       // PopupLayer popups; omit for windows with their own screen
 //       active:       Popups.fooOpen
 //       onFocused:    searchInput.forceActiveFocus()
-//       onDismissed:  Popups.fooOpen = false
+//       onDismissed:  Popups.close("foo")
 //   }
 //
 // Behaviour worth knowing:

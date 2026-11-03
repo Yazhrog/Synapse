@@ -23,7 +23,7 @@ import "../"
 //       open: Popups.audioOpen
 //       hoverEnabled:    true
 //       triggerHovered:  Popups.audioTriggerHovered
-//       onCloseRequested: Popups.audioOpen = false
+//       onCloseRequested: Popups.close("audio")
 //       // content
 //   }
 //

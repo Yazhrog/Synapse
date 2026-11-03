@@ -66,7 +66,7 @@ PanelWindow {
         screen:       root.hostScreen
         active:       Popups.dashboardOpen
         onFocused:    pageArea.forceActiveFocus()
-        onDismissed:  Popups.dashboardOpen = false
+        onDismissed:  Popups.close("dashboard")
     }
 
     Connections {
@@ -98,7 +98,7 @@ PanelWindow {
     // ── Backdrop — closes popup when clicking outside the sizer ──────────────
     MouseArea {
         anchors.fill: parent
-        onClicked:    Popups.dashboardOpen = false
+        onClicked:    Popups.close("dashboard")
     }
 
     // ── Sizer ─────────────────────────────────────────────────────────────────
@@ -217,7 +217,7 @@ PanelWindow {
                         }
                     }
                     
-                    Keys.onEscapePressed: Popups.dashboardOpen = false
+                    Keys.onEscapePressed: Popups.close("dashboard")
                 }
             }
         }

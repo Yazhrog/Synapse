@@ -115,7 +115,7 @@ Item {
         launcher.command = ["bash", "-c", "setsid " + exec + " &>/dev/null &"]
         launcher.running = false
         launcher.running = true
-        Popups.dashboardOpen = false
+        Popups.close("dashboard")
     }
 
     // ── Pin ───────────────────────────────────────────────────────────────────
@@ -454,7 +454,7 @@ Item {
                             if (text !== "") {
                                 text = ""
                             } else {
-                                Popups.dashboardOpen = false
+                                Popups.close("dashboard")
                             }
                         }
                     }

@@ -62,7 +62,7 @@ PopupWindow {
 		screen:       root.hostScreen
 		active:       Popups.archMenuOpen
 		onFocused:    powerMenu.reset()
-		onDismissed:  Popups.archMenuOpen = false
+		onDismissed:  Popups.close("powerMenu")
 	}
 
 	PopupSlide {
@@ -72,7 +72,7 @@ PopupWindow {
 		hoverEnabled:     false
 		triggerHovered:   Popups.archMenuTriggerHovered
 		open:             Popups.archMenuOpen
-		onCloseRequested: Popups.archMenuOpen = false
+		onCloseRequested: Popups.close("powerMenu")
 
 		Item {
 			id: sizer
