@@ -5,7 +5,7 @@ import "../../"
 //
 // Currently just the update settings. disableAutoUpdate() used to be a one-way
 // door with no UI to undo it; the toggle here binds to UpdateService.setAutoUpdate
-// so checks can be turned back on without hand-editing update_prefs.json.
+// so checks can be turned back on without hand-editing shell_prefs.json.
 Item {
     id: root
 
