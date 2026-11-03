@@ -16,17 +16,14 @@ QtObject {
     readonly property bool wallpaperOpen:     SurfaceState.activeContent === "wallpaper"
     readonly property bool clipboardOpen:     SurfaceState.activeContent === "clipboard"
 
-    // Passive content: not part of SurfaceState's single popup slot, so showing
-    // them never closes an open popup. Use showQuick()/hideQuick() and
-    // showToast()/hideToast().
-    property bool notificationToastOpen: false
+    // Passive OSD: not part of SurfaceState's single popup slot, so showing it
+    // never closes an open popup. Use showQuick()/hideQuick(). (The toast is
+    // driven by ToastState.)
     property bool quickOpen:             false
     property bool quickHeld:             false   // OSD hovered: don't auto-hide
 
     function showQuick()  { quickOpen = true }
     function hideQuick()  { quickOpen = false }
-    function showToast()  { notificationToastOpen = true }
-    function hideToast()  { notificationToastOpen = false }
 
     // ── Opening and closing ────────────────────────────────────────────────────
     // Content keys: dashboard, network, notifications, audio,
@@ -74,16 +71,7 @@ QtObject {
     // ── Network popup — per-page content (string key) ─────────────────────────
     property string networkPage: "wifi"
 
-    // ── Per-popup trigger hover state ─────────────────────────────────────────
-    property bool archMenuTriggerHovered: false
-    property bool audioTriggerHovered:         false
-    property bool networkTriggerHovered:       false
-    property bool notificationsTriggerHovered: false
-    property bool wallpaperTriggerHovered:     false
-    property bool quickTriggerHovered: false
-
-    // ── Universal popup behavior settings ─────────────────────────────────────
-    property int  slideDuration:   Theme.animDuration
+    // ── Hover behaviour ───────────────────────────────────────────────────────
     property int  hoverCloseDelay: Theme.animDuration + 200   // delay after hover leaves before closing
 
     // ── Confirm dialog ────────────────────────────────────────────────────────

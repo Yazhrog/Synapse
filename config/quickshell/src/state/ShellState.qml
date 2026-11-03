@@ -11,16 +11,13 @@ import "../."
 // Caffeine          — owned by QuickSettings (systemd-inhibit)
 // Hotspot           — owned by QuickSettings (nmcli hotspot)
 // Airplane Mode     — owned by QuickSettings (rfkill)
-// Focus Mode        — owned by QuickSettings; TopBar reacts to hide + zero gaps
+// Focus Mode        — owned by QuickSettings; the surface collapses the bar and its strut reserves nothing
 // DND               — read by NotificationService to suppress incoming notifications
 // VPN               — written by VPNTab; read by Network.qml for bar icon
 
 QtObject {
     id: root
 
-    property int topBarLWidth: 0
-    property int topBarCWidth: 0
-    property int topBarRWidth: 0
     
     
     property bool focusMode:    false

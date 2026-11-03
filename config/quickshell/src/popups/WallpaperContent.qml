@@ -10,8 +10,8 @@ import "../"
 
 // WallpaperContent — the wallpaper picker UI: horizontal wallpaper strip,
 // search, folder mode, colour scheme dropdown and apply. Fills the popup body
-// (including the flare margins `fw`/`fh`). Hosted by WallpaperPopup (legacy)
-// and the bottom-center region of DynamicSurface.
+// (including the flare margins `fw`/`fh`). Hosted by the bottom-center region of
+// DynamicSurface.
 Item {
     id: root
 

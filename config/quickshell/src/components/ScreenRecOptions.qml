@@ -4,8 +4,7 @@ import "../"
 
 // ScreenRecOptions — the capture / audio option list shown under the center
 // notch while setting up a screen recording (ScreenRecService.openStrip).
-// Sized to its content. Hosted by ScreenRecOptionsPopup (legacy) and the
-// surface.
+// Sized to its content. Hosted by the surface.
 Item {
     id: root
 

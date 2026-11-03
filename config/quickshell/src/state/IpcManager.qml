@@ -158,7 +158,7 @@ QtObject {
     signal focusToggleRequested()
 
     // ── Quick Controls OSD (volume/brightness keys) ──────────
-    // Reveals the QuickControl popup briefly, then auto-hides — see
+    // Reveals the Quick Controls OSD briefly, then auto-hides — see
     // Popups.anyOpen for why quickOpen stays out of the shared popup set.
     // NOTE: the handler function must not be named "show" — that collides
     // with quickshell's own "qs ipc show" introspection verb and silently

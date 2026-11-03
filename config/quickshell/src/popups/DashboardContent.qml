@@ -5,8 +5,7 @@ import "../services/"
 import "../"
 
 // DashboardContent — the dashboard UI: tab bar (Home / System / Tasks / Apps /
-// Config) and the page area. Hosted by Dashboard (legacy) and the top region
-// of DynamicSurface. The popup width per page comes from
+// Config) and the page area. Hosted by the top region of DynamicSurface. The popup width per page comes from
 // Popups.dashboardPageWidth.
 Item {
     id: root

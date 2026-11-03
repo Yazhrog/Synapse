@@ -6,8 +6,7 @@ import "../"
 
 // QuickControlContent — the volume and brightness sliders of the Quick
 // Controls OSD, with their state (default sink, brightnessctl polling).
-// Hosted by popups/QuickControl.qml (legacy) and the right-center region of
-// DynamicSurface.
+// Hosted by the right-center region of DynamicSurface.
 Item {
     id: root
 

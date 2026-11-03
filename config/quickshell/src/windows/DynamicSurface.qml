@@ -47,7 +47,7 @@ PanelWindow {
     exclusionMode: ExclusionMode.Ignore
     color:         "transparent"
 
-    // Overlay, like the legacy popups: Hyprland draws fullscreen windows above
+    // Overlay: Hyprland draws fullscreen windows above
     // the Top layer, so popups and the OSD would be invisible (and the keyboard
     // seemingly stuck) in a fullscreen app. On a screen showing a fullscreen
     // window, the frame hides itself unless it has something to show.
@@ -276,8 +276,8 @@ PanelWindow {
     Behavior on _cDrop { Anim {} }
     readonly property real centerBottom: notchBottom + _cDrop
 
-    // The right notch follows its content instantly, like TopBar; only a
-    // popup or the toast morph it.
+    // The right notch follows its content instantly; only a popup or the
+    // toast morph it.
     readonly property int _rBase: Math.max(
         px(Theme.rNotchMinWidth),
         Math.min(px(Theme.rNotchMaxWidth), rightContent.implicitWidth + notchPadding * 2))
@@ -552,32 +552,17 @@ PanelWindow {
         }
     }
 
-    // ── Border triggers (#42), same zones as the legacy Border windows ───────
+    // ── Border triggers (#42) ────────────────────────────────────────────────
     // Each zone is one corner radius deep, so it's easy to hit at the screen
-    // edge. Flags are kept on Popups for the legacy popups and future
-    // per-popup hover settings.
+    // edge.
     readonly property int _triggerDepth: cornerRadius
-
-    // Left border middle: hover flag only (the power menu opens on click).
-    Item {
-        id: leftTrigger
-        x: 0; y: (root.height - height) / 2
-        width: root._triggerDepth; height: root.px(Metrics.sideTriggerLength)
-        HoverHandler { onHoveredChanged: Popups.archMenuTriggerHovered = hovered }
-    }
 
     // Right border middle: hovering shows the Quick Controls OSD.
     Item {
         id: rightTrigger
         x: root.width - width; y: (root.height - height) / 2
         width: root._triggerDepth; height: root.px(Metrics.sideTriggerLength)
-        HoverHandler {
-            id: rightTriggerHover
-            onHoveredChanged: {
-                Popups.quickTriggerHovered = hovered
-                Popups.audioTriggerHovered = hovered
-            }
-        }
+        HoverHandler { id: rightTriggerHover }
     }
 
     // Bottom border centre: tap toggles the wallpaper picker.
@@ -585,7 +570,6 @@ PanelWindow {
         id: bottomTrigger
         x: (root.width - width) / 2; y: root.height - height
         width: root.px(Metrics.bottomTriggerWidth); height: root._triggerDepth
-        HoverHandler { onHoveredChanged: Popups.wallpaperTriggerHovered = hovered }
         TapHandler   { onTapped: Popups.toggle("wallpaper", root.screenName) }
     }
 
@@ -680,7 +664,6 @@ PanelWindow {
         Region { item: maskRightCenter;  intersection: Intersection.Combine }
         Region { item: maskBottomCenter; intersection: Intersection.Combine }
         Region { item: maskBottomRight;  intersection: Intersection.Combine }
-        Region { item: leftTrigger;      intersection: Intersection.Combine }
         Region { item: rightTrigger;     intersection: Intersection.Combine }
         Region { item: bottomTrigger;    intersection: Intersection.Combine }
         Region { item: cornerTrigger;    intersection: Intersection.Combine }
