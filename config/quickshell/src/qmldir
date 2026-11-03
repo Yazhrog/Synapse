@@ -12,3 +12,4 @@ singleton BatteryWarningService 1.0 services/BatteryWarningService.qml
 singleton AppPinService 1.0 services/AppPinService.qml
 singleton Paths 1.0 utils/Paths.qml
 singleton PrefsService 1.0 services/PrefsService.qml
+singleton SurfaceState 1.0 state/SurfaceState.qml
