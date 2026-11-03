@@ -10,7 +10,12 @@ Synapse is a Wayland desktop shell for Hyprland: a Quickshell/QML shell UI (`con
 
 ## Commands
 
-There is no build/lint/test tooling (no package.json, no CI). The only "commands" are the installer and manual verification on a running Hyprland+Quickshell session:
+There is no build step. Two automated checks run in CI (`.github/workflows/quickshell.yml`) and locally:
+
+- `node config/quickshell/tests/surface-path.test.mjs` — unit tests of the surface frame path (`shapes/surfacePath.js`).
+- `config/quickshell/tests/smoke.sh` — loads the singletons and the shared UI components offscreen against throwaway data and fails on any QML error. Layer-shell windows can't be created offscreen, so the bar, surface and popup windows themselves still need a live session.
+
+Everything else is the installer and manual verification on a running Hyprland+Quickshell session:
 
 - `./boot.sh` — top-level entry point. Detects distro, resolves the repo location, backs up every deploy destination, then runs `install/install.sh`.
 - `install/install.sh` — Arch-specific installer, sources `install/steps/01..06-*.sh` in order (AUR helper → pacman/AUR packages → services → Hyprland plugins → configs → shell config).
