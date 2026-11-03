@@ -1,4 +1,5 @@
 import QtQuick
+import Quickshell
 import Quickshell.Services.SystemTray
 import "../../components"
 import "../../windows"
@@ -11,8 +12,6 @@ IconBtn {
           : NotificationService.count > 0 ? "󰂚" : "󰂜"
 
     onClicked: {
-        var next = !Popups.notificationsOpen
-        Popups.closeAll()
-        Popups.notificationsOpen = next
+        Popups.toggle("notifications", QsWindow.window?.screen?.name ?? "")
     }
 }

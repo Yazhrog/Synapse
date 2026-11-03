@@ -1,4 +1,5 @@
 import QtQuick
+import Quickshell
 import Quickshell.Io
 import "../../components"
 import "../../"
@@ -81,7 +82,7 @@ Item {
     }
     Component.onCompleted: { wifiPoll.running = true; ethPoll.running = true; connPoll.running = true }
 
-    HoverHandler { id: hov; onHoveredChanged: Popups.networkTriggerHovered = hovered }
+    HoverHandler { id: hov }
 
     Row {
         id: row
@@ -100,9 +101,8 @@ Item {
                 anchors.fill: parent
                 cursorShape: Qt.PointingHandCursor
                 onClicked: {
-                    Popups.closeAll()
                     Popups.networkPage = "wifi"
-                    Popups.networkOpen = true
+                    Popups.open("network", QsWindow.window?.screen?.name ?? "")
                 }
             }
         }
@@ -121,9 +121,8 @@ Item {
                 anchors.fill: parent
                 cursorShape: Qt.PointingHandCursor
                 onClicked: {
-                    Popups.closeAll()
                     Popups.networkPage = "vpn"
-                    Popups.networkOpen = true
+                    Popups.open("network", QsWindow.window?.screen?.name ?? "")
                 }
             }
         }
@@ -140,9 +139,8 @@ Item {
                 anchors.fill: parent
                 cursorShape: Qt.PointingHandCursor
                 onClicked: {
-                    Popups.closeAll()
                     Popups.networkPage = "bluetooth"
-                    Popups.networkOpen = true
+                    Popups.open("network", QsWindow.window?.screen?.name ?? "")
                 }
             }
         }
@@ -159,9 +157,8 @@ Item {
                 anchors.fill: parent
                 cursorShape: Qt.PointingHandCursor
                 onClicked: {
-                    Popups.closeAll()
                     Popups.networkPage = "hotspot"
-                    Popups.networkOpen = true
+                    Popups.open("network", QsWindow.window?.screen?.name ?? "")
                 }
             }
         }

@@ -12,10 +12,10 @@ import Quickshell.Hyprland
 // Usage:
 //   PopupFocusGrab {
 //       window:       root
-//       screen:       root.hostScreen       // PopupLayer popups; omit for windows with their own screen
+//       screen:       root.hostScreen       // optional; defaults to the window's screen
 //       active:       Popups.fooOpen
 //       onFocused:    searchInput.forceActiveFocus()
-//       onDismissed:  Popups.fooOpen = false
+//       onDismissed:  Popups.close("foo")
 //   }
 //
 // Behaviour worth knowing:
@@ -28,8 +28,7 @@ import Quickshell.Hyprland
 //     surfaces in an unordered map and gives keyboard focus to whichever comes
 //     first, so whitelisting the bar windows too sent the keyboard to a bar.
 //   - While the grab is live the pointer can't reach other surfaces, and a
-//     click outside clears the grab without being delivered — so PopupDismiss
-//     never sees it. That click is reported via `dismissed()`.
+//     click outside clears the grab without being delivered. That click is reported via `dismissed()`.
 //     Set dismissOnClear: false for modal dialogs that must not close that way.
 //   - Popups are instantiated once per screen and all copies open together;
 //     only the copy on the focused monitor grabs, otherwise each new grab

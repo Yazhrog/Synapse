@@ -41,6 +41,7 @@ QtObject {
     // ── Strip hover (open = "capture" | "audio" | "") ─────────────────────────
     property string openStrip: ""
     property real popupTargetX: 0
+    property string popupTargetScreen: ""   // screen whose bar opened the options list
     property real popupTargetWidth: 0
 
     property var _stripTimer: Timer {

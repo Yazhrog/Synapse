@@ -1,44 +1,18 @@
 import QtQuick
-import Quickshell
-import Quickshell.Wayland
 import "../services"
 import "../"
 
-// ScreenRecOptionsPopup — minimal dropdown under the center notch.
-//
-// No checkboxes, no radio dots. Selection shown by background highlight only.
-// Window sized exactly to content — no mask, no dead space.
-
-PopupWindow {
+// ScreenRecOptions — the capture / audio option list shown under the center
+// notch while setting up a screen recording (ScreenRecService.openStrip).
+// Sized to its content. Hosted by the surface.
+Item {
     id: root
-
-    required property var anchorWindow
 
     readonly property int _padH: 5
     readonly property int _padV: 5
 
     implicitWidth:  optCol.implicitWidth + _padH * 2
     implicitHeight: optCol.implicitHeight + _padV * 2
-
-    anchor.window:     root.anchorWindow
-    anchor.gravity:    Edges.Bottom
-    anchor.adjustment: PopupAdjustment.None
-    anchor.rect: Qt.rect(
-       ScreenRecService.popupTargetX + (ScreenRecService.popupTargetWidth / 2),
-        25,
-        root.implicitWidth,
-        Theme.notchHeight
-    )
-
-    color:   "transparent"
-    visible: ScreenRecService.openStrip !== ""
-
-    HoverHandler {
-        onHoveredChanged: {
-            if (hovered) ScreenRecService.keepStripOpen()
-            else         ScreenRecService.scheduleStripClose()
-        }
-    }
 
     Rectangle {
         anchors.fill: parent

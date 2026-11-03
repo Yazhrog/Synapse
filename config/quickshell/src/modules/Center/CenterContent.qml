@@ -1,4 +1,5 @@
 import QtQuick
+import Quickshell
 import QtQuick.Effects
 import Quickshell.Hyprland
 import Quickshell.Services.Mpris
@@ -23,13 +24,16 @@ import "../../services/home/."
 // symmetrically. No center rounding artefact. 5px wide.
 
 Item {
+	// Set by the Dynamic Surface host (#39); contents adopt it progressively.
+	property real localScale: 1.0
+
 	id: root
 
 	width:  Theme.cNotchMinWidth
 	height: 30
 
 	// ── Required notch width for the current carousel item ────────────────────
-	// TopBar.cWidth reads this so the notch always matches what is visible,
+	// DynamicSurface sizes the center notch from it so the notch always matches what is visible,
 	// even if the user scrolls away from record_active while recording.
 	readonly property int fw: Theme.notchRadius
 	readonly property int requiredWidth: Theme.cNotchMinWidth
@@ -605,6 +609,7 @@ Item {
 											if (hovered) {
 												var pos = parent.mapToItem(null, 0, 0)
 												ScreenRecService.popupTargetX = pos.x
+												ScreenRecService.popupTargetScreen = QsWindow.window?.screen?.name ?? ""
 												ScreenRecService.popupTargetWidth = parent.width
 
 												ScreenRecService.openStrip = "capture"
@@ -663,6 +668,7 @@ Item {
 											if (hovered) {
 												var pos = parent.mapToItem(null, 0, 0)
 												ScreenRecService.popupTargetX = pos.x
+												ScreenRecService.popupTargetScreen = QsWindow.window?.screen?.name ?? ""
 												ScreenRecService.popupTargetWidth = parent.width
 
 												ScreenRecService.openStrip = "audio"
@@ -859,9 +865,7 @@ Item {
 				onTapped: {
 					// Do nothing during screen rec setup — ESC / cancel button handles it
 					if (ShellState.screenRecord && !ScreenRecService.recording) return
-					var next = !Popups.dashboardOpen
-					Popups.closeAll()
-					Popups.dashboardOpen = next
+					Popups.toggle("dashboard", QsWindow.window?.screen?.name ?? "")
 				}
 			}
 		}

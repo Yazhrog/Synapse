@@ -42,7 +42,7 @@ PanelWindow {
             if (UpdateService.showPopup) {
                 // Overlay-layer popup — close the dashboard so it can't
                 // cover this and block input to it.
-                Popups.dashboardOpen = false
+                Popups.close("dashboard")
                 root.windowVisible = true
             } else {
                 closeTimer.restart()
