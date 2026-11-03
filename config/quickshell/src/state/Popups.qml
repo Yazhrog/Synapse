@@ -62,7 +62,11 @@ QtObject {
     }
 
     // ── Dashboard — per-page state ───────────────────────────────────────────
-    property int    dashboardPageWidth: 900
+    // Width the dashboard grows to for the current page.
+    readonly property var _dashboardPageWidths: ({
+        home: 900, stats: 900, kanban: 900, launcher: 560, config: 900
+    })
+    readonly property int dashboardPageWidth: _dashboardPageWidths[dashboardPage] ?? 900
     property string dashboardPage:      "home"
     
     // ── Audio popup — per-page state ─────────────────────────────────────────
