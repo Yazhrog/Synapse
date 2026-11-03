@@ -43,15 +43,21 @@ Singleton {
     readonly property bool _blocked: ShellState.screenRecord && !ScreenRecService.recording
 
     // ── Resolution scaling ──────────────────────────────────────────────────
-    // Surface sizes are designed for a 1080 px tall screen and multiplied by
-    // this factor, clamped to [0.75, 1.5]. SYNAPSE_SURFACE_SCALE forces a
-    // factor for testing.
+    // Surface sizes are designed for a 1080 px tall screen. The factor comes
+    // from PrefsService.surfaceScale: "off" → 1, "auto" → screen height / 1080
+    // clamped to [0.75, 1.5] (on top of Hyprland's own monitor scale), or a
+    // fixed number. SYNAPSE_SURFACE_SCALE overrides it for testing.
     readonly property real _forcedScale: Number(Quickshell.env("SYNAPSE_SURFACE_SCALE") ?? 0) || 0
 
     function scaleFor(screen): real {
         if (root._forcedScale > 0) return root._forcedScale
-        if (!screen || !screen.height) return 1.0
-        return Math.max(0.75, Math.min(1.5, screen.height / 1080))
+        const mode = PrefsService.surfaceScale
+        if (mode === "auto") {
+            if (!screen || !screen.height) return 1.0
+            return Math.max(0.75, Math.min(1.5, screen.height / 1080))
+        }
+        const fixed = Number(mode)
+        return fixed > 0 ? Math.max(0.5, Math.min(2.0, fixed)) : 1.0
     }
 
     function isOpen(content: string): bool {

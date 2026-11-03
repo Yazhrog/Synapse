@@ -22,6 +22,22 @@ Item {
         spacing: 14
 
         SettingsGroup {
+            title: "Display"
+
+            SettingsDropdown {
+                label:       "Surface scale"
+                description: "Frame and popup sizes with SYNAPSE_SURFACE=1. Popup contents don't scale yet."
+                prefKey:     "surfaceScale"
+                options: [
+                    { value: "off",  label: "Off"  },
+                    { value: "auto", label: "Auto" },
+                    { value: "1.25", label: "125%" },
+                    { value: "1.5",  label: "150%" }
+                ]
+            }
+        }
+
+        SettingsGroup {
             title: "Updates"
 
             SettingsToggle {
