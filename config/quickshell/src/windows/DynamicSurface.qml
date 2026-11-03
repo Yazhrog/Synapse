@@ -1,6 +1,5 @@
 import Quickshell
 import Quickshell.Wayland
-import Quickshell.Hyprland
 import QtQuick
 import "../modules/Center/"
 import "../modules/Right/"
@@ -16,15 +15,15 @@ import "../"
 // ignores exclusive zones. Clicks outside the visible frame pass through to
 // the windows below thanks to the input mask.
 //
-// Keyboard-focus spike: `qs ipc call surfaceSpike toggle` opens a test text
-// field on the focused monitor. SYNAPSE_SURFACE_FOCUS picks how the surface
-// asks for the keyboard (see ShellHost).
+// Keyboard focus (decided by the #38 spike): the surface asks for the
+// keyboard with WlrKeyboardFocus.Exclusive only while `wantsKeyboard` is set
+// (an interactive popup is open), and None otherwise, so clicking the frame
+// never takes focus from the active window. Passive content (OSD, toasts)
+// must never set it.
 PanelWindow {
     id: root
 
-    property bool   spikeOpen: false
-    property string focusMode: "exclusive"   // exclusive | ondemand | grab
-    signal spikeCloseRequested()
+    property bool wantsKeyboard: false
 
     anchors {
         top:    true
@@ -37,11 +36,7 @@ PanelWindow {
 
     WlrLayershell.layer:     WlrLayer.Top
     WlrLayershell.namespace: "synapse-frame"
-    WlrLayershell.keyboardFocus: {
-        if (root.focusMode === "ondemand" || root.focusMode === "grab")
-            return WlrKeyboardFocus.OnDemand
-        return root.spikeOpen ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
-    }
+    WlrLayershell.keyboardFocus: wantsKeyboard ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
 
     // ── Frame geometry (same values TopBar uses today) ───────────────────────
     property real notchBottom: ShellState.focusMode ? Theme.borderWidth : Theme.notchHeight
@@ -136,8 +131,6 @@ PanelWindow {
     Item { id: maskLeftNotch;   x: leftNotch.x;   y: 0; width: leftNotch.width;   height: root.notchBottom }
     Item { id: maskCenterNotch; x: centerNotch.x; y: 0; width: centerNotch.width; height: root.notchBottom }
     Item { id: maskRightNotch;  x: rightNotch.x;  y: 0; width: rightNotch.width;  height: root.notchBottom }
-    Item { id: maskSpike; x: spike.x; y: spike.y
-           width: root.spikeOpen ? spike.width : 0; height: root.spikeOpen ? spike.height : 0 }
 
     mask: Region {
         Region { item: maskTop;         intersection: Intersection.Combine }
@@ -147,75 +140,5 @@ PanelWindow {
         Region { item: maskLeftNotch;   intersection: Intersection.Combine }
         Region { item: maskCenterNotch; intersection: Intersection.Combine }
         Region { item: maskRightNotch;  intersection: Intersection.Combine }
-        Region { item: maskSpike;       intersection: Intersection.Combine }
-    }
-
-    // ── Keyboard-focus spike (#38 §7) ────────────────────────────────────────
-    HyprlandFocusGrab {
-        windows: [root]
-        active:  root.focusMode === "grab" && root.spikeOpen
-        onCleared: if (root.spikeOpen) root.spikeCloseRequested()
-    }
-
-    Rectangle {
-        id: spike
-        visible: root.spikeOpen
-        anchors.horizontalCenter: parent.horizontalCenter
-        y:      Theme.notchHeight + 16
-        width:  380
-        height: 112
-        radius: Theme.cornerRadius
-        color:  Theme.background
-        border.color: Qt.rgba(Theme.active.r, Theme.active.g, Theme.active.b, 0.5)
-        border.width: 1
-
-        onVisibleChanged: if (visible) focusTimer.restart()
-
-        // Give the compositor a moment to hand over the keyboard first.
-        Timer {
-            id: focusTimer
-            interval: 50
-            onTriggered: field.forceActiveFocus()
-        }
-
-        Column {
-            anchors.fill:    parent
-            anchors.margins: 14
-            spacing: 8
-
-            Text {
-                text: "Focus spike · mode: " + root.focusMode + " · " + (root.screen ? root.screen.name : "")
-                font.pixelSize: 11
-                color: Theme.active
-            }
-
-            Rectangle {
-                width:  parent.width
-                height: 30
-                radius: 8
-                color:  Qt.rgba(1, 1, 1, 0.06)
-                border.color: field.activeFocus
-                    ? Qt.rgba(Theme.active.r, Theme.active.g, Theme.active.b, 0.6)
-                    : Qt.rgba(1, 1, 1, 0.12)
-
-                TextInput {
-                    id: field
-                    anchors.fill:    parent
-                    anchors.margins: 8
-                    color:           Theme.text
-                    font.pixelSize:  12
-                    clip:            true
-                    onActiveFocusChanged: console.log("FocusSpike[" + root.focusMode + "]: field activeFocus=" + activeFocus)
-                    onTextChanged:        console.log("FocusSpike[" + root.focusMode + "]: typed \"" + text + "\"")
-                    Keys.onEscapePressed: root.spikeCloseRequested()
-                }
-            }
-
-            Text {
-                text: field.activeFocus ? "Field has focus: type, Esc closes" : "Field has NO focus"
-                font.pixelSize: 10
-                color: Qt.rgba(Theme.text.r, Theme.text.g, Theme.text.b, 0.55)
-            }
-        }
     }
 }
