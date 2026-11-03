@@ -1,0 +1,22 @@
+name: Quickshell checks
+
+on:
+  push:
+    branches: [main, dev, "stack/**"]
+  pull_request:
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    container: archlinux:latest
+    steps:
+      - name: Install quickshell and node
+        run: pacman -Syu --noconfirm --needed quickshell qt6-declarative qt6-svg nodejs git
+
+      - uses: actions/checkout@v4
+
+      - name: Surface path unit tests
+        run: node config/quickshell/tests/surface-path.test.mjs
+
+      - name: Offscreen smoke test
+        run: config/quickshell/tests/smoke.sh
