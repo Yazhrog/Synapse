@@ -33,7 +33,9 @@ PanelWindow {
     readonly property var hostedContents: ["powerMenu", "audio", "notifications", "network",
                                            "clipboard", "wallpaper", "dashboard"]
     readonly property bool hostedOpen: hostedContents.indexOf(openContent) >= 0
-    readonly property bool wantsKeyboard: hostedOpen
+    // The screen-recording setup (bar carousel) also wants Escape to cancel it.
+    readonly property bool recSetup: ShellState.screenRecord && !ScreenRecService.recording
+    readonly property bool wantsKeyboard: hostedOpen || (recSetup && _focusedHere)
 
     anchors {
         top:    true
@@ -171,7 +173,7 @@ PanelWindow {
     // whole surface takes clicks and a click outside the open popup and the
     // bar closes it. It sits below everything else, so the popups and the bar
     // still get their own clicks first.
-    readonly property bool shieldActive: SurfaceState.anyOpen
+    readonly property bool shieldActive: SurfaceState.anyOpen || recSetup
 
     MouseArea {
         id: clickShield
@@ -193,6 +195,9 @@ PanelWindow {
             network: networkRegion, dashboard: dashboardRegion,
             wallpaper: wallpaperRegion, clipboard: clipboardRegion
         }
+        if (recOptions.visible && x >= recOptions.x && x <= recOptions.x + recOptions.width
+                && y >= recOptions.y && y <= recOptions.y + recOptions.height)
+            return true
         const r = regions[root.openContent]
         return !!r && x >= r.x && x <= r.x + r.width && y >= r.y && y <= r.y + r.height
     }
@@ -317,7 +322,10 @@ PanelWindow {
     FocusScope {
         id: popupScope
         anchors.fill: parent
-        Keys.onEscapePressed: Popups.close()
+        Keys.onEscapePressed: {
+            Popups.closeAll()
+            if (root.recSetup) ScreenRecService.cancelSetup()
+        }
 
         // Power menu — left-center
         Item {
@@ -500,6 +508,7 @@ PanelWindow {
     // Hand the keyboard to the opened popup once the compositor has given it
     // to the surface.
     onOpenContentChanged: if (hostedOpen) focusTimer.restart()
+    onWantsKeyboardChanged: if (wantsKeyboard && !hostedOpen) focusTimer.restart()
     Timer {
         id: focusTimer
         interval: 50
@@ -577,6 +586,35 @@ PanelWindow {
         onTriggered: if (!root._quickHovered) root._quickHoverOpen = false
     }
 
+    // ── Screen-recording options (capture / audio), under the center notch ──
+    ScreenRecOptions {
+        id: recOptions
+        x:       ScreenRecService.popupTargetX + ScreenRecService.popupTargetWidth / 2
+        y:       root.notchHeight + 25
+        width:   implicitWidth
+        height:  implicitHeight
+        visible: ScreenRecService.openStrip !== "" && root._focusedHere
+
+        HoverHandler {
+            onHoveredChanged: {
+                if (hovered) ScreenRecService.keepStripOpen()
+                else         ScreenRecService.scheduleStripClose()
+            }
+        }
+    }
+
+    // ── Focus mode: the bar is a thin strip; tapping its centre opens the
+    // dashboard (the keybind works as usual).
+    Item {
+        id: focusDashTrigger
+        x:       (root.width - root.cWidth) / 2
+        y:       0
+        width:   root.cWidth
+        height:  Math.max(1, root.borderWidth)
+        enabled: ShellState.focusMode
+        TapHandler { onTapped: Popups.toggle("dashboard", root.screenName) }
+    }
+
     // ── Input mask: only the visible frame takes clicks ──────────────────────
     readonly property int _edge: Math.max(1, borderWidth)
 
@@ -584,6 +622,8 @@ PanelWindow {
     Item { id: maskLeft;   x: 0; y: 0; width: root._edge; height: root.height }
     Item { id: maskRight;  x: root.width - root._edge; y: 0; width: root._edge; height: root.height }
     Item { id: maskBottom; x: 0; y: root.height - root._edge; width: root.width; height: root._edge }
+    Item { id: maskRecOptions; x: recOptions.x; y: recOptions.y
+           width: recOptions.visible ? recOptions.width : 0; height: recOptions.visible ? recOptions.height : 0 }
     Item { id: maskShield; x: 0; y: 0; width: root.shieldActive ? root.width : 0; height: root.shieldActive ? root.height : 0 }
     Item { id: maskLeftNotch;   x: leftNotch.x;   y: 0; width: leftNotch.width;   height: root.notchBottom }
     Item { id: maskCenterNotch; x: centerNotch.x; y: 0; width: centerNotch.width; height: root.centerBottom }
@@ -610,5 +650,6 @@ PanelWindow {
         Region { item: bottomTrigger;   intersection: Intersection.Combine }
         Region { item: cornerTrigger;   intersection: Intersection.Combine }
         Region { item: maskShield;      intersection: Intersection.Combine }
+        Region { item: maskRecOptions;  intersection: Intersection.Combine }
     }
 }
