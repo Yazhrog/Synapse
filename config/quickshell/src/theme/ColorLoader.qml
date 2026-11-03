@@ -1,8 +1,9 @@
 import QtQuick
 import Quickshell.Io
+import "../"
 
 // ============================================================
-// ColorsLoader — watches ~/.config/Synapse/src/user_data/colors.json
+// ColorsLoader — watches Paths.userData("colors.json")
 // and exposes parsed color properties.
 //
 // Not a singleton. Instantiated as a property inside Theme.qml.
@@ -24,21 +25,10 @@ QtObject {
     // ── File watcher ──────────────────────────────────────────────────────────
     property var _file: FileView {
         id: colorsFile
+        path: Paths.userData("colors.json")
         watchChanges: true
         onFileChanged: reload()
         onLoaded: root._parse(colorsFile.text())
-    }
-
-    property var _homeProc: Process {
-        command: ["bash", "-c", "echo $HOME"]
-        running: true
-        stdout: SplitParser {
-            onRead: function(line) {
-                var h = line.trim()
-                if (h !== "")
-                    colorsFile.path = h + "/.config/Synapse/src/user_data/colors.json"
-            }
-        }
     }
 
     // ── Parser ────────────────────────────────────────────────────────────────

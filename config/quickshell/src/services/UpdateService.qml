@@ -82,12 +82,10 @@ QtObject {
         )
 
     // ── Paths ──────────────────────────────────────────────────────────────
-    // The repo location is written by boot.sh / install/link.sh. It can't be
-    // derived from Quickshell.shellDir: ~/.config/quickshell is a symlink and
-    // quickshell reports the link path, not the checkout behind it.
+    // The repo location comes from Paths.repoDir (see Paths.qml for why it
+    // can't be derived from Quickshell.shellDir).
     property string _dir: ""
-    readonly property string _repoPathFile: Quickshell.env("HOME") + "/.config/Synapse/repo-path"
-    readonly property string _cfgPath:      Quickshell.env("HOME") + "/.config/Synapse/src/user_data/update_prefs.json"
+    readonly property string _cfgPath: Paths.userData("update_prefs.json")
 
     // ── Startup: 30s delay ─────────────────────────────────────────────────
     property var _startTimer: Timer {
@@ -98,23 +96,20 @@ QtObject {
     }
 
     // ── Config: init → read repo path + prefs → arm timer ─────────────────
-    // Emits the repo path on the first line, then the prefs JSON.
+    // Creates the prefs file if missing, then emits the prefs JSON.
     property var _initProc: Process {
         command: ["bash", "-c",
             "[ -f '" + root._cfgPath + "' ] || " +
             "(mkdir -p \"$(dirname '" + root._cfgPath + "')\" && " +
             "printf '%s' '{\"autoUpdate\":true}' > '" + root._cfgPath + "');\n" +
-            "cat '" + root._repoPathFile + "' 2>/dev/null || " +
-            "echo \"$HOME/.local/src/Synapse\";\n" +
             "cat '" + root._cfgPath + "'"]
         running: false
         stdout: StdioCollector {
             onStreamFinished: {
-                var lines = text.split("\n")
-                root._dir = (lines.shift() || "").trim()
+                root._dir = Paths.repoDir
 
                 try {
-                    var o = JSON.parse(lines.join("\n").trim())
+                    var o = JSON.parse(text.trim())
                     if (typeof o.autoUpdate === "boolean")
                         root.autoUpdate = o.autoUpdate
                 } catch(e) {

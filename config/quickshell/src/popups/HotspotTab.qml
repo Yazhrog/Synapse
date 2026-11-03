@@ -17,7 +17,7 @@ Item {
     property bool   _dirty:     false   // unsaved changes
 
     readonly property string _cfgPath:
-        Quickshell.env("HOME") + "/.config/Synapse/src/user_data/hotspot.json"
+        Paths.userData("hotspot.json")
 
     // ── Load ──────────────────────────────────────────────────────────────────
     Process {

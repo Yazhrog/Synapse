@@ -187,7 +187,7 @@ StatCard {
     property string _hsWifiIface:  "wlan0"
 
     readonly property string _hsCfgPath:
-        Quickshell.env("HOME") + "/.config/Synapse/src/user_data/hotspot.json"
+        Paths.userData("hotspot.json")
 
     // Load config on startup
     Process {
