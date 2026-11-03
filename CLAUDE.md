@@ -82,6 +82,22 @@ These are a *different* mechanism from `binds.lua` and are generated at runtime,
 
 If you add/rename a shell action: update `keybind-defaults.json` and the matching `IpcHandler` target in `IpcManager.qml` together — they're the two ends of the same string and nothing type-checks the match between them.
 
+## Project workflow
+
+Planning lives on the **Synapse Roadmap** GitHub Project (board columns: Backlog → Ready → In progress → In review → Done), with one **milestone per release** (`v0.3.0` = #27 config foundation, `v0.4.0` = #37 Dynamic Surface, `v0.5.0` = #31 config pages).
+
+Branches:
+- `main` — released code; what the in-shell updater pulls. Only `dev` → `main` release PRs land here.
+- `dev` — integration branch; must stay releasable.
+- `stack/<issue>-<slug>` — one per **parent issue** (label `epic`), cut from `dev`. Each sub-issue is its own branch and PR **into the stack**. A draft PR (label `stack`) from the stack into `dev`, opened after the first sub-PR is merged, tracks progress with a checklist; it's marked ready and merged once every sub-issue is done.
+- `fix/…`, `feat/…`, `chore/…`, `docs/…`, `refactor/…` — one per PR. Standalone bugs and small features target `dev` directly.
+
+Rules:
+- Merge `dev` into active stacks regularly so they don't drift. Finish one stack before starting the next when they touch the same files.
+- `Closes #N` only auto-closes issues on merge into `main`, so close an issue by hand (with a comment pointing to the PR) when its PR is merged into `dev` or a stack. Tick it in the stack PR's checklist and move it to Done on the board.
+- Shell changes are tested on the live install (`~/.local/src/Synapse`) by applying the PR's diff there as uncommitted edits; once confirmed, `git restore .` it so the updater's `git pull` keeps working.
+- Releasing: bump the version (README badge + note, `boot.sh` banner) in a `chore(release)` PR to `dev`, open the `dev` → `main` release PR, merge it, push an annotated tag `vX.Y.Z` on the merge commit, publish a GitHub Release from the notes, close the milestone.
+
 ## Commit conventions for Claude agents
 
 When making commits to this repository, follow these rules:
