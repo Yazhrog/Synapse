@@ -3,7 +3,7 @@ import Quickshell.Hyprland
 import QtQuick
 import "../"
 
-// ShellHost — the Dynamic Surface root (#37), enabled with SYNAPSE_SURFACE=1.
+// ShellHost — the shell root: one Dynamic Surface per screen (#37).
 //
 // Per screen: a top StrutWindow reserving the bar's space, the DynamicSurface
 // drawing the frame, the bar and every popup, and the centered modal windows,
