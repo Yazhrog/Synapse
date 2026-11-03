@@ -29,9 +29,9 @@ import "../"
 PanelWindow {
     id: root
 
-    // Interactive popups hosted by the surface so far (#41). Others still only
-    // exist in the legacy host.
-    readonly property var hostedContents: ["powerMenu", "audio", "notifications", "network"]
+    // Interactive popups hosted by the surface (#41).
+    readonly property var hostedContents: ["powerMenu", "audio", "notifications", "network",
+                                           "clipboard", "wallpaper", "dashboard"]
     readonly property bool hostedOpen: hostedContents.indexOf(openContent) >= 0
     readonly property bool wantsKeyboard: hostedOpen
 
@@ -77,9 +77,11 @@ PanelWindow {
         px(Theme.lNotchMinWidth),
         Math.min(px(Theme.lNotchMaxWidth), leftContent.implicitWidth + notchPadding * 2))
 
-    property int cWidth: Math.max(
-        px(Theme.cNotchMinWidth),
-        Math.min(px(Theme.cNotchMaxWidth), centerContent.implicitWidth + notchPadding * 2))
+    // The dashboard grows the center notch to its page width (like TopBar).
+    property int cWidth: openContent === "dashboard"
+        ? px(Popups.dashboardPageWidth)
+        : Math.max(px(Theme.cNotchMinWidth),
+                   Math.min(px(Theme.cNotchMaxWidth), centerContent.implicitWidth + notchPadding * 2))
     Behavior on cWidth {
         NumberAnimation { duration: Theme.animDuration; easing.type: Easing.InOutCubic }
     }
@@ -131,6 +133,27 @@ PanelWindow {
                                   : quickShown              ? quickDepth : 0
     Behavior on rightCenterDepth { NumberAnimation { duration: Theme.animDuration; easing.type: Easing.InOutCubic } }
 
+    // Top region: the dashboard drops the center notch to its height.
+    readonly property int dashboardBottom: px(Theme.dashboardHeight)
+    property real _cDrop: openContent === "dashboard" ? dashboardBottom - notchBottom : 0
+    Behavior on _cDrop { NumberAnimation { duration: Theme.animDuration; easing.type: Easing.InOutCubic } }
+    readonly property real centerBottom: notchBottom + _cDrop
+
+    // Bottom regions: wallpaper (bottom-center) and clipboard (bottom-right).
+    readonly property int wallpaperWidth:  px(980)
+    readonly property int wallpaperHeight: px(420)
+    readonly property int clipboardWidth:  px(420)
+    readonly property int clipboardHeight: px(560)
+
+    property real bottomCenterWidth:  openContent === "wallpaper" ? wallpaperWidth  : 0
+    property real bottomCenterHeight: openContent === "wallpaper" ? wallpaperHeight : 0
+    property real bottomRightWidth:   openContent === "clipboard" ? clipboardWidth  : 0
+    property real bottomRightHeight:  openContent === "clipboard" ? clipboardHeight : 0
+    Behavior on bottomCenterWidth  { NumberAnimation { duration: Theme.animDuration; easing.type: Easing.InOutCubic } }
+    Behavior on bottomCenterHeight { NumberAnimation { duration: Theme.animDuration; easing.type: Easing.InOutCubic } }
+    Behavior on bottomRightWidth   { NumberAnimation { duration: Theme.animDuration; easing.type: Easing.InOutCubic } }
+    Behavior on bottomRightHeight  { NumberAnimation { duration: Theme.animDuration; easing.type: Easing.InOutCubic } }
+
     // Left-center region: the power menu.
     readonly property int powerWidth:  px(216)
     readonly property int powerHeight: px(258)
@@ -156,6 +179,11 @@ PanelWindow {
         rightCenterHeight: root.quickHeight
         leftCenterDepth:   root.leftCenterDepth
         leftCenterHeight:  root.powerHeight + px(12)
+        centerBottom:      root.centerBottom
+        bottomCenterWidth:  root.bottomCenterWidth
+        bottomCenterHeight: root.bottomCenterHeight
+        bottomRightWidth:   root.bottomRightWidth
+        bottomRightHeight:  root.bottomRightHeight
     }
 
     // ── Bar content (fades out in focus mode) ────────────────────────────────
@@ -189,6 +217,9 @@ PanelWindow {
                 id: centerContent
                 localScale: root.localScale
                 anchors.centerIn: parent
+                // The dashboard covers the notch while open.
+                opacity: root.openContent === "dashboard" ? 0 : 1
+                Behavior on opacity { NumberAnimation { duration: 150 } }
             }
         }
 
@@ -349,6 +380,90 @@ PanelWindow {
         }
     }
 
+    // ── Second half of the interactive popups ────────────────────────────────
+    Item {
+        anchors.fill: parent
+
+        // Dashboard — the center notch, grown down
+        Item {
+            id: dashboardRegion
+            x:      (root.width - root.cWidth) / 2
+            y:      0
+            width:  root.cWidth
+            height: root.centerBottom
+            clip:   true
+            visible: opacity > 0
+            opacity: root.openContent === "dashboard" ? 1 : 0
+            Behavior on opacity { NumberAnimation { duration: 150 } }
+
+            DashboardContent {
+                id: dashboardContent
+                x:      root.px(8)
+                y:      root.px(Theme.notchRadius + 8)
+                width:  root.px(Popups.dashboardPageWidth) - root.px(16)
+                height: root.dashboardBottom - root.px(Theme.notchRadius + 16)
+            }
+        }
+
+        // Wallpaper — bottom-center panel
+        Item {
+            id: wallpaperRegion
+            x:      (root.width - root.bottomCenterWidth) / 2 - root.notchRadius
+            y:      root.height - root.borderWidth - root.bottomCenterHeight
+            width:  root.bottomCenterWidth + 2 * root.notchRadius
+            height: root.bottomCenterHeight
+            clip:   true
+            visible: opacity > 0
+            opacity: root.openContent === "wallpaper" ? 1 : 0
+            Behavior on opacity { NumberAnimation { duration: 150 } }
+
+            WallpaperContent {
+                id: wallpaperContent
+                anchors.horizontalCenter: parent.horizontalCenter
+                y:      0
+                width:  root.wallpaperWidth + 2 * root.notchRadius
+                height: root.wallpaperHeight
+                fw:     root.notchRadius
+                fh:     root.notchRadius
+                open:   root.openContent === "wallpaper"
+            }
+        }
+
+        // Clipboard — bottom-right panel
+        Item {
+            id: clipboardRegion
+            x:      root.width - root.borderWidth - root.bottomRightWidth
+            y:      root.height - root.borderWidth - root.bottomRightHeight
+            width:  root.bottomRightWidth
+            height: root.bottomRightHeight
+            clip:   true
+            visible: opacity > 0
+            opacity: root.openContent === "clipboard" ? 1 : 0
+            Behavior on opacity { NumberAnimation { duration: 150 } }
+
+            FocusScope {
+                id: clipboardScope
+                x:      root.px(10)
+                y:      root.px(8)
+                width:  root.clipboardWidth - root.px(10)
+                height: root.clipboardHeight - root.px(16)
+                Keys.onEscapePressed: Popups.close("clipboard")
+                HistoryTab { anchors.fill: parent }
+            }
+        }
+    }
+
+    // Reset the dashboard tabs once its close animation is done.
+    Timer {
+        id: dashboardResetTimer
+        interval: Theme.animDuration + 20
+        onTriggered: dashboardContent.reset()
+    }
+    Connections {
+        target: Popups
+        function onDashboardOpenChanged() { if (!Popups.dashboardOpen) dashboardResetTimer.restart() }
+    }
+
     // Hand the keyboard to the opened popup once the compositor has given it
     // to the surface.
     onOpenContentChanged: if (hostedOpen) focusTimer.restart()
@@ -356,8 +471,13 @@ PanelWindow {
         id: focusTimer
         interval: 50
         onTriggered: {
-            if (root.openContent === "powerMenu") powerMenu.reset()
-            else popupScope.forceActiveFocus()
+            switch (root.openContent) {
+            case "powerMenu": powerMenu.reset(); break
+            case "dashboard": dashboardContent.focusPage(); break
+            case "wallpaper": wallpaperContent.focusSearch(); break
+            case "clipboard": clipboardScope.forceActiveFocus(); break
+            default:          popupScope.forceActiveFocus()
+            }
         }
     }
 
@@ -369,10 +489,12 @@ PanelWindow {
     Item { id: maskRight;  x: root.width - root._edge; y: 0; width: root._edge; height: root.height }
     Item { id: maskBottom; x: 0; y: root.height - root._edge; width: root.width; height: root._edge }
     Item { id: maskLeftNotch;   x: leftNotch.x;   y: 0; width: leftNotch.width;   height: root.notchBottom }
-    Item { id: maskCenterNotch; x: centerNotch.x; y: 0; width: centerNotch.width; height: root.notchBottom }
+    Item { id: maskCenterNotch; x: centerNotch.x; y: 0; width: centerNotch.width; height: root.centerBottom }
     Item { id: maskRightNotch;  x: rightNotch.x;  y: 0; width: rightNotch.width;  height: root.rightBottom }
     Item { id: maskQuick; x: quickRegion.x; y: quickRegion.y; width: quickRegion.width; height: quickRegion.height }
     Item { id: maskPower; x: powerRegion.x; y: powerRegion.y; width: powerRegion.width; height: powerRegion.height }
+    Item { id: maskWallpaper; x: wallpaperRegion.x; y: wallpaperRegion.y; width: wallpaperRegion.width; height: wallpaperRegion.height }
+    Item { id: maskClipboard; x: clipboardRegion.x; y: clipboardRegion.y; width: clipboardRegion.width; height: clipboardRegion.height }
 
     mask: Region {
         Region { item: maskTop;         intersection: Intersection.Combine }
@@ -384,5 +506,7 @@ PanelWindow {
         Region { item: maskRightNotch;  intersection: Intersection.Combine }
         Region { item: maskQuick;       intersection: Intersection.Combine }
         Region { item: maskPower;       intersection: Intersection.Combine }
+        Region { item: maskWallpaper;   intersection: Intersection.Combine }
+        Region { item: maskClipboard;   intersection: Intersection.Combine }
     }
 }
