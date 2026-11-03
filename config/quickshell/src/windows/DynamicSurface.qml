@@ -125,7 +125,7 @@ PanelWindow {
     // Notification toast: grows the right notch on the screen it was shown on.
     // An interactive popup in the right region wins and hides it.
     readonly property bool toastShown: ToastState.isOn(screenName) && ToastState.showing
-                                       && openRegion !== "right"
+                                       && openRegion !== "right" && _toastFits
     readonly property int  toastWidth: px(Theme.notificationToastWidth + Theme.notchRadius + Theme.notchPadding - 3)
 
     // Right region size: network and notifications grow the right notch;
@@ -134,20 +134,37 @@ PanelWindow {
     readonly property int networkBottom: px(648 - Theme.notchRadius)
     readonly property int notifWidth:    px(Theme.notificationsWidth + Theme.notchRadius) + borderWidth
 
-    property real _rGrow: openContent === "network"       ? networkWidth
-                        : openContent === "notifications" ? notifWidth
-                        : toastShown                      ? toastWidth : 0
+    // Targets (not animated) are kept separate so the collision checks below
+    // compare final sizes, not mid-animation ones.
+    readonly property real _rGrowTarget: openContent === "network"       ? networkWidth
+                                       : openContent === "notifications" ? notifWidth
+                                       : toastShown                      ? toastWidth : 0
+    readonly property real _rDropTarget: openContent === "network"       ? networkBottom - notchBottom
+                                       : openContent === "notifications" ? notifList.height + px(2 * Theme.popupPadding + 4)
+                                       : toastShown                      ? toastCard.implicitHeight + px(26) : 0
+    property real _rGrow: _rGrowTarget
     Behavior on _rGrow { NumberAnimation { duration: Theme.animDuration; easing.type: Easing.InOutCubic } }
-    property real _rDrop: openContent === "network"       ? networkBottom - notchBottom
-                        : openContent === "notifications" ? notifList.height + px(2 * Theme.popupPadding + 4)
-                        : toastShown                      ? toastCard.implicitHeight + px(26) : 0
+    property real _rDrop: _rDropTarget
     Behavior on _rDrop { NumberAnimation { duration: Theme.animDuration; easing.type: Easing.InOutCubic } }
+
+    // ── Region collisions ────────────────────────────────────────────────────
+    // Regions are bumps on one path: two that overlap make it self-intersect,
+    // and the odd-even fill then punches a hole. Interactive popups never
+    // overlap (one at a time); passive content yields when it would hit the
+    // open popup's region.
+    // Toast: the grown right notch must stay clear of the center notch.
+    readonly property bool _toastFits:
+        width - toastWidth - notchRadius > (width + cWidth) / 2 + notchRadius
+    // OSD: the right notch's final bottom (plus both flares) must stay above
+    // the right-center region.
+    readonly property bool _quickFits:
+        notchBottom + _rDropTarget + 2 * cornerRadius < (height - quickHeight) / 2
 
     // Quick Controls OSD: right-center region, on the focused monitor, unless
     // an interactive popup (audio, #41) owns that region.
     // Also opens while the right-border trigger (or the OSD itself) is hovered.
     readonly property bool quickShown: ((Popups.quickOpen && _focusedHere) || _quickHoverOpen)
-                                       && openRegion !== "rightCenter"
+                                       && openRegion !== "rightCenter" && _quickFits
     readonly property int  quickDepth:  px(180)
     readonly property int  quickHeight: px(340 - 2 * Theme.cornerRadius)
 
