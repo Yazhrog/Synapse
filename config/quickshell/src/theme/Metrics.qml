@@ -58,6 +58,28 @@ QtObject {
     // -- Animations --
     property int animDuration: 320
 
+    // -- Dynamic Surface regions (#37) --
+    // Unscaled sizes, multiplied by the surface's localScale. "Body" sizes
+    // exclude the flares that melt a region into the frame.
+    property int powerMenuWidth:        216   // content area of the power menu
+    property int powerMenuHeight:       258
+    property int powerMenuPadding:      6     // around it, inside the left-center bump
+    property int sideRegionHeight:      306   // audio popup and OSD (right-center)
+    property var audioPageWidths:       ({ output: 200, input: 200, mixer: 300 })
+    property int osdWidth:              180
+    property int osdTopPadding:         30
+    property int networkPopupBodyWidth: 489   // networkPopupWidth + its inner margin
+    property int networkPopupHeight:    648   // incl. the bottom flare (notchRadius)
+    property int wallpaperPanelWidth:   980
+    property int wallpaperPanelHeight:  420
+    property int clipboardPanelWidth:   420
+    property int clipboardPanelHeight:  560
+    property int toastNotchExtra:       13    // toast notch = toast width + notchRadius + this
+    property int regionFadeDuration:    150
+    property int sideTriggerLength:     300   // hover zones in the middle of the side borders
+    property int bottomTriggerWidth:    420   // tap zone in the middle of the bottom border
+    property int cornerTriggerWidth:    80    // tap zone in the bottom-right corner
+
     // -- Settings widgets (components/Settings*.qml) --
     property int settingsRowMinHeight: 44
     property int settingsRowPadding:   14
