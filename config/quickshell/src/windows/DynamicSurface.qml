@@ -121,7 +121,9 @@ PanelWindow {
 
     // Quick Controls OSD: right-center region, on the focused monitor, unless
     // an interactive popup (audio, #41) owns that region.
-    readonly property bool quickShown: Popups.quickOpen && _focusedHere && openRegion !== "rightCenter"
+    // Also opens while the right-border trigger (or the OSD itself) is hovered.
+    readonly property bool quickShown: ((Popups.quickOpen && _focusedHere) || _quickHoverOpen)
+                                       && openRegion !== "rightCenter"
     readonly property int  quickDepth:  px(180)
     readonly property int  quickHeight: px(340 - 2 * Theme.cornerRadius)
 
@@ -163,6 +165,37 @@ PanelWindow {
     Binding { target: ShellState; property: "topBarLWidth"; value: root.lWidth }
     Binding { target: ShellState; property: "topBarCWidth"; value: root.cWidth }
     Binding { target: ShellState; property: "topBarRWidth"; value: root.rWidth }
+
+    // ── Click shield (#42) ───────────────────────────────────────────────────
+    // While a popup is open (on any screen, like the legacy PopupDismiss), the
+    // whole surface takes clicks and a click outside the open popup and the
+    // bar closes it. It sits below everything else, so the popups and the bar
+    // still get their own clicks first.
+    readonly property bool shieldActive: SurfaceState.anyOpen
+
+    MouseArea {
+        id: clickShield
+        anchors.fill:    parent
+        enabled:         root.shieldActive
+        acceptedButtons: Qt.LeftButton | Qt.RightButton
+        onClicked: function(mouse) {
+            if (root._insideFrameOrPopup(mouse.x, mouse.y)) return
+            Popups.closeAll()
+        }
+    }
+
+    function _insideFrameOrPopup(x, y) {
+        if (y < root.notchBottom || x < root.borderWidth || x > root.width - root.borderWidth
+                || y > root.height - root.borderWidth)
+            return true
+        const regions = {
+            powerMenu: powerRegion, audio: audioRegion, notifications: notifRegion,
+            network: networkRegion, dashboard: dashboardRegion,
+            wallpaper: wallpaperRegion, clipboard: clipboardRegion
+        }
+        const r = regions[root.openContent]
+        return !!r && x >= r.x && x <= r.x + r.width && y >= r.y && y <= r.y + r.height
+    }
 
     // ── Shape ────────────────────────────────────────────────────────────────
     SurfaceShape {
@@ -265,7 +298,7 @@ PanelWindow {
         Behavior on opacity { NumberAnimation { duration: 150 } }
 
         // Hovering keeps the OSD open (see IpcManager's hide timer).
-        HoverHandler { onHoveredChanged: Popups.quickHeld = hovered }
+        HoverHandler { id: quickHover; onHoveredChanged: Popups.quickHeld = hovered }
 
         QuickControlContent {
             x:        root.px(8)
@@ -481,6 +514,69 @@ PanelWindow {
         }
     }
 
+    // ── Border triggers (#42), same zones as the legacy Border windows ───────
+    // Each zone is one corner radius deep, so it's easy to hit at the screen
+    // edge. Flags are kept on Popups for the legacy popups and future
+    // per-popup hover settings.
+    readonly property int _triggerDepth: cornerRadius
+
+    // Left border middle: hover flag only (the power menu opens on click).
+    Item {
+        id: leftTrigger
+        x: 0; y: (root.height - height) / 2
+        width: root._triggerDepth; height: root.px(300)
+        HoverHandler { onHoveredChanged: Popups.archMenuTriggerHovered = hovered }
+    }
+
+    // Right border middle: hovering shows the Quick Controls OSD.
+    Item {
+        id: rightTrigger
+        x: root.width - width; y: (root.height - height) / 2
+        width: root._triggerDepth; height: root.px(300)
+        HoverHandler {
+            id: rightTriggerHover
+            onHoveredChanged: {
+                Popups.quickTriggerHovered = hovered
+                Popups.audioTriggerHovered = hovered
+            }
+        }
+    }
+
+    // Bottom border centre: tap toggles the wallpaper picker.
+    Item {
+        id: bottomTrigger
+        x: (root.width - width) / 2; y: root.height - height
+        width: root.px(420); height: root._triggerDepth
+        HoverHandler { onHoveredChanged: Popups.wallpaperTriggerHovered = hovered }
+        TapHandler   { onTapped: Popups.toggle("wallpaper", root.screenName) }
+    }
+
+    // Bottom-right corner: tap toggles the clipboard.
+    Item {
+        id: cornerTrigger
+        x: root.width - width; y: root.height - height
+        width: root.px(80); height: root._triggerDepth
+        TapHandler { onTapped: Popups.toggle("clipboard", root.screenName) }
+    }
+
+    // Hover-open of the OSD: opens at once on the trigger, closes after
+    // Popups.hoverCloseDelay once neither the trigger nor the OSD is hovered.
+    property bool _quickHoverOpen: false
+    readonly property bool _quickHovered: rightTriggerHover.hovered || quickHover.hovered
+    on_QuickHoveredChanged: {
+        if (_quickHovered) {
+            quickHoverCloseTimer.stop()
+            if (rightTriggerHover.hovered) _quickHoverOpen = true
+        } else if (_quickHoverOpen) {
+            quickHoverCloseTimer.restart()
+        }
+    }
+    Timer {
+        id: quickHoverCloseTimer
+        interval: Popups.hoverCloseDelay
+        onTriggered: if (!root._quickHovered) root._quickHoverOpen = false
+    }
+
     // ── Input mask: only the visible frame takes clicks ──────────────────────
     readonly property int _edge: Math.max(1, borderWidth)
 
@@ -488,6 +584,7 @@ PanelWindow {
     Item { id: maskLeft;   x: 0; y: 0; width: root._edge; height: root.height }
     Item { id: maskRight;  x: root.width - root._edge; y: 0; width: root._edge; height: root.height }
     Item { id: maskBottom; x: 0; y: root.height - root._edge; width: root.width; height: root._edge }
+    Item { id: maskShield; x: 0; y: 0; width: root.shieldActive ? root.width : 0; height: root.shieldActive ? root.height : 0 }
     Item { id: maskLeftNotch;   x: leftNotch.x;   y: 0; width: leftNotch.width;   height: root.notchBottom }
     Item { id: maskCenterNotch; x: centerNotch.x; y: 0; width: centerNotch.width; height: root.centerBottom }
     Item { id: maskRightNotch;  x: rightNotch.x;  y: 0; width: rightNotch.width;  height: root.rightBottom }
@@ -508,5 +605,10 @@ PanelWindow {
         Region { item: maskPower;       intersection: Intersection.Combine }
         Region { item: maskWallpaper;   intersection: Intersection.Combine }
         Region { item: maskClipboard;   intersection: Intersection.Combine }
+        Region { item: leftTrigger;     intersection: Intersection.Combine }
+        Region { item: rightTrigger;    intersection: Intersection.Combine }
+        Region { item: bottomTrigger;   intersection: Intersection.Combine }
+        Region { item: cornerTrigger;   intersection: Intersection.Combine }
+        Region { item: maskShield;      intersection: Intersection.Combine }
     }
 }
