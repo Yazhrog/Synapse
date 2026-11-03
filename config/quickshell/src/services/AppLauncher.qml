@@ -6,9 +6,9 @@ import "../components"
 import "../"
 
 // AppLauncher — scrollable app list + bottom search bar.
-// Lives inside Dashboard.qml on the "launcher" page.
-// Dashboard gets keyboard focus from PopupFocusGrab, but that doesn't imply
-// any particular item has Qt-level active focus — searchInput takes it below,
+// Lives inside DashboardContent on the "launcher" page.
+// The surface gets the keyboard while the dashboard is open, but that doesn't
+// imply any particular item has Qt-level active focus — searchInput takes it below,
 // and takes it again whenever the window becomes active, so it doesn't matter
 // whether the compositor's focus lands before or after the timer.
 

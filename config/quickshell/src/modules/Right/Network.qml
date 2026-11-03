@@ -82,7 +82,7 @@ Item {
     }
     Component.onCompleted: { wifiPoll.running = true; ethPoll.running = true; connPoll.running = true }
 
-    HoverHandler { id: hov; onHoveredChanged: Popups.networkTriggerHovered = hovered }
+    HoverHandler { id: hov }
 
     Row {
         id: row

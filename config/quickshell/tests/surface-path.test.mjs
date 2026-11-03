@@ -87,9 +87,19 @@ test("bottom panels are filled once over the frame (no cancelled winding)", () =
     assert.ok(!filled(d, 300, 900), "hole beside the panels")
 })
 
-test("closed bottom panels leave no loop", () => {
-    const d = build({ ...base, bottomCenter: { width: 0, height: 0 }, bottomRight: { width: 0.5, height: 0.5 } })
-    assert.equal((d.match(/M /g) || []).length, 2)
+test("always exactly two loops (no overlapping subpaths)", () => {
+    for (const g of [base,
+                     { ...base, bottomCenter: { width: 980, height: 420 } },
+                     { ...base, bottomRight: { width: 420, height: 560 } },
+                     { ...base, bottomRight: { width: 0.5, height: 0.5 } }])
+        assert.equal((build(g).match(/M /g) || []).length, 2)
+})
+
+test("closed bottom-right panel keeps the round corner", () => {
+    const closed = build(base)
+    assert.equal(build({ ...base, bottomRight: { width: 10, height: 10 } }), closed)
+    assert.ok(filled(closed, 1911, 1071), "the rounded corner is filled")
+    assert.ok(!filled(closed, 1890, 1050), "the hole next to it is not")
 })
 
 test("grown notches (dashboard, network)", () => {

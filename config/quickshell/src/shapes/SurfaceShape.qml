@@ -10,8 +10,7 @@ import "surfacePath.js" as SurfacePath
 // tests/surface-path.test.mjs) and filled with the non-zero rule, so regions
 // that overlap the frame are filled once — no double alpha once the frame
 // becomes translucent (#34). Every size is a plain property: animating one
-// morphs the shape (#37). Replaces SeamlessBarShape + Border's canvases once
-// the surface is the default.
+// morphs the shape (#37).
 Shape {
     id: root
 

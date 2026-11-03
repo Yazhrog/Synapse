@@ -3,21 +3,21 @@ import Quickshell.Hyprland
 import QtQuick
 import "../"
 
-// ShellHost — the Dynamic Surface root (#37), enabled with SYNAPSE_SURFACE=1.
+// ShellHost — the shell root: one Dynamic Surface per screen (#37).
 //
 // Per screen: a top StrutWindow reserving the bar's space, the DynamicSurface
 // drawing the frame, the bar and every popup, and the centered modal windows,
 // which stay separate windows.
 //
-// Space reservation matches the legacy stack exactly: only the top reserves
+// Space reservation: only the top reserves
 // Theme.exclusionGap, scaled per screen (0 in focus mode); the side and bottom borders reserve
 // nothing and Hyprland's gaps_out keeps windows clear of them. Changing that
 // rule means adjusting gaps_out in config/hypr/modules/appearance.lua too.
 Scope {
     id: host
 
-    // Like the legacy PopupDismiss: switching workspace or monitor, or a new
-    // window opening, closes the open popup.
+    // Switching workspace or monitor, or a new window opening, closes the
+    // open popup.
     Connections {
         target: Hyprland
         function onRawEvent(event) {

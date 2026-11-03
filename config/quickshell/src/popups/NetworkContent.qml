@@ -3,8 +3,7 @@ import "../components"
 import "../"
 
 // NetworkContent — the network popup's UI: the Wi-Fi / Bluetooth / VPN /
-// Hotspot tab pages and the tab bar. Hosted by NetworkPopup (legacy) and the
-// right region of DynamicSurface.
+// Hotspot tab pages and the tab bar. Hosted by the right region of DynamicSurface.
 Item {
     id: root
 

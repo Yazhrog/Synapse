@@ -4,7 +4,7 @@ import "../"
 import "../../"
 
 // ─────────────────────────────────────────────────────────────
-// NotificationList — content panel for NotificationsPopup
+// NotificationList — content of the notifications popup
 // ─────────────────────────────────────────────────────────────
 Item {
     id: root

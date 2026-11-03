@@ -10,7 +10,7 @@ Item {
 
     id: root
 
-    // The TopBar State handles expanding the notch for notifications/network/toasts
+    // DynamicSurface grows the notch for notifications, network and toasts.
     implicitWidth: contentRow.implicitWidth
 
     //Behavior on implicitWidth {

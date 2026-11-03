@@ -11,8 +11,7 @@ import "../services/"
 // One toast at a time: new notifications queue up behind the current one.
 // Each toast shows for 5s (or until dismissed or closed), on the monitor
 // that was focused when it appeared. Both hosts render it from here:
-// popups/NotificationToast.qml (legacy) and the right notch of
-// DynamicSurface. Drives Popups.notificationToastOpen.
+// the right notch of DynamicSurface.
 // ============================================================
 
 Singleton {
@@ -32,7 +31,6 @@ Singleton {
     function dismiss() {
         autoTimer.stop()
         root.showing = false
-        Popups.hideToast()
         slideOutTimer.restart()
     }
 
@@ -41,7 +39,6 @@ Singleton {
         root.screen  = Hyprland.focusedMonitor ? Hyprland.focusedMonitor.name : ""
         root.showing = false
         slideInTimer.restart()
-        Popups.hideToast()
     }
 
     property Connections _service: Connections {
@@ -65,7 +62,6 @@ Singleton {
         interval: 30
         onTriggered: {
             root.showing = true
-            Popups.showToast()
             autoTimer.restart()
         }
     }

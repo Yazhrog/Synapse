@@ -33,7 +33,7 @@ Item {
 	height: 30
 
 	// ── Required notch width for the current carousel item ────────────────────
-	// TopBar.cWidth reads this so the notch always matches what is visible,
+	// DynamicSurface sizes the center notch from it so the notch always matches what is visible,
 	// even if the user scrolls away from record_active while recording.
 	readonly property int fw: Theme.notchRadius
 	readonly property int requiredWidth: Theme.cNotchMinWidth

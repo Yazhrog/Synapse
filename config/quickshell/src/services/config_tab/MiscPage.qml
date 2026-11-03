@@ -26,7 +26,7 @@ Item {
 
             SettingsDropdown {
                 label:       "Surface scale"
-                description: "Frame and popup sizes with SYNAPSE_SURFACE=1. Popup contents don't scale yet."
+                description: "Scales the frame and popup sizes. Popup contents don't scale yet."
                 prefKey:     "surfaceScale"
                 options: [
                     { value: "off",  label: "Off"  },
