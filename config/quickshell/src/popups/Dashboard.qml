@@ -27,24 +27,6 @@ PanelWindow {
     readonly property int fh: Theme.notchRadius
     readonly property int animDuration: Theme.animDuration
 
-    property string page: Popups.dashboardPage
-
-    // ── Per-page content widths ───────────────────────────────────────────────
-    readonly property var _pageWidths: ({
-        "home":     900,
-        "stats":    900,
-        "kanban":   900,
-        "launcher": 560,
-        "config":   900
-    })
-
-    function _applyPageWidth(p) {
-        var w = _pageWidths[p]
-        Popups.dashboardPageWidth = (w !== undefined) ? w : 900
-    }
-
-    onPageChanged: _applyPageWidth(page)
-
     color:   "transparent"
     visible: windowVisible
 
@@ -65,7 +47,7 @@ PanelWindow {
         window:       root
         screen:       root.hostScreen
         active:       Popups.dashboardOpen
-        onFocused:    pageArea.forceActiveFocus()
+        onFocused:    dashboardContent.focusPage()
         onDismissed:  Popups.close("dashboard")
     }
 
@@ -75,15 +57,11 @@ PanelWindow {
             if (Popups.dashboardOpen) {
                 closeTimer.stop()
                 root.windowVisible = true
-                root._applyPageWidth(root.page)
             } else {
                 closeTimer.restart()
             }
         }
 
-        function onDashboardPageChanged() {
-            root.page = Popups.dashboardPage
-        }
     }
 
     Timer {
@@ -91,7 +69,7 @@ PanelWindow {
         interval: root.animDuration + 20
         onTriggered: {
             root.windowVisible = false
-            tabBar.reset()
+            dashboardContent.reset()
         }
     }
 
@@ -152,73 +130,9 @@ PanelWindow {
                 }
             }
 
-            Column {
+            DashboardContent {
+                id: dashboardContent
                 anchors.fill: parent
-                spacing: 0
-
-                // ── Tab bar ───────────────────────────────────────────────────
-                TabSwitcher {
-                    id: tabBar
-                    orientation: "horizontal"
-                    width:       parent.width
-                    currentPage: root.page
-                    model: [
-                        { key: "home",     icon: "󰋜", label: "Home"   },
-                        { key: "stats",    icon: "󰻠", label: "System" },
-                        { key: "kanban",   icon: "󰄬", label: "Tasks"  },
-                        { key: "launcher", icon: "󱓞", label: "Apps"   },
-                        { key: "config",   icon: "󰒓", label: "Config" },
-                    ]
-                    onPageChanged: function(key) { Popups.dashboardPage = key }
-                }
-
-                // ── Page area ─────────────────────────────────────────────────
-                // FocusScope so forceActiveFocus() from the focus grab restores
-                // whichever page item last held focus (e.g. the launcher search)
-                // instead of taking it for itself.
-                FocusScope {
-                    id: pageArea
-                    focus: true
-                    
-                    width:  parent.width
-                    height: parent.height - tabBar.height
-
-                    Item {
-                        anchors.fill: parent
-                        visible:      root.page === "home"
-                        DashHome { anchors.fill: parent }
-                    }
-
-                    Item {
-                        anchors.fill: parent
-                        visible:      root.page === "stats"
-                        DashStats { anchors.fill: parent }
-                    }
-
-                    Item {
-                        anchors.fill: parent
-                        visible:      root.page === "kanban"
-                        KanbanBoard { anchors.fill: parent }
-                    }
-
-                    Item {
-                        anchors.fill: parent
-                        visible:      root.page === "launcher"
-                        AppLauncher { anchors.fill: parent }
-                    }
-
-                    Item {
-                        anchors.fill: parent
-                        visible:      root.page === "config"
-                        Item {
-                            anchors.fill: parent
-                            visible:      root.page === "config"
-                            ShellConfig { anchors.fill: parent }
-                        }
-                    }
-                    
-                    Keys.onEscapePressed: Popups.close("dashboard")
-                }
             }
         }
     }

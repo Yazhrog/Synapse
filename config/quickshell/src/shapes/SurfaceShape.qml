@@ -42,6 +42,16 @@ Shape {
     property real rightCenterDepth:  0
     property real rightCenterHeight: 0
 
+    // Bottom regions: a panel growing up from the middle of the bottom border
+    // (wallpaper) and one growing out of the bottom-right inner corner
+    // (clipboard). Size 0 = closed. They're drawn as extra filled paths in
+    // the frame colour on top of the frame, so a closed region leaves the
+    // plain border and rounded corner untouched.
+    property real bottomCenterWidth:  0
+    property real bottomCenterHeight: 0
+    property real bottomRightWidth:   0
+    property real bottomRightHeight:  0
+
     property color color: Theme.background
 
     // ── Derived values ───────────────────────────────────────────────────────
@@ -74,6 +84,17 @@ Shape {
     readonly property real _lcTop: height / 2 - _lcH / 2
     readonly property real _lcBot: height / 2 + _lcH / 2
     readonly property real _lcX:   _t + _lcD
+
+    readonly property real _bcL:   width / 2 - bottomCenterWidth / 2
+    readonly property real _bcR:   width / 2 + bottomCenterWidth / 2
+    readonly property real _bcTop: height - _t - bottomCenterHeight
+    readonly property real _bcF:   Math.max(0.0005, Math.min(notchRadius, bottomCenterHeight / 2))
+    readonly property real _bcC:   Math.max(0.0005, Math.min(cornerRadius, bottomCenterWidth / 2, bottomCenterHeight / 2))
+
+    readonly property real _brL:   width - _t - bottomRightWidth
+    readonly property real _brTop: height - _t - bottomRightHeight
+    readonly property real _brF:   Math.max(0.0005, Math.min(cornerRadius, bottomRightWidth / 2, bottomRightHeight / 2))
+    readonly property real _brC:   Math.max(0.0005, Math.min(cornerRadius, bottomRightWidth / 2, bottomRightHeight / 2))
     readonly property real _cS:    width / 2 - centerWidth / 2
     readonly property real _cE:    width / 2 + centerWidth / 2
     readonly property real _rS:    width - rightWidth
@@ -170,5 +191,47 @@ Shape {
         PathLine { x: root._t + root._R; y: root.height - root._t }
         PathArc  { x: root._t; y: root.height - root._t - root._R
                    radiusX: root._R; radiusY: root._R; direction: PathArc.Clockwise }
+    }
+
+    // ── Bottom-center panel (wallpaper) ──────────────────────────────────────
+    ShapePath {
+        fillColor:   root.bottomCenterHeight >= 1 ? root.color : "transparent"
+        strokeWidth: -1
+
+        startX: root._bcL - root._bcF; startY: root.height - root._t
+        PathArc  { x: root._bcL; y: root.height - root._t - root._bcF
+                   radiusX: root._bcF; radiusY: root._bcF; direction: PathArc.Counterclockwise }
+        PathLine { x: root._bcL; y: root._bcTop + root._bcC }
+        PathArc  { x: root._bcL + root._bcC; y: root._bcTop
+                   radiusX: root._bcC; radiusY: root._bcC; direction: PathArc.Clockwise }
+        PathLine { x: root._bcR - root._bcC; y: root._bcTop }
+        PathArc  { x: root._bcR; y: root._bcTop + root._bcC
+                   radiusX: root._bcC; radiusY: root._bcC; direction: PathArc.Clockwise }
+        PathLine { x: root._bcR; y: root.height - root._t - root._bcF }
+        PathArc  { x: root._bcR + root._bcF; y: root.height - root._t
+                   radiusX: root._bcF; radiusY: root._bcF; direction: PathArc.Counterclockwise }
+        PathLine { x: root._bcR + root._bcF; y: root.height }
+        PathLine { x: root._bcL - root._bcF; y: root.height }
+        PathLine { x: root._bcL - root._bcF; y: root.height - root._t }
+    }
+
+    // ── Bottom-right panel (clipboard) ───────────────────────────────────────
+    ShapePath {
+        fillColor:   root.bottomRightHeight >= 1 ? root.color : "transparent"
+        strokeWidth: -1
+
+        startX: root.width - root._t; startY: root._brTop - root._brF
+        PathArc  { x: root.width - root._t - root._brF; y: root._brTop
+                   radiusX: root._brF; radiusY: root._brF; direction: PathArc.Clockwise }
+        PathLine { x: root._brL + root._brC; y: root._brTop }
+        PathArc  { x: root._brL; y: root._brTop + root._brC
+                   radiusX: root._brC; radiusY: root._brC; direction: PathArc.Counterclockwise }
+        PathLine { x: root._brL; y: root.height - root._t - root._brF }
+        PathArc  { x: root._brL - root._brF; y: root.height - root._t
+                   radiusX: root._brF; radiusY: root._brF; direction: PathArc.Clockwise }
+        PathLine { x: root._brL - root._brF; y: root.height }
+        PathLine { x: root.width; y: root.height }
+        PathLine { x: root.width; y: root._brTop - root._brF }
+        PathLine { x: root.width - root._t; y: root._brTop - root._brF }
     }
 }
