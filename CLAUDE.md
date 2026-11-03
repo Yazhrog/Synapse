@@ -32,7 +32,7 @@ There is no build/lint/test tooling (no package.json, no CI). The only "commands
 2. **`file`** — per-file symlinks inside a *real* directory (`config/hypr/`, `config/nvim/`, `config/ghostty/`, `config/zsh/`). Used wherever runtime output has to sit alongside repo files: matugen writes `~/.config/hypr/modules/colors.lua` and `~/.config/nvim/colors/nvim-colors.json`, zsh writes its history. Keeping those directories real is why no runtime path had to move.
 3. **`copy`** — copied once, never overwritten, because another tool rewrites it in place (`sunsetr.toml`, `qt6ct.conf`, `nvim/lazy-lock.json`).
 
-The repo location is resolved once by `boot.sh` and written to `~/.config/Synapse/repo-path`. Read that file rather than hardcoding a path — and note it **cannot** be derived from `Quickshell.shellDir`, because `~/.config/quickshell` is a symlink and quickshell reports the link path, not the checkout behind it.
+The repo location is resolved once by `boot.sh` and written to `~/.config/Synapse/repo-path`. In QML, use `Paths.repoDir`, which reads that file, rather than hardcoding a path — and note it **cannot** be derived from `Quickshell.shellDir`, because `~/.config/quickshell` is a symlink and quickshell reports the link path, not the checkout behind it.
 
 Runtime state lives under `~/.config/Synapse/` (never symlinked): `src/user_data/*.json` plus the generated `SynapseKeybinds.lua` and the user's own `monitors.lua`. See the "Summary tree" at the bottom of `DEPLOY-MAP.md`.
 
@@ -46,11 +46,14 @@ Entry point `shell.qml` instantiates windows/overlays once per screen (`Variants
 
 Global singletons are declared in `src/qmldir` (`singleton Name path`) and are the backbone of shared state — QML doesn't need imports to reach them, any file can reference `Theme`, `Popups`, `ShellState`, `IpcManager`, `ClockState`, `ScreenRecService`, `CavaService`, `ClipboardService`, `KeybindService`, `UpdateService` directly:
 
+- **`utils/Paths.qml`** — every directory the shell uses: `configDir`, `userDataDir` (with `Paths.userData("file.json")`), `wallpaperDir`, `shellDir`, `repoDir`, `cacheDir`. Never hardcode `~/.config/Synapse` in QML. Setting `SYNAPSE_CONFIG_DIR` points `configDir` somewhere else, so the dev checkout can run against throwaway data: `SYNAPSE_CONFIG_DIR=/tmp/synapse-test qs -p <checkout>/config/quickshell`. `matugen.toml` and the installer can't read it and keep their own paths. A file in a subdirectory of `src/` must import `src` itself (e.g. `import "../"`) to see the singletons.
+- **`services/PrefsService.qml`** — shell preferences (how the shell behaves), stored in `shell_prefs.json` through a `JsonAdapter`. Bind to `PrefsService.<pref>` and assign to change it: saving (debounced) and hot reload are automatic, `reset(key)` / `resetAll()` / `isDefault(key)` serve the settings widgets. Wait for `PrefsService.ready` (or its `loaded` signal) before acting on a pref at startup. To add a pref, follow the 3 steps at the top of the file. User data (tasks, pins, wallpaper, keybinds) keeps its own files.
 - **`state/Popups.qml`** — the single source of truth for which popup/dashboard page is open. All popups toggle through `Popups.closeAll()` + setting their own `xOpen` flag, so only one popup is ever open at a time.
 - **`state/ShellState.qml`** — misc global toggles owned by other components (wifi/bluetooth/DND/focus mode/etc — see the ownership comment at the top of the file) plus the Hyprland "submap" passthrough mechanism used while capturing a new keybind.
 - **`state/IpcManager.qml`** — centralizes every `IpcHandler` (external `hyprctl dispatch` / `qs ipc` entry point) in one place specifically so multi-monitor setups (where `TopBar`/`PopupLayer` are duplicated per-screen) only ever have one handler reacting to a given signal. New IPC-triggerable actions should be added here, not on a per-window component.
 - **`theme/Theme.qml`** — flattens `Colors.qml` (from `theme/ColorLoader.qml`, a `FileView` that watches `~/.config/Synapse/src/user_data/colors.json`) and `Metrics.qml` into one property surface. QML singletons can't alias another singleton's properties directly, hence the manual re-binding of every property.
 - **`services/`** — one QML object per external integration, mostly thin wrappers around CLI tools driven via `Quickshell.Io` `Process`/`SplitParser` (nmcli, bluetoothctl, playerctl, wf-recorder, cava, etc.). Some are qmldir singletons (audio/network/etc. don't need to be — check `src/qmldir` for which ones are global vs. instantiated per-use).
+- **Settings widgets** (`components/Settings*.qml`) — build config pages from `SettingsGroup` (titled card), `SettingsToggle`, `SettingsSlider`, `SettingsDropdown`, `SettingsButton` (`destructive` asks for confirmation), `SettingsRow` (read-only row, base of the others) and `SettingsDivider`. Give a control a `prefKey` and it reads/writes that `PrefsService` key and shows a reset button when it differs from the default. `MiscPage.qml` is the reference usage.
 - **`popups/`, `windows/`, `modules/`, `components/`** — the UI layer. New popups go through `popups/PopupLayer.qml` (per the comment in `shell.qml`); don't wire a new popup directly into `shell.qml`.
 - **Keyboard focus** — any popup/dialog that needs the keyboard uses `components/PopupFocusGrab.qml` (a delayed `HyprlandFocusGrab`, the pattern ArchMenu originally proved out): bind `active` to the popup's open flag, `forceActiveFocus()` the target item in `onFocused`, close the popup in `onDismissed`, and pass `hostScreen` as `screen` for PopupLayer popups. The grab must whitelist **only** the popup window — Hyprland gives the keyboard to an arbitrary whitelisted surface, so adding the bar windows sent focus to a bar. Don't rely on `WlrKeyboardFocus.Exclusive`/`OnDemand` alone — Hyprland doesn't reliably focus a freshly-mapped layer surface, which made focus intermittent. While a grab is live, clicks outside the whitelisted windows never reach `PopupDismiss`, and neither does Escape, so the popup has to handle Escape itself.
 
@@ -80,6 +83,22 @@ These are a *different* mechanism from `binds.lua` and are generated at runtime,
 5. `install/steps/06-shell-config.sh` runs a live conflict check (`hyprctl binds -j`) against the same `keybind-defaults.json` at install time, and pre-unbinds (in `keybinds.json`) any default that collides with an existing Hyprland bind.
 
 If you add/rename a shell action: update `keybind-defaults.json` and the matching `IpcHandler` target in `IpcManager.qml` together — they're the two ends of the same string and nothing type-checks the match between them.
+
+## Project workflow
+
+Planning lives on the **Synapse Roadmap** GitHub Project (board columns: Backlog → Ready → In progress → In review → Done), with one **milestone per release** (`v0.3.0` = #27 config foundation, `v0.4.0` = #37 Dynamic Surface, `v0.5.0` = #31 config pages).
+
+Branches:
+- `main` — released code; what the in-shell updater pulls. Only `dev` → `main` release PRs land here.
+- `dev` — integration branch; must stay releasable.
+- `stack/<issue>-<slug>` — one per **parent issue** (label `epic`), cut from `dev`. Each sub-issue is its own branch and PR **into the stack**. A draft PR (label `stack`) from the stack into `dev`, opened after the first sub-PR is merged, tracks progress with a checklist; it's marked ready and merged once every sub-issue is done.
+- `fix/…`, `feat/…`, `chore/…`, `docs/…`, `refactor/…` — one per PR. Standalone bugs and small features target `dev` directly.
+
+Rules:
+- Merge `dev` into active stacks regularly so they don't drift. Finish one stack before starting the next when they touch the same files.
+- `Closes #N` only auto-closes issues on merge into `main`, so close an issue by hand (with a comment pointing to the PR) when its PR is merged into `dev` or a stack. Tick it in the stack PR's checklist and move it to Done on the board.
+- Shell changes are tested on the live install (`~/.local/src/Synapse`) by applying the PR's diff there as uncommitted edits; once confirmed, `git restore .` it so the updater's `git pull` keeps working.
+- Releasing: bump the version (README badge + note, `boot.sh` banner) in a `chore(release)` PR to `dev`, open the `dev` → `main` release PR, merge it, push an annotated tag `vX.Y.Z` on the merge commit, publish a GitHub Release from the notes, close the milestone.
 
 ## Commit conventions for Claude agents
 

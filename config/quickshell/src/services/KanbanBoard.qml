@@ -3,7 +3,7 @@ import Quickshell.Io
 import "../"
 import "../components"
 
-// KanbanBoard — three columns, JSON at $HOME/.config/Synapse/src/user_data/tasks.json.
+// KanbanBoard — three columns, JSON at Paths.userData("tasks.json").
 //
 // Key behaviours:
 //   • Draft: task only saved when Enter pressed or focus lost with text.
@@ -47,24 +47,16 @@ Item {
     ]
     readonly property var _dowNames: ["Su","Mo","Tu","We","Th","Fr","Sa"]
 
-    // ── Boot: resolve $HOME → create file if missing → load ──────────────────
-    Process {
-        command: ["bash", "-c", "echo $HOME"]
-        running: true
-        stdout: SplitParser {
-            onRead: function(line) {
-                var h = line.trim()
-                if (h === "") return
-                root._filePath = h + "/.config/Synapse/src/user_data/tasks.json"
-                mkProc.command = [
-                    "bash", "-c",
-                    "[ -f '" + root._filePath + "' ] || " +
-                    "(mkdir -p \"$HOME/.config/Synapse/src/user_data\" && " +
-                    "printf '%s' '{\"tasks\":[],\"nextId\":0}' > '" + root._filePath + "')"
-                ]
-                mkProc.running = false; mkProc.running = true
-            }
-        }
+    // ── Boot: create file if missing → load ───────────────────────────────────
+    Component.onCompleted: {
+        root._filePath = Paths.userData("tasks.json")
+        mkProc.command = [
+            "bash", "-c",
+            "[ -f '" + root._filePath + "' ] || " +
+            "(mkdir -p '" + Paths.userDataDir + "' && " +
+            "printf '%s' '{\"tasks\":[],\"nextId\":0}' > '" + root._filePath + "')"
+        ]
+        mkProc.running = true
     }
 
     Process {

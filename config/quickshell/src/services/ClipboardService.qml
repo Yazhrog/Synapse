@@ -12,7 +12,7 @@ QtObject {
     property bool loading: false
 
     readonly property string _pinsPath:
-        Quickshell.env("HOME") + "/.config/Synapse/src/user_data/clipboard_pins.json"
+        Paths.userData("clipboard_pins.json")
 
     // ── Pins: load ─────────────────────────────────────────────────────────────
     property var _loadPinsProc: Process {

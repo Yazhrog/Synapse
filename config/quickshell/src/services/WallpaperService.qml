@@ -18,8 +18,8 @@ QtObject {
     id: root
 
     // ── Paths ─────────────────────────────────────────────────────────────────
-    readonly property string configPath:      Quickshell.env("HOME") + "/.config/Synapse/src/user_data/wallpaper.json"
-    readonly property string _wallDir:        Quickshell.env("HOME") + "/.config/Synapse/src/user_data/wallpapers"
+    readonly property string configPath:      Paths.userData("wallpaper.json")
+    readonly property string _wallDir:        Paths.wallpaperDir
     readonly property string _currWall:       _wallDir + "/curr_wall"
     readonly property string _currWallStatic: _wallDir + "/curr_wall_static.jpg"
 
@@ -134,33 +134,31 @@ QtObject {
                 root.wallpaperApplied(root.currentWall)
                 root.saveConfig()
 
-                // Trigger border update after wallpaper application finishes
                 updateBorders()
             }
         }
     }
 
-    // New function to update borders based on config provider
+    // Pushes the new primary color to the Hyprland border after an apply.
+    // The color is read from the colors.lua / colors.conf matugen just wrote,
+    // not from Theme.active: Theme reloads colors.json asynchronously, so right
+    // after an apply (or at startup, before colors.json is read) it still holds
+    // the previous or fallback color.
+    // Not called at startup: appearance.lua already loads colors.lua.
     function updateBorders() {
-        // Strip '#' from the colors (assuming QML hex format #RRGGBB)
-        let primary = String(Theme.active).replace('#', '')
-        
-
-        // Build command based on config provider
         if (ShellState.configProvider === "lua") {
-            // Using hl.config with RGB strings in Lua
             borderUpdateProc.command = [
                 "bash", "-c",
-                "hyprctl eval 'hl.config({ general = { [\"col.active_border\"] = { colors = { \"rgb(" + primary + ")\" } } } })'"
+                "p=$(sed -n 's/^M\\.primary *= *\"\\([0-9a-fA-F]\\{6\\}\\)\".*/\\1/p' \"$HOME/.config/hypr/modules/colors.lua\"); " +
+                "[ -n \"$p\" ] && hyprctl eval \"hl.config({ general = { [\\\"col.active_border\\\"] = { colors = { \\\"rgb($p)\\\" } } } })\""
             ]
         } else {
-            // Using hyprctl keyword for .conf
             borderUpdateProc.command = [
                 "bash", "-c",
-                "hyprctl keyword general:col.active_border \"rgb(" + primary + ")\""
+                "p=$(sed -n 's/^\\$primary *= *\\([0-9a-fA-F]\\{6\\}\\).*/\\1/p' \"$HOME/.config/hypr/colors.conf\"); " +
+                "[ -n \"$p\" ] && hyprctl keyword general:col.active_border \"rgb($p)\""
             ]
         }
-        
         borderUpdateProc.running = true
     }
 
@@ -168,10 +166,5 @@ QtObject {
         command: []
     }
 
-    Component.onCompleted: {
-        readConfigProc.running = true
-        if (Theme.active && String(Theme.active).trim() !== "") {
-            updateBorders()
-        }
-    }
+    Component.onCompleted: readConfigProc.running = true
 }

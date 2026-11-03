@@ -6,7 +6,7 @@ import "../"
 
 // AppPinService — launcher pins, shared by every per-screen AppLauncher.
 // Stored as an ordered array of .desktop ids (list_apps.py's "id" field) in
-// $HOME/.config/Synapse/src/user_data/app_pins.json. Pins of uninstalled apps
+// Paths.userData("app_pins.json"). Pins of uninstalled apps
 // are kept, just not rendered, so reinstalling an app brings its pin back.
 
 QtObject {
@@ -15,7 +15,7 @@ QtObject {
     property var pinned: []
 
     readonly property string _pinsPath:
-        Quickshell.env("HOME") + "/.config/Synapse/src/user_data/app_pins.json"
+        Paths.userData("app_pins.json")
 
     // ── Load ───────────────────────────────────────────────────────────────────
     property var _loadProc: Process {
