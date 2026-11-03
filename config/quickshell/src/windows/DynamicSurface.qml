@@ -203,9 +203,6 @@ PanelWindow {
     property real leftCenterDepth: openContent === "powerMenu" ? powerWidth + px(12) : 0
     Behavior on leftCenterDepth { NumberAnimation { duration: Theme.animDuration; easing.type: Easing.InOutCubic } }
 
-    Binding { target: ShellState; property: "topBarLWidth"; value: root.lWidth }
-    Binding { target: ShellState; property: "topBarCWidth"; value: root.cWidth }
-    Binding { target: ShellState; property: "topBarRWidth"; value: root.rWidth }
 
     // ── Click shield (#42) ───────────────────────────────────────────────────
     // While a popup is open (on any screen, like the legacy PopupDismiss), the
@@ -632,7 +629,7 @@ PanelWindow {
         y:       root.notchHeight + 25
         width:   implicitWidth
         height:  implicitHeight
-        visible: ScreenRecService.openStrip !== "" && root._focusedHere
+        visible: ScreenRecService.openStrip !== "" && ScreenRecService.popupTargetScreen === root.screenName
 
         HoverHandler {
             onHoveredChanged: {

@@ -609,6 +609,7 @@ Item {
 											if (hovered) {
 												var pos = parent.mapToItem(null, 0, 0)
 												ScreenRecService.popupTargetX = pos.x
+												ScreenRecService.popupTargetScreen = QsWindow.window?.screen?.name ?? ""
 												ScreenRecService.popupTargetWidth = parent.width
 
 												ScreenRecService.openStrip = "capture"
@@ -667,6 +668,7 @@ Item {
 											if (hovered) {
 												var pos = parent.mapToItem(null, 0, 0)
 												ScreenRecService.popupTargetX = pos.x
+												ScreenRecService.popupTargetScreen = QsWindow.window?.screen?.name ?? ""
 												ScreenRecService.popupTargetWidth = parent.width
 
 												ScreenRecService.openStrip = "audio"
