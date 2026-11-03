@@ -30,7 +30,9 @@ Item {
         content.folderMode           = false
         content.appliedScheme        = WallpaperService.scheme
         searchInput.text             = ""
-        searchInput.forceActiveFocus()
+        // No focus here: the surface calls focusSearch() once it has the
+        // keyboard. Focusing twice makes Qt's Wayland text-input re-enable
+        // the surface and log a warning.
     }
 
     function focusSearch() { searchInput.forceActiveFocus() }
