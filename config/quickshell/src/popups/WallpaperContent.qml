@@ -19,8 +19,9 @@ Item {
     property int  fw:   Theme.notchRadius
     property int  fh:   Theme.notchRadius
 
-    // Reset the picker each time it opens.
+    // Reset the picker each time it opens (also when created already open).
     onOpenChanged: if (open) reset()
+    Component.onCompleted: if (open) reset()
 
     function reset() {
         WallpaperService.refresh()

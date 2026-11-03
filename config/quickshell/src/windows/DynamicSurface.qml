@@ -140,7 +140,7 @@ PanelWindow {
                                        : openContent === "notifications" ? notifWidth
                                        : toastShown                      ? toastWidth : 0
     readonly property real _rDropTarget: openContent === "network"       ? networkBottom - notchBottom
-                                       : openContent === "notifications" ? notifList.height + px(2 * Theme.popupPadding + 4)
+                                       : openContent === "notifications" ? (notifLoader.item ? notifLoader.item.height : 0) + px(2 * Theme.popupPadding + 4)
                                        : toastShown                      ? toastCard.implicitHeight + px(26) : 0
     property real _rGrow: _rGrowTarget
     Behavior on _rGrow { NumberAnimation { duration: Theme.animDuration; easing.type: Easing.InOutCubic } }
@@ -157,8 +157,11 @@ PanelWindow {
         width - toastWidth - notchRadius > (width + cWidth) / 2 + notchRadius
     // OSD: the right notch's final bottom (plus both flares) must stay above
     // the right-center region.
+    // The clipboard panel (bottom-right) must not reach up into it either.
     readonly property bool _quickFits:
         notchBottom + _rDropTarget + 2 * cornerRadius < (height - quickHeight) / 2
+        && !(openContent === "clipboard"
+             && height - borderWidth - clipboardHeight - cornerRadius < (height + quickHeight) / 2 + cornerRadius)
 
     // Quick Controls OSD: right-center region, on the focused monitor, unless
     // an interactive popup (audio, #41) owns that region.
@@ -170,7 +173,7 @@ PanelWindow {
 
     // Right-center region: the audio popup (width follows its page) or the OSD.
     readonly property var audioPageWidths: ({ output: 200, input: 200, mixer: 300 })
-    readonly property int audioWidth: px(audioPageWidths[audioControl.page] ?? 300)
+    readonly property int audioWidth: px(audioPageWidths[audioLoader.item ? audioLoader.item.page : Popups.audioPage] ?? 300)
 
     property real rightCenterDepth: openContent === "audio" ? audioWidth
                                   : quickShown              ? quickDepth : 0
@@ -375,10 +378,12 @@ PanelWindow {
             opacity: root.openContent === "powerMenu" ? 1 : 0
             Behavior on opacity { NumberAnimation { duration: 150 } }
 
-            Item {
+            Loader {
+                id: powerLoader
                 x: root.px(4); y: root.px(6)
                 width: root.powerWidth; height: root.powerHeight
-                PowerMenu { id: powerMenu }
+                active: !!root._loaded.powerMenu
+                sourceComponent: Component { PowerMenu {} }
             }
         }
 
@@ -394,24 +399,26 @@ PanelWindow {
             opacity: root.openContent === "audio" ? 1 : 0
             Behavior on opacity { NumberAnimation { duration: 150 } }
 
-            AudioControl {
-                id: audioControl
+            Loader {
+                id: audioLoader
                 x: root.px(10); y: root.px(6)
                 width:  root.audioWidth - root.px(16)
                 height: parent.height - root.px(12)
+                active: !!root._loaded.audio
+                sourceComponent: Component { AudioControl {} }
             }
 
             // Back to the default page once the close animation is done.
             Timer {
                 id: audioResetTimer
                 interval: Theme.animDuration + 20
-                onTriggered: audioControl.reset()
+                onTriggered: if (audioLoader.item) audioLoader.item.reset()
             }
             Connections {
                 target: Popups
                 function onAudioOpenChanged() {
                     if (!Popups.audioOpen) audioResetTimer.restart()
-                    else audioControl.page = Popups.audioPage
+                    else if (audioLoader.item) audioLoader.item.page = Popups.audioPage
                 }
             }
         }
@@ -428,11 +435,13 @@ PanelWindow {
             opacity: root.openContent === "notifications" ? 1 : 0
             Behavior on opacity { NumberAnimation { duration: 150 } }
 
-            NotificationList {
-                id: notifList
+            Loader {
+                id: notifLoader
                 x:     root.px(Theme.notchRadius + 4)
                 y:     root.px(4)
                 width: root.notifWidth - root.borderWidth - root.px(Theme.notchRadius + 8)
+                active: !!root._loaded.notifications
+                sourceComponent: Component { NotificationList { width: notifLoader.width } }
             }
         }
 
@@ -448,11 +457,12 @@ PanelWindow {
             opacity: root.openContent === "network" ? 1 : 0
             Behavior on opacity { NumberAnimation { duration: 150 } }
 
-            NetworkContent {
+            Loader {
                 x:      root.px(Theme.notchRadius)
                 width:  root.networkWidth - root.borderWidth - root.px(Theme.notchRadius) - root.px(7)
                 height: root.networkBottom - root.notchHeight - root.px(Theme.cornerRadius)
-                page:   Popups.networkPage || "wifi"
+                active: !!root._loaded.network
+                sourceComponent: Component { NetworkContent { page: Popups.networkPage || "wifi" } }
             }
         }
     }
@@ -473,12 +483,14 @@ PanelWindow {
             opacity: root.openContent === "dashboard" ? 1 : 0
             Behavior on opacity { NumberAnimation { duration: 150 } }
 
-            DashboardContent {
-                id: dashboardContent
+            Loader {
+                id: dashboardLoader
                 x:      root.px(8)
                 y:      root.px(Theme.notchRadius + 8)
                 width:  root.px(Popups.dashboardPageWidth) - root.px(16)
                 height: root.dashboardBottom - root.px(Theme.notchRadius + 16)
+                active: !!root._loaded.dashboard
+                sourceComponent: Component { DashboardContent {} }
             }
         }
 
@@ -494,15 +506,20 @@ PanelWindow {
             opacity: root.openContent === "wallpaper" ? 1 : 0
             Behavior on opacity { NumberAnimation { duration: 150 } }
 
-            WallpaperContent {
-                id: wallpaperContent
+            Loader {
+                id: wallpaperLoader
                 anchors.horizontalCenter: parent.horizontalCenter
                 y:      0
                 width:  root.wallpaperWidth + 2 * root.notchRadius
                 height: root.wallpaperHeight
-                fw:     root.notchRadius
-                fh:     root.notchRadius
-                open:   root.openContent === "wallpaper"
+                active: !!root._loaded.wallpaper
+                sourceComponent: Component {
+                    WallpaperContent {
+                        fw:   root.notchRadius
+                        fh:   root.notchRadius
+                        open: root.openContent === "wallpaper"
+                    }
+                }
             }
         }
 
@@ -518,14 +535,19 @@ PanelWindow {
             opacity: root.openContent === "clipboard" ? 1 : 0
             Behavior on opacity { NumberAnimation { duration: 150 } }
 
-            FocusScope {
-                id: clipboardScope
+            Loader {
+                id: clipboardLoader
                 x:      root.px(10)
                 y:      root.px(8)
                 width:  root.clipboardWidth - root.px(10)
                 height: root.clipboardHeight - root.px(16)
-                Keys.onEscapePressed: Popups.close("clipboard")
-                HistoryTab { anchors.fill: parent }
+                active: !!root._loaded.clipboard
+                sourceComponent: Component {
+                    FocusScope {
+                        Keys.onEscapePressed: Popups.close("clipboard")
+                        HistoryTab { anchors.fill: parent }
+                    }
+                }
             }
         }
     }
@@ -534,7 +556,7 @@ PanelWindow {
     Timer {
         id: dashboardResetTimer
         interval: Theme.animDuration + 20
-        onTriggered: dashboardContent.reset()
+        onTriggered: if (dashboardLoader.item) dashboardLoader.item.reset()
     }
     Connections {
         target: Popups
@@ -543,17 +565,30 @@ PanelWindow {
 
     // Hand the keyboard to the opened popup once the compositor has given it
     // to the surface.
-    onOpenContentChanged: if (hostedOpen) focusTimer.restart()
+    // Popup contents are created on this screen the first time they open there,
+    // then kept (re-creating the dashboard on every open would be slow).
+    property var _loaded: ({})
+    // (hostedOpen may not be re-evaluated yet inside this handler, so the
+    // check is done on openContent directly.)
+    onOpenContentChanged: {
+        if (hostedContents.indexOf(openContent) < 0) return
+        if (!_loaded[openContent]) {
+            const loaded = Object.assign({}, _loaded)
+            loaded[openContent] = true
+            _loaded = loaded
+        }
+        focusTimer.restart()
+    }
     onWantsKeyboardChanged: if (wantsKeyboard && !hostedOpen) focusTimer.restart()
     Timer {
         id: focusTimer
         interval: 50
         onTriggered: {
             switch (root.openContent) {
-            case "powerMenu": powerMenu.reset(); break
-            case "dashboard": dashboardContent.focusPage(); break
-            case "wallpaper": wallpaperContent.focusSearch(); break
-            case "clipboard": clipboardScope.forceActiveFocus(); break
+            case "powerMenu": if (powerLoader.item)     powerLoader.item.reset();          break
+            case "dashboard": if (dashboardLoader.item) dashboardLoader.item.focusPage();  break
+            case "wallpaper": if (wallpaperLoader.item) wallpaperLoader.item.focusSearch(); break
+            case "clipboard": if (clipboardLoader.item) clipboardLoader.item.forceActiveFocus(); break
             default:          popupScope.forceActiveFocus()
             }
         }
