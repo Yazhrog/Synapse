@@ -46,9 +46,31 @@ PanelWindow {
     exclusionMode: ExclusionMode.Ignore
     color:         "transparent"
 
-    WlrLayershell.layer:     WlrLayer.Top
+    // Overlay, like the legacy popups: Hyprland draws fullscreen windows above
+    // the Top layer, so popups and the OSD would be invisible (and the keyboard
+    // seemingly stuck) in a fullscreen app. On a screen showing a fullscreen
+    // window, the frame hides itself unless it has something to show.
+    WlrLayershell.layer:     WlrLayer.Overlay
     WlrLayershell.namespace: "synapse-frame"
     WlrLayershell.keyboardFocus: wantsKeyboard ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
+
+    // ── Fullscreen ───────────────────────────────────────────────────────────
+    readonly property var  _monitor: Hyprland.monitorFor(screen)
+    readonly property bool fullscreenHere: !!(_monitor && _monitor.activeWorkspace
+                                              && _monitor.activeWorkspace.hasFullscreen)
+    readonly property bool showingSomething: openContent !== "none" || quickShown || toastShown
+                                             || recOptions.visible
+    readonly property bool frameHidden: fullscreenHere && !showingSomething
+
+    Binding { target: root.contentItem; property: "opacity"; value: root.frameHidden ? 0 : 1 }
+
+    // hasFullscreen is only refreshed with the workspace list.
+    Connections {
+        target: Hyprland
+        function onRawEvent(event) {
+            if (event.name === "fullscreen") Hyprland.refreshWorkspaces()
+        }
+    }
 
     // ── Popup state for this screen (SurfaceState is global) ─────────────────
     readonly property string openRegion:
@@ -624,6 +646,7 @@ PanelWindow {
     Item { id: maskBottom; x: 0; y: root.height - root._edge; width: root.width; height: root._edge }
     Item { id: maskRecOptions; x: recOptions.x; y: recOptions.y
            width: recOptions.visible ? recOptions.width : 0; height: recOptions.visible ? recOptions.height : 0 }
+    Item { id: maskVisible; width: root.frameHidden ? 0 : root.width; height: root.frameHidden ? 0 : root.height }
     Item { id: maskShield; x: 0; y: 0; width: root.shieldActive ? root.width : 0; height: root.shieldActive ? root.height : 0 }
     Item { id: maskLeftNotch;   x: leftNotch.x;   y: 0; width: leftNotch.width;   height: root.notchBottom }
     Item { id: maskCenterNotch; x: centerNotch.x; y: 0; width: centerNotch.width; height: root.centerBottom }
@@ -651,5 +674,7 @@ PanelWindow {
         Region { item: cornerTrigger;   intersection: Intersection.Combine }
         Region { item: maskShield;      intersection: Intersection.Combine }
         Region { item: maskRecOptions;  intersection: Intersection.Combine }
+        // Hidden over a fullscreen window: take no input at all.
+        Region { item: maskVisible;     intersection: Intersection.Intersect }
     }
 }
