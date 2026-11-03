@@ -55,7 +55,7 @@ PopupWindow {
 		open:             Popups.audioOpen
 		hoverEnabled:     false
 		triggerHovered:   Popups.audioTriggerHovered
-		onCloseRequested: Popups.audioOpen = false
+		onCloseRequested: Popups.close("audio")
 
 		Connections {
 			target: Popups

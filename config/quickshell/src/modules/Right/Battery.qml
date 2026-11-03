@@ -19,9 +19,7 @@ Item {
     MouseArea {
         anchors.fill: parent
         onClicked: {
-            var next = !Popups.batteryOpen
-            Popups.closeAll()
-            Popups.batteryOpen = next
+            Popups.toggle("battery")
         }
     }
 }

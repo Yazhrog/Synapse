@@ -36,7 +36,7 @@ Column {
     Keys.onDownPressed:   root.selIndex = (root.selIndex >= root.actions.length - 1) ? 0 : root.selIndex + 1
     Keys.onReturnPressed: root.activate(root.actions[root.selIndex])
     Keys.onEnterPressed:  root.activate(root.actions[root.selIndex])
-    Keys.onEscapePressed: Popups.archMenuOpen = false
+    Keys.onEscapePressed: Popups.close("powerMenu")
     Keys.onPressed: function(event) {
         if (event.key === Qt.Key_PageUp) {
             root.selIndex = 0
@@ -108,7 +108,7 @@ Column {
             case "suspend": runner.pendingCmd = ["systemctl", "suspend"];        break
         }
         runner.running = true
-        Popups.archMenuOpen = false
+        Popups.close("powerMenu")
     }
 
     Repeater {

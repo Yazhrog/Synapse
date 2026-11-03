@@ -100,9 +100,8 @@ Item {
                 anchors.fill: parent
                 cursorShape: Qt.PointingHandCursor
                 onClicked: {
-                    Popups.closeAll()
                     Popups.networkPage = "wifi"
-                    Popups.networkOpen = true
+                    Popups.open("network")
                 }
             }
         }
@@ -121,9 +120,8 @@ Item {
                 anchors.fill: parent
                 cursorShape: Qt.PointingHandCursor
                 onClicked: {
-                    Popups.closeAll()
                     Popups.networkPage = "vpn"
-                    Popups.networkOpen = true
+                    Popups.open("network")
                 }
             }
         }
@@ -140,9 +138,8 @@ Item {
                 anchors.fill: parent
                 cursorShape: Qt.PointingHandCursor
                 onClicked: {
-                    Popups.closeAll()
                     Popups.networkPage = "bluetooth"
-                    Popups.networkOpen = true
+                    Popups.open("network")
                 }
             }
         }
@@ -159,9 +156,8 @@ Item {
                 anchors.fill: parent
                 cursorShape: Qt.PointingHandCursor
                 onClicked: {
-                    Popups.closeAll()
                     Popups.networkPage = "hotspot"
-                    Popups.networkOpen = true
+                    Popups.open("network")
                 }
             }
         }

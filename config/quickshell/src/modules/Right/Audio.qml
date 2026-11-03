@@ -74,9 +74,7 @@ Item {
                 if (root.sink?.ready)
                     root.sink.audio.muted = !root.sink.audio.muted
             } else {
-                var next = !Popups.audioOpen
-                Popups.closeAll()
-                Popups.audioOpen = next
+                Popups.toggle("audio")
             }
         }
     }

@@ -46,7 +46,7 @@ PanelWindow {
         interval: Popups.hoverCloseDelay
         onTriggered: {
             if (root.allowHover && !Popups.wallpaperTriggerHovered && !root.selfHovered)
-                Popups.wallpaperOpen = false
+                Popups.close("wallpaper")
         }
     }
 
@@ -62,7 +62,7 @@ PanelWindow {
         screen:       root.hostScreen
         active:       Popups.wallpaperOpen
         onFocused:    searchInput.forceActiveFocus()
-        onDismissed:  Popups.wallpaperOpen = false
+        onDismissed:  Popups.close("wallpaper")
     }
 
     Connections {
@@ -74,7 +74,7 @@ PanelWindow {
                     if (!Popups.wallpaperOpen) {
                         closeTimer.stop()
                         root.windowVisible           = true
-                        Popups.wallpaperOpen         = true
+                        Popups.open("wallpaper")
                         WallpaperService.refresh()
                         WallpaperService.previewWall = ""
                         content.schemePopupOpen      = false
@@ -141,7 +141,7 @@ PanelWindow {
 
     MouseArea {
         anchors.fill: parent
-        onClicked:    Popups.wallpaperOpen = false
+        onClicked:    Popups.close("wallpaper")
     }
 
     Item {
@@ -335,7 +335,7 @@ PanelWindow {
                             if (cardDelegate.isPreview) {
                                 content.appliedScheme = WallpaperService.scheme
                                 WallpaperService.apply(cardDelegate.modelData)
-                                Popups.wallpaperOpen = false
+                                Popups.close("wallpaper")
                             } else {
                                 WallpaperService.previewWall = cardDelegate.modelData
                             }
@@ -475,7 +475,7 @@ PanelWindow {
                                     var target = previewInSearch ? WallpaperService.previewWall : walls[0]
                                     content.appliedScheme = WallpaperService.scheme
                                     WallpaperService.apply(target)
-                                    Popups.wallpaperOpen = false
+                                    Popups.close("wallpaper")
                                 }
                                 Keys.onLeftPressed: {
                                     var walls = content.filteredWallpapers
@@ -640,7 +640,7 @@ PanelWindow {
                                 ? WallpaperService.previewWall : WallpaperService.currentWall
                             content.appliedScheme = WallpaperService.scheme
                             WallpaperService.apply(target)
-                            Popups.wallpaperOpen = false
+                            Popups.close("wallpaper")
                         }
                     }
                 }
