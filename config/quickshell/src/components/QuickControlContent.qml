@@ -2,46 +2,16 @@ import QtQuick
 import Quickshell
 import Quickshell.Io
 import Quickshell.Services.Pipewire
-import "../shapes"
-import "../components"
-import "../services"
 import "../"
 
-PopupWindow {
+// QuickControlContent — the volume and brightness sliders of the Quick
+// Controls OSD, with their state (default sink, brightnessctl polling).
+// Hosted by the right-center region of DynamicSurface.
+Item {
     id: root
 
-    required property var anchorWindow
-
-    // ── Config ────────────────────────────────────────────────────────────────
-    readonly property int fw: Theme.cornerRadius
-    readonly property int fh: Theme.cornerRadius
-    readonly property int popupHeight: 340
-    readonly property int popupWidth:  180 // Thinner than the 300px AudioPopup
-
-    color:   "transparent"
-    visible: slide.windowVisible
-    mask:    Region { item: maskProxy }
-
-    // ── Position: Right Center ────────────────────────────────────────────────
-    anchor.window:  anchorWindow
-    anchor.rect: Qt.rect(
-        anchorWindow.width - root.fw,
-        (root.screen.height + root.fh + 5)/2,
-        0,
-        0
-    )
-    anchor.gravity: Edges.Right
-    
-    Item {
-        id:      maskProxy
-        x:       root.popupWidth - sizer.width
-        y:       ((root.popupHeight - sizer.height) / 2) - root.fh
-        width:   sizer.width
-        height:  sizer.height
-    }
-
-    implicitWidth:  popupWidth
-    implicitHeight: popupHeight
+    // Poll brightness fast while shown, so the slider follows the keys.
+    property bool fastPoll: false
 
     // ── Audio State ───────────────────────────────────────────────────────────
     readonly property var sink: Pipewire.defaultAudioSink
@@ -90,7 +60,7 @@ PopupWindow {
         // Poll fast while the OSD is actually visible (e.g. holding the
         // brightness key) so the slider tracks external changes without
         // a laggy catch-up; idle otherwise to avoid needless polling.
-        interval: root.visible ? 100 : 1000
+        interval: root.fastPoll ? 100 : 1000
         running:  true
         repeat:   true
         onTriggered: if (!root._bBusy) brightRead.running = true
@@ -103,80 +73,41 @@ PopupWindow {
         bDebounce.restart()
     }
 
-    // ── Layout ────────────────────────────────────────────────────────────────
-    PopupSlide {
-        id: slide
-        anchors.fill:     parent
-        edge:             "right"
-        open:             Popups.quickOpen 
-        hoverEnabled:     true
-        triggerHovered:   Popups.quickTriggerHovered 
-        onCloseRequested: Popups.quickOpen = false
+    // ── Sliders Layout ────────────────────────────────────────────────
+    Row {
+        anchors.fill: parent
+        spacing: 8
 
-        Item {
-            id: sizer
-            anchors.right:          parent.right
-            anchors.verticalCenter: parent.verticalCenter
-            clip: true
-
-            width:  root.popupWidth
-            height: root.popupHeight
-
-            Behavior on width { NumberAnimation { duration: Theme.animDuration; easing.type: Easing.InOutCubic } }
-
-            PopupShape {
-                id: bg
-                anchors.fill: parent
-                attachedEdge: "right"
-                color:        Theme.background
-                radius:       Theme.cornerRadius
-                flareWidth:   root.fw
-                flareHeight:  root.fh
+        // Audio Slider
+        ChannelColumn {
+            icon: {
+                if (!root.sink?.ready)            return "󰕾"
+                if (root.sink.audio.muted)        return "󰖁"
+                if (root.sink.audio.volume > 0.6) return "󰕾"
+                if (root.sink.audio.volume > 0.2) return "󰖀"
+                return "󰕿"
             }
+            value:  root.sink?.ready ? root.sink.audio.volume : 0
+            muted:  root.sink?.audio.muted ?? false
+            active: root.sink?.ready ?? false
 
-            // ── Sliders Layout ────────────────────────────────────────────────
-            Row {
-                anchors {
-                    fill:         parent
-                    topMargin:    root.fh + 30
-                    leftMargin:   8
-                    rightMargin:  8
-                }
-                spacing: 8 
-                anchors.horizontalCenter: parent.horizontalCenter
+            onVolumeChanged: function(v) {
+                if (root.sink?.ready) root.sink.audio.volume = v
+            }
+            onMuteToggled: {
+                if (root.sink?.ready) root.sink.audio.muted = !root.sink.audio.muted
+            }
+        }
 
-                // Audio Slider
-                ChannelColumn {
-                    icon: {
-                        if (!root.sink?.ready)            return "󰕾"
-                        if (root.sink.audio.muted)        return "󰖁"
-                        if (root.sink.audio.volume > 0.6) return "󰕾"
-                        if (root.sink.audio.volume > 0.2) return "󰖀"
-                        return "󰕿"
-                    }
-                    value:  root.sink?.ready ? root.sink.audio.volume : 0
-                    muted:  root.sink?.audio.muted ?? false
-                    active: root.sink?.ready ?? false
-                    
-                    onVolumeChanged: function(v) {
-                        if (root.sink?.ready) root.sink.audio.volume = v
-                    }
-                    onMuteToggled: {
-                        if (root.sink?.ready) root.sink.audio.muted = !root.sink.audio.muted
-                    }
-                }
+        // Brightness Slider
+        ChannelColumn {
+            icon:   "󰃠"
+            value:  root._bVal 
+            muted:  false
+            active: true
 
-                // Brightness Slider
-                ChannelColumn {
-                    icon:   "󰃠"
-                    value:  root._bVal 
-                    muted:  false
-                    active: true
-                    
-                    onVolumeChanged: function(v) {
-                        root.setBrightness(v)
-                    }
-                }
+            onVolumeChanged: function(v) {
+                root.setBrightness(v)
             }
         }
     }

@@ -7,7 +7,7 @@ import "../"
 //              "vertical"             — Column, fills parent height, tabs spaced equally
 //
 // Horizontal: icon + label pill, bottom divider. Used by Dashboard.
-// Vertical:   icon-only solid pill. Used by ArchMenu.
+// Vertical:   icon-only solid pill. Used by the Config page.
 //
 // Model: [{ key: string, icon: string, label?: string }]
 // label is optional — only rendered in horizontal orientation.

@@ -1,4 +1,5 @@
 import QtQuick
+import Quickshell
 import Quickshell.Services.Pipewire
 import "../../components"
 import "../../"
@@ -74,9 +75,7 @@ Item {
                 if (root.sink?.ready)
                     root.sink.audio.muted = !root.sink.audio.muted
             } else {
-                var next = !Popups.audioOpen
-                Popups.closeAll()
-                Popups.audioOpen = next
+                Popups.toggle("audio", QsWindow.window?.screen?.name ?? "")
             }
         }
     }

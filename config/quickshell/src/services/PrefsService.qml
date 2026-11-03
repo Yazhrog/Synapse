@@ -26,11 +26,16 @@ Singleton {
     id: root
 
     readonly property var defaults: ({
-        autoUpdate: true
+        autoUpdate:   true,
+        // Dynamic Surface scale: "off" (1.0), "auto" (screen height / 1080)
+        // or a fixed factor such as "1.25". Off by default: only the frame and
+        // region sizes scale yet, not the popup contents.
+        surfaceScale: "off"
     })
 
     // ── Preferences ────────────────────────────────────────────────────────
-    property alias autoUpdate: adapter.autoUpdate
+    property alias autoUpdate:   adapter.autoUpdate
+    property alias surfaceScale: adapter.surfaceScale
 
     // True once the file has been read (or created). Services that act on a
     // pref at startup should wait for it.
@@ -77,7 +82,8 @@ Singleton {
 
         JsonAdapter {
             id: adapter
-            property bool autoUpdate: root.defaults.autoUpdate
+            property bool   autoUpdate:   root.defaults.autoUpdate
+            property string surfaceScale: root.defaults.surfaceScale
         }
     }
 
