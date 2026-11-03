@@ -63,9 +63,7 @@ PanelWindow {
     property int rWidth: Math.max(
         Theme.rNotchMinWidth,
         Math.min(Theme.rNotchMaxWidth, rightContent.implicitWidth + Theme.notchPadding * 2))
-    Behavior on rWidth {
-        NumberAnimation { duration: Theme.animDuration; easing.type: Easing.InOutCubic }
-    }
+    // Not animated, like TopBar: only popup states (#41) will animate it.
 
     Binding { target: ShellState; property: "topBarLWidth"; value: root.lWidth }
     Binding { target: ShellState; property: "topBarCWidth"; value: root.cWidth }
