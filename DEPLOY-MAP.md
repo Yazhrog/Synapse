@@ -149,7 +149,8 @@ sourced by `hyprlock.conf`.
 | `.../user_data/app_pins.json` | AppPinService |
 | `.../user_data/tasks.json` | KanbanBoard |
 | `.../user_data/hotspot.json` | QuickSettings / HotspotTab |
-| `.../user_data/update_prefs.json` | UpdateService |
+| `.../user_data/shell_prefs.json` | PrefsService (shell preferences) |
+| `.../user_data/update_prefs.json` | Legacy: read once by PrefsService to migrate `autoUpdate` |
 | `.../user_data/screenrec.json` | ScreenRecService |
 | `.../user_data/keybinds.json` | KeybindService |
 | `.../user_data/config_Provider.json` | Shell bootstrap |
