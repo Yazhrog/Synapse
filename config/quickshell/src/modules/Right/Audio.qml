@@ -7,7 +7,8 @@ import "../../"
 Item {
     id: root
 
-    property bool showPercentage: false
+    // Always show the percentage beside the icon; otherwise only on hover.
+    property bool showPercentage: PrefsService.alwaysShowVolumePercentage
 
     implicitWidth:  row.implicitWidth + 6
     implicitHeight: row.implicitHeight

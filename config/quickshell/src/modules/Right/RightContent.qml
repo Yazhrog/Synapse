@@ -30,12 +30,14 @@ Item {
         visible: opacity > 0
         Behavior on opacity { NumberAnimation { duration: 150 } }
 
-        Network{}
-        Audio{}
-        Battery{}
-        Clock{}
-        SysTray{}
-        Notifications{}
+        // A Row top-aligns its children: center each one, so items shorter
+        // than the tallest icon (e.g. the battery) line up with the others.
+        Network       { anchors.verticalCenter: parent.verticalCenter }
+        Audio         { anchors.verticalCenter: parent.verticalCenter }
+        Battery       { anchors.verticalCenter: parent.verticalCenter }
+        Clock         {}
+        SysTray       { anchors.verticalCenter: parent.verticalCenter }
+        Notifications { anchors.verticalCenter: parent.verticalCenter }
     }
 
     // ── Open indicator — fades in when any right popup opens ──────────────────

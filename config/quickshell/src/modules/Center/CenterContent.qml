@@ -328,6 +328,7 @@ Item {
 
 					Item {
 						id: barsArea
+						visible: CavaService.enabled
 						anchors {
 							left:        parent.left
 							leftMargin:  parent.artPad + parent.artSize + 5

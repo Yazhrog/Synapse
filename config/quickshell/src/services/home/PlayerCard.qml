@@ -456,6 +456,7 @@ Item {
 
     // ── Cava bars — independent, always flush with the card bottom ────────────
     Item {
+        visible: CavaService.enabled
         anchors { left: parent.left; right: parent.right; bottom: parent.bottom }
         height: 32
         Row {

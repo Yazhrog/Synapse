@@ -116,6 +116,63 @@ test("focus mode (notchBottom = t) stays valid", () => {
     assert.ok(filled(d, 960, 3), "top strip")
 })
 
+test("border width and corner radius extremes (Config → Appearance)", () => {
+    for (const t of [0, 16]) for (const R of [0, 30]) {
+        // The notch radius follows the corner radius (Metrics.notchRadius).
+        const g = { ...base, t, R, r: Math.round(R * 15 / 17), bottomCenter: { width: 980, height: 420 } }
+        const d = build(g)
+        assert.ok(!/NaN|Infinity|undefined/.test(d), `t=${t} R=${R}`)
+        assert.ok(filled(d, 960, 20), `center notch t=${t} R=${R}`)
+        assert.ok(filled(d, 960, 1000), `bottom panel t=${t} R=${R}`)
+        assert.ok(!filled(d, 400, 500), `hole t=${t} R=${R}`)
+        if (t > 0) assert.ok(filled(d, t / 2, 500), `left border t=${t} R=${R}`)
+        const clip = build({ ...g, bottomRight: { width: 420, height: 560 } })
+        assert.ok(filled(clip, 1700, 800), `clipboard panel t=${t} R=${R}`)
+        assert.equal((clip.match(/M /g) || []).length, 2, `two loops with the clipboard t=${t} R=${R}`)
+    }
+})
+
+test("bar style: full-width bar, square ends, popups grow from its bottom", () => {
+    const bar = { ...base, style: "bar", t: 0 }
+    const d = build(bar)
+    assert.ok(!/NaN|Infinity|undefined/.test(d))
+    assert.equal((d.match(/M /g) || []).length, 2)
+    assert.ok(filled(d, 1, 20) && filled(d, 1919, 20), "bar reaches both screen edges")
+    assert.ok(filled(d, 600, 38), "bar between the notches")
+    assert.ok(filled(d, 0.5, 39.5) && filled(d, 1919.5, 39.5), "square ends")
+    assert.ok(!filled(d, 960, 45), "nothing below the closed bar")
+    assert.ok(!filled(d, 2, 1078) && !filled(d, 1918, 1078), "no borders, square screen corners")
+    const open = build({ ...bar, center: { width: 900, bottom: 520 }, right: { width: 495, bottom: 633 } })
+    assert.ok(filled(open, 960, 500), "dashboard below the bar")
+    assert.ok(filled(open, 1700, 600) && filled(open, 1919, 600), "network down the right edge")
+    assert.ok(!filled(open, 960, 540), "below the dashboard")
+    assert.ok(!filled(open, 300, 300), "hole")
+})
+
+test("pills style: three floating capsules, cards for the other regions", () => {
+    const pills = { ...base, style: "pills", t: 6 }
+    const d = build(pills)
+    assert.ok(!/NaN|Infinity|undefined/.test(d))
+    assert.equal((d.match(/M /g) || []).length, 3)
+    assert.ok(filled(d, 130, 23) && filled(d, 960, 23) && filled(d, 1770, 23), "the three pills")
+    assert.ok(!filled(d, 130, 3), "gap above the pills")
+    assert.ok(!filled(d, 2, 23) && !filled(d, 1918, 23), "gap at the screen edges")
+    assert.ok(!filled(d, 600, 23), "gap between the pills")
+    assert.ok(!filled(d, 7, 7), "round ends")
+    assert.ok(!filled(d, 3, 500) && !filled(d, 960, 1078), "no borders")
+    const open = build({ ...pills, center: { width: 900, bottom: 520 },
+                         leftCenter: { depth: 228, height: 270 }, bottomCenter: { width: 980, height: 420 } })
+    assert.ok(filled(open, 960, 500), "dashboard panel grown from the center pill")
+    assert.ok(filled(open, 100, 540) && !filled(open, 2, 540), "power menu card off the edge")
+    assert.ok(filled(open, 960, 1000) && !filled(open, 960, 1078), "wallpaper card above the gap")
+    assert.equal((open.match(/M /g) || []).length, 5)
+    assert.equal(build({ ...pills, notchBottom: 6 }), "", "focus mode: nothing to draw")
+    const focusDash = build({ ...pills, notchBottom: 6, center: { width: 900, bottom: 520 } })
+    assert.equal((focusDash.match(/M /g) || []).length, 1, "focus mode: the dashboard panel is still drawn")
+    assert.ok(filled(focusDash, 960, 500) && filled(focusDash, 960, 10), "focus mode dashboard panel")
+    assert.ok(!/NaN|Infinity|undefined/.test(focusDash))
+})
+
 test("degenerate sizes return empty or valid path", () => {
     assert.equal(build({ ...base, width: 0 }), "")
     assert.ok(!/NaN/.test(build({ width: 800, height: 600 })))

@@ -89,11 +89,12 @@ StatCard {
             }
 
             Image {
+                id: avatarImg
                 anchors.fill: parent
                 source:   root.avatarPath !== "" ? ("file://" + root.avatarPath) : ""
                 fillMode: Image.PreserveAspectCrop
                 smooth:   true
-                visible:  root.avatarPath !== ""
+                visible:  root.avatarPath !== "" && status !== Image.Error
                 layer.enabled: true
                 layer.effect: MultiEffect {
                     maskEnabled:      true
@@ -108,7 +109,7 @@ StatCard {
                 text:           "󰀄"
                 font.pixelSize: 28
                 color:          Theme.active
-                visible:        root.avatarPath === ""
+                visible:        !avatarImg.visible
             }
         }
 

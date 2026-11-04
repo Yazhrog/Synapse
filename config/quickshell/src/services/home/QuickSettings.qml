@@ -432,45 +432,6 @@ StatCard {
     }
 
     // ─────────────────────────────────────────────────────────────────────────
-    //  Focus Mode  (hyprctl gaps)
-    // ─────────────────────────────────────────────────────────────────────────
-    property int _savedGapsIn: 5; property int _savedGapsOut: 10
-
-    Process { id: readGapsIn
-        command: ["bash", "-c",
-            "hyprctl getoption general:gaps_in -j | python3 -c \"import sys,json; d=json.load(sys.stdin); print(d.get('int',5))\""]
-        running: false
-        stdout: SplitParser { onRead: function(l) { var v=parseInt(l.trim()); if(!isNaN(v)) root._savedGapsIn=v } }
-        onRunningChanged: if (!running) readGapsOut.running = true }
-    Process { id: readGapsOut
-        command: ["bash", "-c",
-            "hyprctl getoption general:gaps_out -j | python3 -c \"import sys,json; d=json.load(sys.stdin); print(d.get('int',10))\""]
-        running: false
-        stdout: SplitParser { onRead: function(l) { var v=parseInt(l.trim()); if(!isNaN(v)) root._savedGapsOut=v } }
-        onRunningChanged: if (!running) applyFocusGaps.running = true }
-    Process { id: applyFocusGaps
-        command: ["bash", "-c",
-            "hyprctl keyword general:gaps_in 0 && hyprctl keyword general:gaps_out 10"]
-        running: false; onRunningChanged: if (!running) ShellState.focusMode = true }
-    Process { id: restoreGaps; command: []; running: false
-        onRunningChanged: if (!running) ShellState.focusMode = false }
-    function _focusToggle() {
-        if (ShellState.focusMode) {
-            restoreGaps.command = ["bash", "-c",
-                "hyprctl keyword general:gaps_in "  + root._savedGapsIn  +
-                " && hyprctl keyword general:gaps_out " + root._savedGapsOut]
-            restoreGaps.running = false; restoreGaps.running = true
-        } else { readGapsIn.running = false; readGapsIn.running = true }
-    }
-    
-    Connections {
-        target: IpcManager
-        function onFocusToggleRequested() {
-            root._focusToggle()
-        }
-    }
-
-// ─────────────────────────────────────────────────────────────────────────
     //  Filter  (Native Hyprland Lua)
     //
     //  Tile click: runs bash `find`, opens picker popup above the tile.
@@ -827,7 +788,7 @@ StatCard {
                         width: tileGrid.btnW; height: tileGrid.btnH
                         on: ShellState.focusMode
                         icon: ShellState.focusMode ? "󱃕" : "󰍻"; label: "Focus Mode"
-                        onToggled: root._focusToggle()
+                        onToggled: FocusModeService.toggle()
                     }
                     TglBtn {
                         width: tileGrid.btnW; height: tileGrid.btnH

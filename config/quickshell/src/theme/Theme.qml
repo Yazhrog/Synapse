@@ -27,6 +27,11 @@ QtObject {
     
     property int borderWidth:   Metrics.borderWidth
     property int cornerRadius:  Metrics.cornerRadius
+    property string barStyle:   Metrics.barStyle
+    // Alpha of the frame (bar, borders, popups) — Config → Appearance.
+    property real backgroundOpacity: Metrics.backgroundOpacity
+    property color surfaceBackground: Qt.rgba(background.r, background.g, background.b,
+                                              background.a * backgroundOpacity)
     property int notchRadius:   Metrics.notchRadius
     property int notchHeight:   Metrics.notchHeight
     property int exclusionGap:  Metrics.exclusionGap

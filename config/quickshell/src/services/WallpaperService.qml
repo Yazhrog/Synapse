@@ -22,15 +22,18 @@ QtObject {
     readonly property string _wallDir:        Paths.wallpaperDir
     readonly property string _currWall:       _wallDir + "/curr_wall"
     readonly property string _currWallStatic: _wallDir + "/curr_wall_static.jpg"
+    readonly property string defaultWall:     Quickshell.shellDir + "/src/assets/wallpapers/synapse-default-0.png"
+    readonly property string defaultWallpaperDir: "~/Pictures/Wallpapers"
+    readonly property string defaultScheme:   "content"
 
     // ── State ─────────────────────────────────────────────────────────────────
     property var    wallpapers:   []
     property var    tempWalls:   []
     property string currentWall:  ""
     property string previewWall:  ""
-    property string scheme:       "content"
+    property string scheme:       defaultScheme
     property bool   applying:     false
-    property string wallpaperDir: "~/Pictures/Wallpapers"
+    property string wallpaperDir: defaultWallpaperDir
 
     readonly property var schemes: [
         "content", "tonal-spot", "fidelity", "fruit-salad", "neutral", "monochrome"
@@ -38,6 +41,8 @@ QtObject {
 
     // Emitted when the full apply pipeline exits cleanly (exitCode === 0).
     signal wallpaperApplied(string path)
+    // Every apply ends with this, successful or not.
+    signal applyFinished(bool ok)
 
     // ── File listing ──────────────────────────────────────────────────────────
     function refresh() {
@@ -81,12 +86,22 @@ QtObject {
                     if (obj.scheme       && obj.scheme       !== "") root.scheme       = obj.scheme
                 } catch(e) {}
             }
-            if (root.currentWall === "") {
-                var defaultWall = Quickshell.shellDir + "/src/assets/wallpapers/synapse-default-0.png"
-                root.apply(defaultWall)
-            }
+            if (root.currentWall === "") root.apply(root.defaultWall)
             root.refresh()
         }
+    }
+
+    // ── Reset (Config → Data & Storage) ──────────────────────────────────────
+    // Default wallpaper, folder and scheme; wallpaper.json is rewritten once
+    // the default wallpaper is applied. Returns false (and changes nothing)
+    // while another apply is running; applyFinished reports the result.
+    function resetToDefaults() {
+        if (root.applying) return false
+        root.scheme       = root.defaultScheme
+        root.wallpaperDir = root.defaultWallpaperDir
+        root.apply(root.defaultWall)
+        root.refresh()
+        return true
     }
 
     // ── Config write — called after a successful apply ────────────────────────
@@ -101,7 +116,7 @@ QtObject {
         saveConfigProc.command = [
             "bash", "-c",
             "mkdir -p \"$(dirname '" + root.configPath + "')\" && " +
-            "printf '%s' '" + json.replace(/'/g, "'\\''") + "' > '" + root.configPath + "'"
+            "printf '%s' " + Paths.shellQuote(json) + " > " + Paths.shellQuote(root.configPath)
         ]
         saveConfigProc.running = true
     }
@@ -130,6 +145,7 @@ QtObject {
     property Process applyProc: Process {
         onExited: function(exitCode, exitStatus) {
             root.applying = false
+            root.applyFinished(exitCode === 0)
             if (exitCode === 0) {
                 root.wallpaperApplied(root.currentWall)
                 root.saveConfig()

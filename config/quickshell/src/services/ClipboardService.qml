@@ -35,7 +35,7 @@ QtObject {
         var json = JSON.stringify(root.pinned)
         _savePinsProc.command = ["bash", "-c",
             "mkdir -p \"$(dirname '" + root._pinsPath + "')\" && " +
-            "printf '%s' '" + json.replace(/'/g, "'\\''") + "' > '" + root._pinsPath + "'"]
+            "printf '%s' " + Paths.shellQuote(json) + " > " + Paths.shellQuote(root._pinsPath)]
         _savePinsProc.running = false
         _savePinsProc.running = true
     }
@@ -193,6 +193,13 @@ QtObject {
     function wipeHistory() {
         _wipeProc.running = false
         _wipeProc.running = true
+    }
+
+    // History and pins (Config → Data & Storage).
+    function wipeAll() {
+        root.pinned = []
+        root._savePins()
+        root.wipeHistory()
     }
 
     // ── Wipe on Quickshell close ───────────────────────────────────────────────
