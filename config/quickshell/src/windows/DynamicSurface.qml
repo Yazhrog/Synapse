@@ -71,20 +71,35 @@ PanelWindow {
     readonly property bool wantsKeyboard: openSpec !== null || (recSetup && _focusedHere)
 
     // ── Fullscreen ───────────────────────────────────────────────────────────
+    // Only a real fullscreen window hides the frame, not a maximized one:
+    // Hyprland's hasfullscreen is true for both, so look at the windows'
+    // fullscreen mode (a bitmask: 1 maximized, 2 fullscreen).
     readonly property var  _monitor: Hyprland.monitorFor(screen)
-    readonly property bool fullscreenHere: !!(_monitor && _monitor.activeWorkspace
-                                              && _monitor.activeWorkspace.hasFullscreen)
+    readonly property bool fullscreenHere: {
+        const ws = _monitor ? _monitor.activeWorkspace : null
+        if (!ws || !ws.hasFullscreen) return false
+        const wins = ws.toplevels ? ws.toplevels.values : []
+        for (let i = 0; i < wins.length; i++) {
+            const ipc = wins[i].lastIpcObject
+            if (ipc && ((ipc.fullscreen ?? 0) & 2)) return true
+        }
+        return false
+    }
     readonly property bool showingSomething: openContent !== "none" || quickShown || toastShown
                                              || recOptions.visible
     readonly property bool frameHidden: fullscreenHere && !showingSomething
 
     Binding { target: root.contentItem; property: "opacity"; value: root.frameHidden ? 0 : 1 }
 
-    // hasFullscreen is only refreshed with the workspace list.
+    // hasFullscreen is only refreshed with the workspace list, and each
+    // window's fullscreen mode with the toplevel list.
     Connections {
         target: Hyprland
         function onRawEvent(event) {
-            if (event.name === "fullscreen") Hyprland.refreshWorkspaces()
+            if (event.name === "fullscreen") {
+                Hyprland.refreshWorkspaces()
+                Hyprland.refreshToplevels()
+            }
         }
     }
 
