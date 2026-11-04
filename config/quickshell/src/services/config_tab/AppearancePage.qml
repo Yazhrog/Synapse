@@ -50,9 +50,9 @@ Item {
 
             SettingsDropdown {
                 label:       "Bar style"
-                description: PrefsService.barStyle === "pills"
+                description: Theme.barStyle === "pills"
                     ? "Floating capsules; popups grow out of them."
-                    : PrefsService.barStyle === "bar"
+                    : Theme.barStyle === "bar"
                         ? "One full-width bar along the top, no borders."
                         : "Notches joined by the borders around the screen."
                 prefKey:     "barStyle"
@@ -67,11 +67,11 @@ Item {
 
             SettingsSlider {
                 label:       "Border width"
-                description: PrefsService.barStyle === "frame"
+                description: Theme.barStyle === "frame"
                     ? "Of the side and bottom borders. 0 hides them."
                     : "Only in the Frame style."
                 prefKey:     "borderWidth"
-                enabled:     PrefsService.barStyle === "frame"
+                enabled:     Theme.barStyle === "frame"
                 opacity:     enabled ? 1 : 0.45
                 from:        0
                 to:          16

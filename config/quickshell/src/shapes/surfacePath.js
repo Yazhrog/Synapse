@@ -281,18 +281,20 @@ function _buildPills(geo, W, H) {
     const MIN = 1                        // below this a shape isn't drawn
 
     const top = name => geo[name] || {}
+    // In focus mode the capsules are 0 tall (h = g) and only a popup grown
+    // out of one is drawn; its top corners then ease in to R as well.
     const pill = (x0, x1, bottom) => {
-        if (ph < MIN || x1 - x0 < MIN) return
-        const y1 = Math.max(h, bottom)
-        const grow = Math.max(0, Math.min(1, (y1 - h) / Math.max(ph, EPS)))
-        loops.push(_roundRect(x0, g, x1, y1, pr, pr + (Rm - pr) * grow))
+        const y1 = Math.max(h, _num(bottom, h))
+        if (y1 - g < MIN || x1 - x0 < MIN) return
+        const grow = Math.max(0, Math.min(1, (y1 - h) / Math.max(ph, 2 * pr, Rm, MIN)))
+        loops.push(_roundRect(x0, g, x1, y1, Math.max(pr, Rm * grow), pr + (Rm - pr) * grow))
     }
     const lW = _num(top("left").width, 0)
     const cW = _num(top("center").width, 0)
     const rW = _num(top("right").width, 0)
-    pill(g, lW, _num(top("left").bottom, h))
-    pill(W / 2 - cW / 2, W / 2 + cW / 2, _num(top("center").bottom, h))
-    pill(W - rW, W - g, _num(top("right").bottom, h))
+    pill(g, lW, top("left").bottom)
+    pill(W / 2 - cW / 2, W / 2 + cW / 2, top("center").bottom)
+    pill(W - rW, W - g, top("right").bottom)
 
     const card = (x0, y0, x1, y1) => {
         if (x1 - x0 < MIN || y1 - y0 < MIN) return

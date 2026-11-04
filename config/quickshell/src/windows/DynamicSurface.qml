@@ -99,8 +99,7 @@ PanelWindow {
     // frame's border; there are no borders in bar, and in pills it's the gap
     // between the floating shapes and the screen edges, so every region rect
     // and placement below works unchanged in the three styles.
-    readonly property string barStyle: ["frame", "bar", "pills"].indexOf(PrefsService.barStyle) >= 0
-                                       ? PrefsService.barStyle : "frame"
+    readonly property string barStyle: Theme.barStyle
     readonly property bool   framed:   barStyle === "frame"
     readonly property bool   pills:    barStyle === "pills"
     readonly property int borderWidth:  framed ? px(Theme.borderWidth)
@@ -652,7 +651,8 @@ PanelWindow {
     // The screen edges only take clicks where there is a border (frame) or
     // the bar (bar); in pills the gaps let clicks through.
     readonly property int _edge:    framed ? Math.max(1, borderWidth) : 0
-    readonly property int _topEdge: barStyle === "bar" ? Math.ceil(notchBottom) : _edge
+    // At least 1 px, so the focus-mode dashboard strip stays clickable.
+    readonly property int _topEdge: barStyle === "bar" ? Math.max(1, Math.ceil(notchBottom)) : _edge
 
     component RegionMask: Item {
         property rect r

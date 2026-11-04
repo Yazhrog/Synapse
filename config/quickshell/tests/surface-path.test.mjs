@@ -167,6 +167,10 @@ test("pills style: three floating capsules, cards for the other regions", () => 
     assert.ok(filled(open, 960, 1000) && !filled(open, 960, 1078), "wallpaper card above the gap")
     assert.equal((open.match(/M /g) || []).length, 5)
     assert.equal(build({ ...pills, notchBottom: 6 }), "", "focus mode: nothing to draw")
+    const focusDash = build({ ...pills, notchBottom: 6, center: { width: 900, bottom: 520 } })
+    assert.equal((focusDash.match(/M /g) || []).length, 1, "focus mode: the dashboard panel is still drawn")
+    assert.ok(filled(focusDash, 960, 500) && filled(focusDash, 960, 10), "focus mode dashboard panel")
+    assert.ok(!/NaN|Infinity|undefined/.test(focusDash))
 })
 
 test("degenerate sizes return empty or valid path", () => {

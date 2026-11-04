@@ -15,6 +15,10 @@ QtObject {
     property int  cornerRadius:      PrefsService.cornerRadius
     property real backgroundOpacity: PrefsService.backgroundOpacity / 100
     property int notchRadius:   Math.round(cornerRadius * 15 / 17)
+    // Bar style pref, checked: anything unknown is "frame". Read this (or
+    // Theme.barStyle), never PrefsService.barStyle directly.
+    readonly property string barStyle: ["frame", "bar", "pills"].indexOf(PrefsService.barStyle) >= 0
+                                       ? PrefsService.barStyle : "frame"
     // Pills bar style: gap between the pills/cards and the screen edges.
     property int pillGap:       6
     property int notchHeight:   40
