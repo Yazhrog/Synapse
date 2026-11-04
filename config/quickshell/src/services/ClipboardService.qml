@@ -195,6 +195,13 @@ QtObject {
         _wipeProc.running = true
     }
 
+    // History and pins (Config → Data & Storage).
+    function wipeAll() {
+        root.pinned = []
+        root._savePins()
+        root.wipeHistory()
+    }
+
     // ── Wipe on Quickshell close ───────────────────────────────────────────────
     property var _shutdownWipeProc: Process {
         command: ["bash", "-c", "cliphist wipe 2>/dev/null"]

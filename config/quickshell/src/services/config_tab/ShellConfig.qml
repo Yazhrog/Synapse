@@ -74,7 +74,7 @@ Item {
             Item {
                 anchors.fill: parent
                 visible: root._page === "data"
-                Text { anchors.centerIn: parent; text: "Data & Storage Coming Soon! "; font.pixelSize: 13; color: Qt.rgba(1,1,1,0.12) }
+                DataPage { anchors.fill: parent }
             }
             Item {
                 anchors.fill: parent

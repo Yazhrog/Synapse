@@ -83,6 +83,17 @@ Item {
         }
     }
 
+    // Config → Data & Storage → Clear task board (DataService writes the file).
+    Connections {
+        target: DataService
+        function onTasksCleared() {
+            root._tasks  = []
+            root._nextId = 0
+            root.delConfirmId = -1
+            root.pickerTaskId = -1
+        }
+    }
+
     // ── Save ──────────────────────────────────────────────────────────────────
     function _save() {
         if (_filePath === "") return
