@@ -85,6 +85,7 @@ QtObject {
     property int sideTriggerLength:     300   // hover zones in the middle of the side borders
     property int bottomTriggerWidth:    420   // tap zone in the middle of the bottom border
     property int cornerTriggerWidth:    80    // tap zone in the bottom-right corner
+    property int edgeTriggerDepth:      12    // depth of those zones; = gaps_out, so they stay off windows
 
     // -- Settings widgets (components/Settings*.qml) --
     property int settingsRowMinHeight: 44

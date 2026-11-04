@@ -556,9 +556,10 @@ PanelWindow {
     }
 
     // ── Border triggers (#42) ────────────────────────────────────────────────
-    // Each zone is one corner radius deep, so it's easy to hit at the screen
-    // edge.
-    readonly property int _triggerDepth: cornerRadius
+    // Each zone is Metrics.edgeTriggerDepth deep (Hyprland's gaps_out), so
+    // it's easy to hit at the screen edge without covering windows, and at
+    // least as deep as the border.
+    readonly property int _triggerDepth: Math.max(px(Metrics.edgeTriggerDepth), borderWidth)
 
     // Right border middle: hovering shows the Quick Controls OSD.
     Item {
