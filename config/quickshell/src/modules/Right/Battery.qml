@@ -3,9 +3,8 @@ import "../../services"
 import "../../"
 
 Item {
-    // Set to true to always show percentage beside the icon.
-    // When false (default), percentage only shows on hover.
-    property bool showPercentage: false
+    // Always show the percentage beside the icon; otherwise only on hover.
+    property bool showPercentage: PrefsService.alwaysShowBatteryPercentage
 
     implicitWidth:  status.implicitWidth
     implicitHeight: status.implicitHeight
