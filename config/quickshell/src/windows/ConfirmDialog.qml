@@ -16,6 +16,7 @@ import "../services/"
 //   "logout"          → hyprshutdown
 //   "lock"            → loginctl lock-session
 //   "suspend"         → systemctl suspend
+//   "factory-reset"   → DataService.factoryReset() (deletes user data, restarts the shell)
 //   "gpu-switch-envy" → pkexec scripts/GfxSwitch.sh <mode>, then systemctl reboot
 //                       GfxSwitch.sh prints "authenticated" after pkexec auth succeeds,
 //                       which triggers the processing card before envycontrol runs.
@@ -120,6 +121,10 @@ PanelWindow {
                 Popups.cancelConfirm()
                 proc.pendingCmd = ["systemctl", "suspend"]
                 proc.running = true
+                break
+            case "factory-reset":
+                Popups.cancelConfirm()
+                DataService.factoryReset()
                 break
             case "gpu-switch-envy":
                 // Capture mode BEFORE cancelConfirm() clears Popups state.

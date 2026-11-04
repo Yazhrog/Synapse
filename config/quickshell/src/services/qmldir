@@ -22,3 +22,6 @@ AppLauncher AppLauncher.qml
 ShellConfig ./config_tab/ShellConfig.qml
 KeybindsPage ./config_tab/KeybindsPage.qml
 MiscPage ./config_tab/MiscPage.qml
+GeneralPage ./config_tab/GeneralPage.qml
+AppearancePage ./config_tab/AppearancePage.qml
+DataPage ./config_tab/DataPage.qml

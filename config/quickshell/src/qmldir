@@ -14,3 +14,6 @@ singleton Paths 1.0 utils/Paths.qml
 singleton PrefsService 1.0 services/PrefsService.qml
 singleton SurfaceState 1.0 state/SurfaceState.qml
 singleton ToastState 1.0 state/ToastState.qml
+singleton FocusModeService 1.0 services/FocusModeService.qml
+singleton AppearanceService 1.0 services/AppearanceService.qml
+singleton DataService 1.0 services/DataService.qml

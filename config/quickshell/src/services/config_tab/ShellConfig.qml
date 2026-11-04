@@ -6,14 +6,15 @@ import "../../components"
 Item {
     id: root
 
-    property string _page: "appearance"
+    property string _page: "general"
 
     readonly property var _tabs: [
+        { key: "general",    icon: "󰒓", label: "General"           },
         { key: "appearance", icon: "󰏘", label: "Appearance"        },
         { key: "layout",     icon: "󰕰", label: "Layout & Behavior" },
         { key: "data",       icon: "󰋊", label: "Data & Storage"    },
         { key: "keybinds",   icon: "󰌌", label: "Keybinds"          },
-        { key: "misc",       icon: "󰒓", label: "Misc"               },
+        { key: "misc",       icon: "󰇘", label: "Misc"               },
     ]
 
     Row {
@@ -57,8 +58,13 @@ Item {
 
             Item {
                 anchors.fill: parent
+                visible: root._page === "general"
+                GeneralPage { anchors.fill: parent }
+            }
+            Item {
+                anchors.fill: parent
                 visible: root._page === "appearance"
-                Text { anchors.centerIn: parent; text: "Appearance Coming Soon!"; font.pixelSize: 13; color: Qt.rgba(1,1,1,0.12) }
+                AppearancePage { anchors.fill: parent }
             }
             Item {
                 anchors.fill: parent
@@ -68,7 +74,7 @@ Item {
             Item {
                 anchors.fill: parent
                 visible: root._page === "data"
-                Text { anchors.centerIn: parent; text: "Data & Storage Coming Soon! "; font.pixelSize: 13; color: Qt.rgba(1,1,1,0.12) }
+                DataPage { anchors.fill: parent }
             }
             Item {
                 anchors.fill: parent

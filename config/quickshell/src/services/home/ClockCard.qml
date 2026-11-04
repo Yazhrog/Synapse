@@ -14,6 +14,7 @@ StatCard {
 
     // ── Clock ─────────────────────────────────────────────────────────────────
     property string _hm:       "00:00"
+    property string _ampm:     ""
     property string _hStr:     "00"
     property string _mStr:     "00"
     property string _sec:      "00"
@@ -87,9 +88,10 @@ StatCard {
         var h = d.getHours(), m = d.getMinutes(), s = d.getSeconds()
         _currentH = h; _currentM = m
         _hm  = _zp(h) + ":" + _zp(m) + ":" + _zp(s)
-        _hStr = _zp(h)
+        _hStr = _zp(PrefsService.use24HourClock ? h : (h % 12 || 12))
         _mStr = _zp(m)
         _sec = _zp(s)
+        _ampm = PrefsService.use24HourClock ? "" : (h < 12 ? "AM" : "PM")
     }
 
     function _timerDisplay() {
@@ -265,13 +267,23 @@ StatCard {
                     }
                 }
 
-                // Seconds — vertically centered beside the stack
-                Text {
+                // Seconds (and AM/PM in 12-hour mode) — centered beside the stack
+                Column {
                     anchors.verticalCenter: parent.verticalCenter
-                    text: root._sec
-                    font.pixelSize: 22; font.weight: Font.Medium
-                    font.family: "JetBrainsMono Nerd Font"
-                    color: Qt.rgba(Theme.text.r, Theme.text.g, Theme.text.b, 0.45)
+                    spacing: 2
+                    Text {
+                        text: root._sec
+                        font.pixelSize: 22; font.weight: Font.Medium
+                        font.family: "JetBrainsMono Nerd Font"
+                        color: Qt.rgba(Theme.text.r, Theme.text.g, Theme.text.b, 0.45)
+                    }
+                    Text {
+                        visible: root._ampm !== ""
+                        text: root._ampm
+                        font.pixelSize: 13; font.weight: Font.Bold
+                        font.family: "JetBrainsMono Nerd Font"
+                        color: Qt.rgba(Theme.active.r, Theme.active.g, Theme.active.b, 0.70)
+                    }
                 }
             }
         }

@@ -29,9 +29,17 @@ QtObject {
     // Content keys: dashboard, network, notifications, audio,
     // powerMenu, wallpaper, clipboard (see SurfaceState.regionOf). The screen
     // defaults to the focused monitor.
-    function open(content, screenName)   { return SurfaceState.open(content, screenName ?? "") }
+    // Opening a popup with tabs this way shows its default page (Config →
+    // General); togglePage() picks the page itself.
+    function open(content, screenName) {
+        if (!isOpen(content)) _applyDefaultPage(content)
+        return SurfaceState.open(content, screenName ?? "")
+    }
     function close(content)              { SurfaceState.close(content ?? "") }
-    function toggle(content, screenName) { return SurfaceState.toggle(content, screenName ?? "") }
+    function toggle(content, screenName) {
+        if (!isOpen(content)) _applyDefaultPage(content)
+        return SurfaceState.toggle(content, screenName ?? "")
+    }
     function isOpen(content)             { return SurfaceState.isOpen(content) }
 
     // Pages of the popups that have tabs. togglePage() switches to `page` if
@@ -54,7 +62,20 @@ QtObject {
             return
         }
         root[prop] = page
-        open(content, screenName)
+        SurfaceState.open(content, screenName ?? "")
+    }
+
+    // Default page prefs ("last" = keep the page it was on).
+    readonly property var _defaultPagePref: ({
+        dashboard: "defaultDashboardPage",
+        audio:     "defaultAudioPage"
+    })
+
+    function _applyDefaultPage(content) {
+        const pref = _defaultPagePref[content]
+        if (!pref) return
+        const page = PrefsService[pref]
+        if (page && page !== "last") root[_pageProp[content]] = page
     }
 
     // ── Dashboard — per-page state ───────────────────────────────────────────

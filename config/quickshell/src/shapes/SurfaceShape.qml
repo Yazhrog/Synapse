@@ -45,9 +45,13 @@ Shape {
     property real bottomRightWidth:   0
     property real bottomRightHeight:  0
 
-    property color color: Theme.background
+    property color color: Theme.surfaceBackground
+    // "frame", "bar" or "pills" (see surfacePath.js). In pills, borderWidth
+    // is the gap to the screen edges.
+    property string style: "frame"
 
     readonly property string path: SurfacePath.build({
+        style:  root.style,
         width:  root.width,
         height: root.height,
         t:      root.borderWidth,

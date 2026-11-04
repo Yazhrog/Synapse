@@ -95,7 +95,15 @@ PanelWindow {
     readonly property real localScale: SurfaceState.scaleFor(screen)
     function px(v) { return Math.round(v * localScale) }
 
-    readonly property int borderWidth:  px(Theme.borderWidth)
+    // Bar style (Config → Appearance): frame, bar or pills. borderWidth is the
+    // frame's border; there are no borders in bar, and in pills it's the gap
+    // between the floating shapes and the screen edges, so every region rect
+    // and placement below works unchanged in the three styles.
+    readonly property string barStyle: Theme.barStyle
+    readonly property bool   framed:   barStyle === "frame"
+    readonly property bool   pills:    barStyle === "pills"
+    readonly property int borderWidth:  framed ? px(Theme.borderWidth)
+                                        : pills ? px(Metrics.pillGap) : 0
     readonly property int notchHeight:  px(Theme.notchHeight)
     readonly property int notchRadius:  px(Theme.notchRadius)
     readonly property int cornerRadius: px(Theme.cornerRadius)
@@ -182,7 +190,10 @@ PanelWindow {
     property string _audioPage:       Popups.audioPage
 
     Component { id: powerComp;     PowerMenu {} }
-    Component { id: audioComp;     AudioControl { onPageChanged: root._audioPage = page } }
+    Component { id: audioComp;     AudioControl {
+        onPageChanged: root._audioPage = page
+        Component.onCompleted: root._audioPage = page
+    } }
     // Wrapped, so the Loader resizes the wrapper and the list keeps the
     // height it computes for itself (the region's size follows it).
     Component {
@@ -350,7 +361,9 @@ PanelWindow {
     }
 
     function _insideFrameOrPopup(x, y) {
-        if (x < borderWidth || x > width - borderWidth || y < borderWidth || y > height - borderWidth)
+        if (framed && (x < borderWidth || x > width - borderWidth || y < borderWidth || y > height - borderWidth))
+            return true
+        if (barStyle === "bar" && y < notchBottom)
             return true
         if (_inRect(Qt.rect(0, 0, lWidth, notchBottom), x, y)
                 || _inRect(Qt.rect((width - cWidth) / 2, 0, cWidth, centerBottom), x, y)
@@ -364,6 +377,7 @@ PanelWindow {
     // ── Shape ────────────────────────────────────────────────────────────────
     SurfaceShape {
         anchors.fill: parent
+        style:        root.barStyle
         borderWidth:  root.borderWidth
         notchRadius:  root.notchRadius
         cornerRadius: root.cornerRadius
@@ -389,9 +403,13 @@ PanelWindow {
         opacity: ShellState.focusMode ? 0 : 1
         Behavior on opacity { Anim {} }
 
+        // In pills the capsules start one gap from the edges: center the
+        // contents in them.
+        readonly property real _pillShift: root.pills ? root.borderWidth / 2 : 0
+
         Item {
             id: leftNotch
-            x: 0; y: 0
+            x: parent._pillShift; y: parent._pillShift
             width:  root.lWidth
             height: root.notchHeight
 
@@ -404,7 +422,7 @@ PanelWindow {
 
         Item {
             id: centerNotch
-            x: (root.width - root.cWidth) / 2; y: 0
+            x: (root.width - root.cWidth) / 2; y: parent._pillShift
             width:  root.cWidth
             height: root.notchHeight
 
@@ -420,7 +438,7 @@ PanelWindow {
 
         Item {
             id: rightNotch
-            x: root.width - root.rWidth; y: 0
+            x: root.width - root.rWidth - parent._pillShift; y: parent._pillShift
             width:  root.rWidth
             height: root.notchHeight
             clip:   true
@@ -553,9 +571,10 @@ PanelWindow {
     }
 
     // ── Border triggers (#42) ────────────────────────────────────────────────
-    // Each zone is one corner radius deep, so it's easy to hit at the screen
-    // edge.
-    readonly property int _triggerDepth: cornerRadius
+    // Each zone is Metrics.edgeTriggerDepth deep (Hyprland's gaps_out), so
+    // it's easy to hit at the screen edge without covering windows, and at
+    // least as deep as the border.
+    readonly property int _triggerDepth: Math.max(px(Metrics.edgeTriggerDepth), borderWidth)
 
     // Right border middle: hovering shows the Quick Controls OSD.
     Item {
@@ -629,14 +648,18 @@ PanelWindow {
     }
 
     // ── Input mask: only the visible frame takes clicks ──────────────────────
-    readonly property int _edge: Math.max(1, borderWidth)
+    // The screen edges only take clicks where there is a border (frame) or
+    // the bar (bar); in pills the gaps let clicks through.
+    readonly property int _edge:    framed ? Math.max(1, borderWidth) : 0
+    // At least 1 px, so the focus-mode dashboard strip stays clickable.
+    readonly property int _topEdge: barStyle === "bar" ? Math.max(1, Math.ceil(notchBottom)) : _edge
 
     component RegionMask: Item {
         property rect r
         x: r.x; y: r.y; width: r.width; height: r.height
     }
 
-    Item { id: maskTop;    x: 0; y: 0; width: root.width; height: root._edge }
+    Item { id: maskTop;    x: 0; y: 0; width: root.width; height: root._topEdge }
     Item { id: maskLeft;   x: 0; y: 0; width: root._edge; height: root.height }
     Item { id: maskRight;  x: root.width - root._edge; y: 0; width: root._edge; height: root.height }
     Item { id: maskBottom; x: 0; y: root.height - root._edge; width: root.width; height: root._edge }

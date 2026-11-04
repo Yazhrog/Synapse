@@ -83,13 +83,24 @@ Item {
         }
     }
 
+    // Config → Data & Storage → Clear task board (DataService writes the file).
+    Connections {
+        target: DataService
+        function onTasksCleared() {
+            root._tasks  = []
+            root._nextId = 0
+            root.delConfirmId = -1
+            root.pickerTaskId = -1
+        }
+    }
+
     // ── Save ──────────────────────────────────────────────────────────────────
     function _save() {
         if (_filePath === "") return
         var s = JSON.stringify({ tasks: _tasks, nextId: _nextId })
         wrProc.command = [
             "bash", "-c",
-            "printf '%s' '" + s.replace(/'/g, "'\\''") + "' > '" + _filePath + "'"
+            "printf '%s' " + Paths.shellQuote(s) + " > " + Paths.shellQuote(_filePath)
         ]
         wrProc.running = false; wrProc.running = true
     }
