@@ -56,7 +56,9 @@ Item {
             id: profileCard
             anchors { left: parent.left; right: parent.right; top: parent.top }
             height: root.profileH
-            avatarPath: root._avatarPath
+            // Custom avatar from Config → General, else the wallpaper.
+            avatarPath: PrefsService.avatarPath.trim() !== ""
+                ? Paths.expand(PrefsService.avatarPath) : root._avatarPath
         }
 
         CalendarCard {

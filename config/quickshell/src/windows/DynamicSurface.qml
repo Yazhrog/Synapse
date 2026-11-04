@@ -182,7 +182,10 @@ PanelWindow {
     property string _audioPage:       Popups.audioPage
 
     Component { id: powerComp;     PowerMenu {} }
-    Component { id: audioComp;     AudioControl { onPageChanged: root._audioPage = page } }
+    Component { id: audioComp;     AudioControl {
+        onPageChanged: root._audioPage = page
+        Component.onCompleted: root._audioPage = page
+    } }
     // Wrapped, so the Loader resizes the wrapper and the list keeps the
     // height it computes for itself (the region's size follows it).
     Component {

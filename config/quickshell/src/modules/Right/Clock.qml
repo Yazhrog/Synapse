@@ -3,7 +3,7 @@ import "../../"
 
 Text {
     id: clock
-    text: Qt.formatDateTime(new Date(), "hh:mm")
+    text: ""
     color: clockHov.hovered ? Theme.active : Theme.text
     Behavior on color { ColorAnimation { duration: 120 } }
     font.bold: true
@@ -11,6 +11,8 @@ Text {
     font.pixelSize: 16
 
     property int formatMode: 0
+    readonly property bool use24h: PrefsService.use24HourClock
+    onUse24hChanged: updateText()
 
     state: "time"
     states: [
@@ -61,10 +63,10 @@ Text {
         let now = new Date()
         switch(formatMode) {
             case 0:
-                text = Qt.formatDateTime(now, "hh:mm")
+                text = Qt.formatDateTime(now, use24h ? "hh:mm" : "h:mm AP")
                 break
             case 1:
-                text = Qt.formatDateTime(now, "hh:mm:ss")
+                text = Qt.formatDateTime(now, use24h ? "hh:mm:ss" : "h:mm:ss AP")
                 break
             case 2:
                 text = Qt.formatDateTime(now, "dd-MM-yyyy")

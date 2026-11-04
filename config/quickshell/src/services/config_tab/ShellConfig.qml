@@ -6,14 +6,15 @@ import "../../components"
 Item {
     id: root
 
-    property string _page: "appearance"
+    property string _page: "general"
 
     readonly property var _tabs: [
+        { key: "general",    icon: "󰒓", label: "General"           },
         { key: "appearance", icon: "󰏘", label: "Appearance"        },
         { key: "layout",     icon: "󰕰", label: "Layout & Behavior" },
         { key: "data",       icon: "󰋊", label: "Data & Storage"    },
         { key: "keybinds",   icon: "󰌌", label: "Keybinds"          },
-        { key: "misc",       icon: "󰒓", label: "Misc"               },
+        { key: "misc",       icon: "󰇘", label: "Misc"               },
     ]
 
     Row {
@@ -55,6 +56,11 @@ Item {
             width:  parent.width - Math.floor((parent.width - parent.spacing) * 0.30) - parent.spacing
             height: parent.height
 
+            Item {
+                anchors.fill: parent
+                visible: root._page === "general"
+                GeneralPage { anchors.fill: parent }
+            }
             Item {
                 anchors.fill: parent
                 visible: root._page === "appearance"

@@ -118,7 +118,7 @@ QtObject {
             audioSystem:   root.audioSystem
         })
         _saveProc.command = ["bash", "-c",
-            "printf '%s' '" + data.replace(/'/g, "'\\''") + "' > '" + path + "'"]
+            "printf '%s' " + Paths.shellQuote(data) + " > " + Paths.shellQuote(path)]
         _saveProc.running = false
         _saveProc.running = true
     }
@@ -275,9 +275,8 @@ QtObject {
 
             if (!root._discarding && savedFile !== "") {
                 // Normal stop — notify with interactive action buttons.
-                // FILE/"$FILE" expands $HOME correctly inside bash.
                 _notifyProc.command = ["bash", "-c",
-                    "FILE=\"" + savedFile + "\"; " +
+                    "FILE=" + Paths.shellQuote(savedFile) + "; " +
                     "DIR=\"$(dirname \"$FILE\")\"; " +
                     "ACTION=$(notify-send" +
                     " --app-name 'ScreenRec'" +
@@ -297,11 +296,17 @@ QtObject {
         }
     }
 
+    // Recordings folder from Config → General, "~" expanded.
+    readonly property string outputDir: {
+        const dir = Paths.expand(PrefsService.screenRecordingDir).replace(/\/+$/, "")
+        return dir !== "" ? dir : Paths.home + "/Videos/screen_recordings"
+    }
+
     function _buildCmd() {
     var ts  = Qt.formatDateTime(new Date(), "yyyyMMdd_HHmmss")
-    root._currentFile = "$HOME/Videos/screen_recordings/" + ts + ".mp4"
+    root._currentFile = root.outputDir + "/" + ts + ".mp4"
     
-    var cmd = "mkdir -p $HOME/Videos/screen_recordings && " +
+    var cmd = "mkdir -p " + Paths.shellQuote(root.outputDir) + " && " +
               "wf-recorder -c libx264" +
               " -x yuv420p" +
               " -r 30" +                       // Limit FPS to 30
@@ -312,7 +317,7 @@ QtObject {
               " -p colorspace=bt709" +         // Tags the correct HD color matrix
               " -p color_primaries=bt709" +
               " -p color_trc=bt709" +
-              " -f " + root._currentFile
+              " -f " + Paths.shellQuote(root._currentFile)
               
     if (root._pendingGeometry !== "")
         cmd += " -g '" + root._pendingGeometry + "'"
@@ -388,7 +393,7 @@ QtObject {
             if (fileToDelete !== "") {
                 var f = fileToDelete
                 _discardDeleteProc.command = ["bash", "-c",
-                    "rm -f \"" + f + "\" && " +
+                    "rm -f " + Paths.shellQuote(f) + " && " +
                     "notify-send" +
                     " --app-name 'ScreenRec'" +
                     " --icon 'video-x-generic'" +
@@ -440,9 +445,9 @@ QtObject {
 
         _cavaRecProc.command = [
             "bash", "-c",
-            "mkdir -p /tmp/synapse && printf '%s\\n' '" +
-            config.replace(/'/g, "'\\''") +
-            "' > /tmp/synapse/cava_rec.ini && " +
+            "mkdir -p /tmp/synapse && printf '%s\\n' " +
+            Paths.shellQuote(config) +
+            " > /tmp/synapse/cava_rec.ini && " +
             "exec cava -p /tmp/synapse/cava_rec.ini 2>/dev/null"
         ]
         _cavaRecProc.running = false

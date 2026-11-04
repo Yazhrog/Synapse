@@ -175,7 +175,7 @@ installer's conflict check — one canonical copy.
 |---|---|
 | `~/.config/hypr/plugin/hyprselect/` | `04-plugins.sh` — git clone + `hyprselect.so` build |
 | `~/.config/systemd/user/cliphist-wipe.service` | `ClipboardService.qml` |
-| `~/Videos/screen_recordings/` | `ScreenRecService.qml` |
+| `~/Videos/screen_recordings/` (default, set in Config → General) | `ScreenRecService.qml` |
 | `~/.config/zsh/.zsh_history`, `.zcompdump` | zsh (both gitignored) |
 | `~/.cache/matugen/vscode-colors*` | matugen |
 
