@@ -48,10 +48,31 @@ Item {
         SettingsGroup {
             title: "Shape"
 
+            SettingsDropdown {
+                label:       "Bar style"
+                description: PrefsService.barStyle === "pills"
+                    ? "Floating capsules; popups grow out of them."
+                    : PrefsService.barStyle === "bar"
+                        ? "One full-width bar along the top, no borders."
+                        : "Notches joined by the borders around the screen."
+                prefKey:     "barStyle"
+                options: [
+                    { value: "frame", label: "Frame" },
+                    { value: "bar",   label: "Bar"   },
+                    { value: "pills", label: "Pills" }
+                ]
+            }
+
+            SettingsDivider {}
+
             SettingsSlider {
                 label:       "Border width"
-                description: "Of the side and bottom borders. 0 hides them."
+                description: PrefsService.barStyle === "frame"
+                    ? "Of the side and bottom borders. 0 hides them."
+                    : "Only in the Frame style."
                 prefKey:     "borderWidth"
+                enabled:     PrefsService.barStyle === "frame"
+                opacity:     enabled ? 1 : 0.45
                 from:        0
                 to:          16
                 stepSize:    1
