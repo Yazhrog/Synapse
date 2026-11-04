@@ -41,6 +41,13 @@ Singleton {
         return dir !== "" ? dir : home + "/.local/src/Synapse"
     }
 
+    // Quotes a string for a bash command line (single quotes), e.g.
+    // "cat " + Paths.shellQuote(file). Use it for every path or text that
+    // goes into a `bash -c` string.
+    function shellQuote(s): string {
+        return "'" + String(s ?? "").replace(/'/g, "'\\''") + "'"
+    }
+
     // A path typed by the user, with a leading "~" expanded to home.
     function expand(path: string): string {
         const p = String(path ?? "").trim()
