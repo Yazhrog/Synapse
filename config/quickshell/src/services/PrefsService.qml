@@ -47,7 +47,14 @@ Singleton {
         // Image for the dashboard's profile card; "" = the current wallpaper.
         avatarPath:           "",
         // Where screen recordings are saved ("~" = home).
-        screenRecordingDir:   "~/Videos/screen_recordings"
+        screenRecordingDir:   "~/Videos/screen_recordings",
+        // Config → Appearance. Frame background alpha in %, blur behind the
+        // frame (Hyprland layer rule in hypr/modules/rules.lua), border
+        // thickness and corner radius in px (before the surface scale).
+        backgroundOpacity:    100,
+        backgroundBlur:       false,
+        borderWidth:          6,
+        cornerRadius:         17
     })
 
     // ── Preferences ────────────────────────────────────────────────────────
@@ -62,6 +69,10 @@ Singleton {
     property alias defaultAudioPage:            adapter.defaultAudioPage
     property alias avatarPath:                  adapter.avatarPath
     property alias screenRecordingDir:          adapter.screenRecordingDir
+    property alias backgroundOpacity:           adapter.backgroundOpacity
+    property alias backgroundBlur:              adapter.backgroundBlur
+    property alias borderWidth:                 adapter.borderWidth
+    property alias cornerRadius:                adapter.cornerRadius
 
     // True once the file has been read (or created). Services that act on a
     // pref at startup should wait for it.
@@ -119,6 +130,10 @@ Singleton {
             property string defaultAudioPage:            root.defaults.defaultAudioPage
             property string avatarPath:                  root.defaults.avatarPath
             property string screenRecordingDir:          root.defaults.screenRecordingDir
+            property int    backgroundOpacity:           root.defaults.backgroundOpacity
+            property bool   backgroundBlur:              root.defaults.backgroundBlur
+            property int    borderWidth:                 root.defaults.borderWidth
+            property int    cornerRadius:                root.defaults.cornerRadius
         }
     }
 

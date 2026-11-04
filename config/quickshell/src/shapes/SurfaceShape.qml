@@ -45,7 +45,7 @@ Shape {
     property real bottomRightWidth:   0
     property real bottomRightHeight:  0
 
-    property color color: Theme.background
+    property color color: Theme.surfaceBackground
 
     readonly property string path: SurfacePath.build({
         width:  root.width,

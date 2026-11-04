@@ -1,13 +1,17 @@
 pragma Singleton
 import QtQuick
+import "../"
 
 QtObject {
     // --Bar Toggle--
     property bool barEnabled: false
 
     // -- Bar Sizes --
-    property int borderWidth:   6
-    property int cornerRadius:  17
+    // Border width, corner radius and background opacity are user prefs
+    // (Config → Appearance); defaults 6 px, 17 px, 100 %.
+    property int  borderWidth:       PrefsService.borderWidth
+    property int  cornerRadius:      PrefsService.cornerRadius
+    property real backgroundOpacity: PrefsService.backgroundOpacity / 100
     property int notchRadius:   15
     property int notchHeight:   40
     property int exclusionGap:  34

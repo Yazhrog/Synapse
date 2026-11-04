@@ -77,3 +77,25 @@ hl.window_rule({
     opacity = "1.0 override 1.0 override",
     no_blur = true,
 })
+
+-- Blur behind the Synapse frame (Config → Appearance → Background blur).
+-- Enabled from backgroundBlur in shell_prefs.json, so it survives a reload;
+-- the shell flips it live with `hyprctl eval "SynapseFrameBlur:set_enabled(...)"`
+-- (services/AppearanceService.qml). ignore_alpha keeps the transparent hole
+-- and the anti-aliased edges unblurred.
+local function synapse_frame_blur()
+    local dir = os.getenv("SYNAPSE_CONFIG_DIR") or (os.getenv("HOME") .. "/.config/Synapse")
+    local f = io.open(dir .. "/src/user_data/shell_prefs.json", "r")
+    if not f then return false end
+    local text = f:read("*a")
+    f:close()
+    return text:match('"backgroundBlur"%s*:%s*true') ~= nil
+end
+
+SynapseFrameBlur = hl.layer_rule({
+    name         = "synapse-frame-blur",
+    match        = { namespace = "^synapse-frame$" },
+    blur         = true,
+    ignore_alpha = 0.2,
+    enabled      = synapse_frame_blur(),
+})
