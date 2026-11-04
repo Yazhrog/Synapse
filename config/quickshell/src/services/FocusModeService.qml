@@ -10,27 +10,82 @@ import "../"
 // off restores them. ShellState.focusMode follows once hyprctl is done. Toggled
 // from Quick Settings and the focus-toggle IPC; with the "Boot into Focus Mode"
 // pref (Config → General) it turns on once at startup.
+//
+// The saved gaps are also written to $XDG_RUNTIME_DIR/synapse-focus-gaps.json,
+// so a shell restarted while Focus Mode is on (crash, factory reset, hot
+// reload) resumes it with the user's real gaps instead of saving 0/10 as the
+// values to restore. Hyprland reports the gaps as CSS ("2 2 2 2"), which
+// `hyprctl keyword` accepts back as is.
 Singleton {
     id: root
 
-    property int _savedGapsIn:  5
-    property int _savedGapsOut: 10
+    readonly property string focusIn:  "0"
+    readonly property string focusOut: "10"
+    readonly property string _stateFile:
+        (Quickshell.env("XDG_RUNTIME_DIR") || "/tmp") + "/synapse-focus-gaps.json"
+
+    // The gaps to restore when Focus Mode turns off (CSS strings).
+    property var _saved: ({ in: "2", out: "12" })
 
     function toggle() {
-        if (ShellState.focusMode) {
-            _restoreGaps.command = ["bash", "-c",
-                "hyprctl keyword general:gaps_in "  + root._savedGapsIn +
-                " && hyprctl keyword general:gaps_out " + root._savedGapsOut]
-            _restoreGaps.running = false
-            _restoreGaps.running = true
-        } else {
-            _readGapsIn.running = false
-            _readGapsIn.running = true
-        }
+        if (ShellState.focusMode) root._restore()
+        else root._probe("on")
     }
 
-    function _applyBootPref() {
-        if (PrefsService.bootFocusMode && !ShellState.focusMode) root.toggle()
+    // "2 2 2 2" and "2" are both gap 2 on every side.
+    function _isGap(css, value) {
+        const parts = String(css).trim().split(/\s+/)
+        return parts.length > 0 && parts.every(p => p === value)
+    }
+
+    function _restore() {
+        _restoreProc.command = ["bash", "-c",
+            "hyprctl keyword general:gaps_in " + Paths.shellQuote(root._saved.in) +
+            " && hyprctl keyword general:gaps_out " + Paths.shellQuote(root._saved.out) +
+            "; rm -f " + Paths.shellQuote(root._stateFile)]
+        _restoreProc.running = false
+        _restoreProc.running = true
+    }
+
+    function _enter(saved) {
+        root._saved = saved
+        _applyProc.command = ["bash", "-c",
+            "printf '%s' " + Paths.shellQuote(JSON.stringify(saved)) + " > " + Paths.shellQuote(root._stateFile) +
+            "; hyprctl keyword general:gaps_in " + root.focusIn +
+            " && hyprctl keyword general:gaps_out " + root.focusOut]
+        _applyProc.running = false
+        _applyProc.running = true
+    }
+
+    // Reads the current gaps and the saved ones, then continues in _onProbe.
+    property string _probeMode: ""
+    function _probe(mode) {
+        if (_probeProc.running) return
+        root._probeMode = mode
+        _probeProc.running = true
+    }
+
+    function _onProbe(text) {
+        let r = null
+        try { r = JSON.parse(text) } catch (e) {}
+        if (!r) return
+        r.in  = r.in  || root._saved.in
+        r.out = r.out || root._saved.out
+        const inFocus = root._isGap(r.in, root.focusIn) && root._isGap(r.out, root.focusOut)
+        const saved   = r.saved && r.saved.in && r.saved.out ? r.saved : null
+
+        if (root._probeMode === "boot") {
+            if (inFocus && saved) {
+                // Restarted while Focus Mode was on: resume it.
+                root._saved = saved
+                ShellState.focusMode = true
+            } else if (PrefsService.bootFocusMode && !ShellState.focusMode) {
+                root._enter({ in: r.in, out: r.out })
+            }
+            return
+        }
+        // Turning it on: never save the focus gaps as the ones to restore.
+        root._enter(inFocus && saved ? saved : { in: r.in, out: r.out })
     }
 
     property Connections _ipc: Connections {
@@ -40,35 +95,36 @@ Singleton {
 
     property Connections _prefs: Connections {
         target: PrefsService
-        function onLoaded() { root._applyBootPref() }
+        function onLoaded() { root._probe("boot") }
     }
 
-    Component.onCompleted: if (PrefsService.ready) root._applyBootPref()
+    Component.onCompleted: if (PrefsService.ready) root._probe("boot")
 
-    property Process _readGapsIn: Process {
-        command: ["bash", "-c",
-            "hyprctl getoption general:gaps_in -j | python3 -c \"import sys,json; d=json.load(sys.stdin); print(d.get('int',5))\""]
-        stdout: SplitParser {
-            onRead: function(l) { const v = parseInt(l.trim()); if (!isNaN(v)) root._savedGapsIn = v }
+    property Process _probeProc: Process {
+        command: ["python3", "-c",
+            "import json, os, subprocess\n" +
+            "def gap(k):\n" +
+            "    try:\n" +
+            "        d = json.loads(subprocess.run(['hyprctl', 'getoption', k, '-j'], capture_output=True, text=True).stdout)\n" +
+            "        return str(d.get('css', d.get('int', '')))\n" +
+            "    except Exception:\n" +
+            "        return ''\n" +
+            "try:\n" +
+            "    saved = json.load(open(os.sys.argv[1]))\n" +
+            "except Exception:\n" +
+            "    saved = None\n" +
+            "print(json.dumps({'in': gap('general:gaps_in'), 'out': gap('general:gaps_out'), 'saved': saved}))\n",
+            root._stateFile]
+        stdout: StdioCollector {
+            onStreamFinished: root._onProbe(text)
         }
-        onExited: { root._readGapsOut.running = false; root._readGapsOut.running = true }
     }
 
-    property Process _readGapsOut: Process {
-        command: ["bash", "-c",
-            "hyprctl getoption general:gaps_out -j | python3 -c \"import sys,json; d=json.load(sys.stdin); print(d.get('int',10))\""]
-        stdout: SplitParser {
-            onRead: function(l) { const v = parseInt(l.trim()); if (!isNaN(v)) root._savedGapsOut = v }
-        }
-        onExited: { root._applyFocusGaps.running = false; root._applyFocusGaps.running = true }
-    }
-
-    property Process _applyFocusGaps: Process {
-        command: ["bash", "-c", "hyprctl keyword general:gaps_in 0 && hyprctl keyword general:gaps_out 10"]
+    property Process _applyProc: Process {
         onExited: ShellState.focusMode = true
     }
 
-    property Process _restoreGaps: Process {
+    property Process _restoreProc: Process {
         onExited: ShellState.focusMode = false
     }
 }

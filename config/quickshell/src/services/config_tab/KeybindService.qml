@@ -195,7 +195,7 @@ QtObject {
         var json = JSON.stringify(out, null, 2)
         _saveProc.command = ["bash", "-c",
             "mkdir -p \"$(dirname '" + root._jsonPath + "')\" && " +
-            "printf '%s' '" + json.replace(/'/g, "'\\''") + "' > '" + root._jsonPath + "'"]
+            "printf '%s' " + Paths.shellQuote(json) + " > " + Paths.shellQuote(root._jsonPath)]
         _saveProc.running = false
         _saveProc.running = true
         root._writeFiles()
