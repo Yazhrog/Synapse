@@ -14,8 +14,8 @@ Singleton {
     id: root
 
     signal finished(string action, bool ok)
-    // KanbanBoard empties its in-memory columns on this (the file is cleared
-    // here too, in case no board is loaded).
+    // Emitted once tasks.json has been emptied; KanbanBoard then empties its
+    // in-memory columns.
     signal tasksCleared()
 
     readonly property bool busy: _proc.running
@@ -24,19 +24,31 @@ Singleton {
 
     readonly property string _tasksFile: Paths.userData("tasks.json")
 
-    // Shell-quotes a string (single quotes).
-    function _sq(s) { return "'" + String(s).replace(/'/g, "'\\''") + "'" }
-
     // ── Preferences ──────────────────────────────────────────────────────────
     function resetPrefs() {
         PrefsService.resetAll()
         root.finished("prefs", true)
     }
 
-    // Back to the default wallpaper, folder and colour scheme.
+    // Back to the default wallpaper, folder and colour scheme. Reports once
+    // the default wallpaper is applied (that is when wallpaper.json is saved).
+    property bool _wallpaperPending: false
+
     function resetWallpaper() {
-        WallpaperService.resetToDefaults()
-        root.finished("wallpaper", true)
+        if (!WallpaperService.resetToDefaults()) {
+            root.finished("wallpaper", false)
+            return
+        }
+        root._wallpaperPending = true
+    }
+
+    property Connections _wallpaper: Connections {
+        target: WallpaperService
+        function onApplyFinished(ok) {
+            if (!root._wallpaperPending) return
+            root._wallpaperPending = false
+            root.finished("wallpaper", ok)
+        }
     }
 
     function resetAvatar() {
@@ -52,14 +64,15 @@ Singleton {
             "[ -n \"$dir\" ] && [ \"$dir\" != \"$HOME\" ] || dir=\"$HOME/Documents\"; " +
             "mkdir -p \"$dir\" && " +
             "f=\"$dir/synapse_tasks_$(date +%Y-%m-%d_%H%M%S).json\" && " +
-            "cp " + root._sq(root._tasksFile) + " \"$f\" && " +
+            "cp " + Paths.shellQuote(root._tasksFile) + " \"$f\" && " +
             "{ notify-send --app-name Synapse --icon document-save 'Tasks exported' \"$f\" || true; }")
     }
 
+    // The board is emptied only once the file is (see _proc), so a refused or
+    // failed write can't leave an empty board that saves over the tasks.
     function clearTasks() {
-        root.tasksCleared()
         root._run("tasks",
-            "printf '%s' '{\"tasks\":[],\"nextId\":0}' > " + root._sq(root._tasksFile))
+            "printf '%s' '{\"tasks\":[],\"nextId\":0}' > " + Paths.shellQuote(root._tasksFile))
     }
 
     // History and pins.
@@ -70,7 +83,7 @@ Singleton {
 
     // ── Cache & reset ────────────────────────────────────────────────────────
     function clearCache() {
-        const d = root._sq(Paths.cacheDir)
+        const d = Paths.shellQuote(Paths.cacheDir)
         root._run("cache", "[ ! -d " + d + " ] || find " + d + " -mindepth 1 -delete")
     }
 
@@ -84,11 +97,11 @@ Singleton {
     // outside user_data/ and stay. The deletion runs in a detached shell after
     // this quickshell has exited, so nothing in memory writes its file back.
     function factoryReset() {
-        const ud    = root._sq(Paths.userDataDir)
-        const cache = root._sq(Paths.cacheDir)
+        const ud    = Paths.shellQuote(Paths.userDataDir)
+        const cache = Paths.shellQuote(Paths.cacheDir)
         const dir   = String(Quickshell.shellDir).replace(/\/+$/, "")
         const start = dir === Paths.home + "/.config/quickshell"
-            ? "quickshell" : "quickshell -p " + root._sq(dir)
+            ? "quickshell" : "quickshell -p " + Paths.shellQuote(dir)
         const script =
             "kill \"$1\"; " +
             "for i in $(seq 50); do kill -0 \"$1\" 2>/dev/null || break; sleep 0.1; done; " +
@@ -97,7 +110,7 @@ Singleton {
             "exec " + start + " >/dev/null 2>&1 </dev/null"
         // $PPID of this bash is quickshell itself.
         _resetProc.command = ["bash", "-c",
-            "setsid -f bash -c " + root._sq(script) + " _ \"$PPID\""]
+            "setsid -f bash -c " + Paths.shellQuote(script) + " _ \"$PPID\""]
         _resetProc.running = true
     }
 
@@ -119,14 +132,15 @@ Singleton {
             const action = root._action
             root._action = ""
             if (action === "cache") root.refreshCacheSize()
+            if (action === "tasks" && exitCode === 0) root.tasksCleared()
             root.finished(action, exitCode === 0)
         }
     }
 
     property Process _sizeProc: Process {
         command: ["bash", "-c",
-            "[ -d " + root._sq(Paths.cacheDir) + " ] && [ -n \"$(ls -A " + root._sq(Paths.cacheDir) + ")\" ] " +
-            "&& du -sh " + root._sq(Paths.cacheDir) + " | cut -f1 || true"]
+            "[ -d " + Paths.shellQuote(Paths.cacheDir) + " ] && [ -n \"$(ls -A " + Paths.shellQuote(Paths.cacheDir) + ")\" ] " +
+            "&& du -sh " + Paths.shellQuote(Paths.cacheDir) + " | cut -f1 || true"]
         stdout: StdioCollector {
             onStreamFinished: root.cacheSize = text.trim()
         }
