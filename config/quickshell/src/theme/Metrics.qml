@@ -8,11 +8,13 @@ QtObject {
 
     // -- Bar Sizes --
     // Border width, corner radius and background opacity are user prefs
-    // (Config → Appearance); defaults 6 px, 17 px, 100 %.
+    // (Config → Appearance); defaults 6 px, 17 px, 100 %. The notch radius
+    // (top notches, the popups grown from them and their flares) follows the
+    // corner radius in proportion: 15 px at the default 17 px.
     property int  borderWidth:       PrefsService.borderWidth
     property int  cornerRadius:      PrefsService.cornerRadius
     property real backgroundOpacity: PrefsService.backgroundOpacity / 100
-    property int notchRadius:   15
+    property int notchRadius:   Math.round(cornerRadius * 15 / 17)
     property int notchHeight:   40
     property int exclusionGap:  34
     property int spacing:       10

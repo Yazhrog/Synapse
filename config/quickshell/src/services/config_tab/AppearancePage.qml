@@ -62,7 +62,7 @@ Item {
 
             SettingsSlider {
                 label:       "Corner roundness"
-                description: "Frame corners, popups and cards."
+                description: "Frame corners, notches, popups and cards."
                 prefKey:     "cornerRadius"
                 from:        0
                 to:          30
