@@ -36,7 +36,18 @@ Singleton {
         alwaysShowVolumePercentage:  false,
         // Audio visualizer (cava) in the notch and the player card. Off stops
         // the cava process.
-        enableVisualiser: true
+        enableVisualiser: true,
+        // Config → General.
+        use24HourClock:       true,
+        bootFocusMode:        false,
+        // Page a popup opens on when opened without one: "last" keeps the
+        // page it was on, otherwise a page key.
+        defaultDashboardPage: "last",
+        defaultAudioPage:     "last",
+        // Image for the dashboard's profile card; "" = the current wallpaper.
+        avatarPath:           "",
+        // Where screen recordings are saved ("~" = home).
+        screenRecordingDir:   "~/Videos/screen_recordings"
     })
 
     // ── Preferences ────────────────────────────────────────────────────────
@@ -45,6 +56,12 @@ Singleton {
     property alias alwaysShowBatteryPercentage: adapter.alwaysShowBatteryPercentage
     property alias alwaysShowVolumePercentage:  adapter.alwaysShowVolumePercentage
     property alias enableVisualiser:            adapter.enableVisualiser
+    property alias use24HourClock:              adapter.use24HourClock
+    property alias bootFocusMode:               adapter.bootFocusMode
+    property alias defaultDashboardPage:        adapter.defaultDashboardPage
+    property alias defaultAudioPage:            adapter.defaultAudioPage
+    property alias avatarPath:                  adapter.avatarPath
+    property alias screenRecordingDir:          adapter.screenRecordingDir
 
     // True once the file has been read (or created). Services that act on a
     // pref at startup should wait for it.
@@ -96,6 +113,12 @@ Singleton {
             property bool   alwaysShowBatteryPercentage: root.defaults.alwaysShowBatteryPercentage
             property bool   alwaysShowVolumePercentage:  root.defaults.alwaysShowVolumePercentage
             property bool   enableVisualiser:            root.defaults.enableVisualiser
+            property bool   use24HourClock:              root.defaults.use24HourClock
+            property bool   bootFocusMode:               root.defaults.bootFocusMode
+            property string defaultDashboardPage:        root.defaults.defaultDashboardPage
+            property string defaultAudioPage:            root.defaults.defaultAudioPage
+            property string avatarPath:                  root.defaults.avatarPath
+            property string screenRecordingDir:          root.defaults.screenRecordingDir
         }
     }
 

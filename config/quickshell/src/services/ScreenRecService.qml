@@ -275,9 +275,8 @@ QtObject {
 
             if (!root._discarding && savedFile !== "") {
                 // Normal stop — notify with interactive action buttons.
-                // FILE/"$FILE" expands $HOME correctly inside bash.
                 _notifyProc.command = ["bash", "-c",
-                    "FILE=\"" + savedFile + "\"; " +
+                    "FILE=" + root._sq(savedFile) + "; " +
                     "DIR=\"$(dirname \"$FILE\")\"; " +
                     "ACTION=$(notify-send" +
                     " --app-name 'ScreenRec'" +
@@ -297,11 +296,20 @@ QtObject {
         }
     }
 
+    // Shell-quotes a string (single quotes), for paths from the prefs.
+    function _sq(s) { return "'" + String(s).replace(/'/g, "'\\''") + "'" }
+
+    // Recordings folder from Config → General, "~" expanded.
+    readonly property string outputDir: {
+        const dir = Paths.expand(PrefsService.screenRecordingDir).replace(/\/+$/, "")
+        return dir !== "" ? dir : Paths.home + "/Videos/screen_recordings"
+    }
+
     function _buildCmd() {
     var ts  = Qt.formatDateTime(new Date(), "yyyyMMdd_HHmmss")
-    root._currentFile = "$HOME/Videos/screen_recordings/" + ts + ".mp4"
+    root._currentFile = root.outputDir + "/" + ts + ".mp4"
     
-    var cmd = "mkdir -p $HOME/Videos/screen_recordings && " +
+    var cmd = "mkdir -p " + root._sq(root.outputDir) + " && " +
               "wf-recorder -c libx264" +
               " -x yuv420p" +
               " -r 30" +                       // Limit FPS to 30
@@ -312,7 +320,7 @@ QtObject {
               " -p colorspace=bt709" +         // Tags the correct HD color matrix
               " -p color_primaries=bt709" +
               " -p color_trc=bt709" +
-              " -f " + root._currentFile
+              " -f " + root._sq(root._currentFile)
               
     if (root._pendingGeometry !== "")
         cmd += " -g '" + root._pendingGeometry + "'"
@@ -388,7 +396,7 @@ QtObject {
             if (fileToDelete !== "") {
                 var f = fileToDelete
                 _discardDeleteProc.command = ["bash", "-c",
-                    "rm -f \"" + f + "\" && " +
+                    "rm -f " + root._sq(f) + " && " +
                     "notify-send" +
                     " --app-name 'ScreenRec'" +
                     " --icon 'video-x-generic'" +

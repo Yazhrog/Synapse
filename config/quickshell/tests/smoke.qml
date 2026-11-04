@@ -10,10 +10,12 @@ import "./src/components"
 import "./src/popups"
 import "./src/services"
 import "./src/services/config_tab"
+import "./src/modules/Right"
 
 ShellRoot {
     property var _singletons: [Theme, Paths, PrefsService, SurfaceState, Popups, ToastState,
-                               ShellState, KeybindService, UpdateService, IpcManager]
+                               ShellState, KeybindService, UpdateService, IpcManager,
+                               FocusModeService, CavaService]
 
     FloatingWindow {
         implicitWidth: 1920; implicitHeight: 1080
@@ -33,6 +35,8 @@ ShellRoot {
             ToastCard           { width: 360 }
             ScreenRecOptions    {}
             MiscPage            { width: 600; height: 300 }
+            GeneralPage         { width: 600; height: 460 }
+            Row { Clock {} Battery {} Audio {} }
         }
     }
 

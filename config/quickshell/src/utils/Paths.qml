@@ -41,6 +41,13 @@ Singleton {
         return dir !== "" ? dir : home + "/.local/src/Synapse"
     }
 
+    // A path typed by the user, with a leading "~" expanded to home.
+    function expand(path: string): string {
+        const p = String(path ?? "").trim()
+        if (p === "~") return home
+        return p.startsWith("~/") ? home + p.slice(1) : p
+    }
+
     // Path of a file in userDataDir, e.g. Paths.userData("tasks.json").
     function userData(name: string): string {
         return userDataDir + "/" + name

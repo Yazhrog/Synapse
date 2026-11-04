@@ -11,6 +11,7 @@ ShellRoot {
     property var _updater:    UpdateService
     property var _ipc:        IpcManager
     property var _battery:    BatteryWarningService
+    property var _focusMode:  FocusModeService
 
     // One Dynamic Surface per screen (#37): frame, bar and every popup.
     ShellHost {}
