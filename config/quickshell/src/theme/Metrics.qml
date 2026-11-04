@@ -1,14 +1,20 @@
 pragma Singleton
 import QtQuick
+import "../"
 
 QtObject {
     // --Bar Toggle--
     property bool barEnabled: false
 
     // -- Bar Sizes --
-    property int borderWidth:   6
-    property int cornerRadius:  17
-    property int notchRadius:   15
+    // Border width, corner radius and background opacity are user prefs
+    // (Config → Appearance); defaults 6 px, 17 px, 100 %. The notch radius
+    // (top notches, the popups grown from them and their flares) follows the
+    // corner radius in proportion: 15 px at the default 17 px.
+    property int  borderWidth:       PrefsService.borderWidth
+    property int  cornerRadius:      PrefsService.cornerRadius
+    property real backgroundOpacity: PrefsService.backgroundOpacity / 100
+    property int notchRadius:   Math.round(cornerRadius * 15 / 17)
     property int notchHeight:   40
     property int exclusionGap:  34
     property int spacing:       10
@@ -79,6 +85,7 @@ QtObject {
     property int sideTriggerLength:     300   // hover zones in the middle of the side borders
     property int bottomTriggerWidth:    420   // tap zone in the middle of the bottom border
     property int cornerTriggerWidth:    80    // tap zone in the bottom-right corner
+    property int edgeTriggerDepth:      12    // depth of those zones; = gaps_out, so they stay off windows
 
     // -- Settings widgets (components/Settings*.qml) --
     property int settingsRowMinHeight: 44

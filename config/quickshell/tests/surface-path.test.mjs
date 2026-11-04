@@ -116,6 +116,22 @@ test("focus mode (notchBottom = t) stays valid", () => {
     assert.ok(filled(d, 960, 3), "top strip")
 })
 
+test("border width and corner radius extremes (Config → Appearance)", () => {
+    for (const t of [0, 16]) for (const R of [0, 30]) {
+        // The notch radius follows the corner radius (Metrics.notchRadius).
+        const g = { ...base, t, R, r: Math.round(R * 15 / 17), bottomCenter: { width: 980, height: 420 } }
+        const d = build(g)
+        assert.ok(!/NaN|Infinity|undefined/.test(d), `t=${t} R=${R}`)
+        assert.ok(filled(d, 960, 20), `center notch t=${t} R=${R}`)
+        assert.ok(filled(d, 960, 1000), `bottom panel t=${t} R=${R}`)
+        assert.ok(!filled(d, 400, 500), `hole t=${t} R=${R}`)
+        if (t > 0) assert.ok(filled(d, t / 2, 500), `left border t=${t} R=${R}`)
+        const clip = build({ ...g, bottomRight: { width: 420, height: 560 } })
+        assert.ok(filled(clip, 1700, 800), `clipboard panel t=${t} R=${R}`)
+        assert.equal((clip.match(/M /g) || []).length, 2, `two loops with the clipboard t=${t} R=${R}`)
+    }
+})
+
 test("degenerate sizes return empty or valid path", () => {
     assert.equal(build({ ...base, width: 0 }), "")
     assert.ok(!/NaN/.test(build({ width: 800, height: 600 })))
