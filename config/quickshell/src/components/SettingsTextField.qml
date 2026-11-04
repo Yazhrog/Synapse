@@ -14,9 +14,9 @@ SettingsRow {
     property int    fieldWidth:      220
     signal committed(string text)
 
-    // Clicking the row (or tabbing to it) focuses the field.
-    activeFocusOnTab: true
-    onActiveFocusChanged: if (activeFocus) input.forceActiveFocus()
+    // Tab focuses the field itself (not the row, which would bounce focus
+    // back into it on Shift+Tab).
+    activeFocusOnTab: false
 
     function commit() {
         const next = input.text.trim()
@@ -50,6 +50,7 @@ SettingsRow {
                 verticalCenter: parent.verticalCenter
             }
             text:              root.text
+            activeFocusOnTab:  true
             clip:              true
             selectByMouse:     true
             font.pixelSize:    11

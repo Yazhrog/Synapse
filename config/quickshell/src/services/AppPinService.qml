@@ -40,7 +40,7 @@ QtObject {
         var json = JSON.stringify(root.pinned)
         _saveProc.command = ["bash", "-c",
             "mkdir -p \"$(dirname '" + root._pinsPath + "')\" && " +
-            "printf '%s' '" + json.replace(/'/g, "'\\''") + "' > '" + root._pinsPath + "'"]
+            "printf '%s' " + Paths.shellQuote(json) + " > " + Paths.shellQuote(root._pinsPath)]
         _saveProc.running = false
         _saveProc.running = true
     }

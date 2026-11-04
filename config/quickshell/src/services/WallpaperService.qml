@@ -111,7 +111,7 @@ QtObject {
         saveConfigProc.command = [
             "bash", "-c",
             "mkdir -p \"$(dirname '" + root.configPath + "')\" && " +
-            "printf '%s' '" + json.replace(/'/g, "'\\''") + "' > '" + root.configPath + "'"
+            "printf '%s' " + Paths.shellQuote(json) + " > " + Paths.shellQuote(root.configPath)
         ]
         saveConfigProc.running = true
     }
