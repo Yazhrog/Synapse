@@ -14,8 +14,10 @@ import "../"
 // The saved gaps are also written to $XDG_RUNTIME_DIR/synapse-focus-gaps.json,
 // so a shell restarted while Focus Mode is on (crash, factory reset, hot
 // reload) resumes it with the user's real gaps instead of saving 0/10 as the
-// values to restore. Hyprland reports the gaps as CSS ("2 2 2 2"), which
-// `hyprctl keyword` accepts back as is.
+// values to restore. Hyprland reports the gaps as CSS ("2 2 2 2"). The Lua
+// config has no `hyprctl keyword` ("unknown request"), so they are set with
+// `hyprctl eval "hl.config(...)"` and a { top, right, bottom, left } table
+// there, and with `hyprctl keyword` on the legacy .conf provider.
 Singleton {
     id: root
 
@@ -38,10 +40,32 @@ Singleton {
         return parts.length > 0 && parts.every(p => p === value)
     }
 
+    // CSS gap ("2", "2 4", "2 4 6", "2 4 6 8") → [top, right, bottom, left].
+    function _sides(css) {
+        const n = String(css).trim().split(/\s+/).map(v => Math.max(0, parseInt(v) || 0))
+        if (n.length === 1) return [n[0], n[0], n[0], n[0]]
+        if (n.length === 2) return [n[0], n[1], n[0], n[1]]
+        if (n.length === 3) return [n[0], n[1], n[2], n[1]]
+        return n.slice(0, 4)
+    }
+
+    // Shell command setting both gaps.
+    function _setGapsCmd(inCss, outCss) {
+        if (ShellState.configProvider === "lua") {
+            const t = css => {
+                const s = root._sides(css)
+                return "{ top = " + s[0] + ", right = " + s[1] + ", bottom = " + s[2] + ", left = " + s[3] + " }"
+            }
+            return "hyprctl eval " + Paths.shellQuote(
+                "hl.config({ general = { gaps_in = " + t(inCss) + ", gaps_out = " + t(outCss) + " } })")
+        }
+        return "hyprctl keyword general:gaps_in " + Paths.shellQuote(root._sides(inCss).join(" ")) +
+               " && hyprctl keyword general:gaps_out " + Paths.shellQuote(root._sides(outCss).join(" "))
+    }
+
     function _restore() {
         _restoreProc.command = ["bash", "-c",
-            "hyprctl keyword general:gaps_in " + Paths.shellQuote(root._saved.in) +
-            " && hyprctl keyword general:gaps_out " + Paths.shellQuote(root._saved.out) +
+            root._setGapsCmd(root._saved.in, root._saved.out) +
             "; rm -f " + Paths.shellQuote(root._stateFile)]
         _restoreProc.running = false
         _restoreProc.running = true
@@ -51,8 +75,7 @@ Singleton {
         root._saved = saved
         _applyProc.command = ["bash", "-c",
             "printf '%s' " + Paths.shellQuote(JSON.stringify(saved)) + " > " + Paths.shellQuote(root._stateFile) +
-            "; hyprctl keyword general:gaps_in " + root.focusIn +
-            " && hyprctl keyword general:gaps_out " + root.focusOut]
+            "; " + root._setGapsCmd(root.focusIn, root.focusOut)]
         _applyProc.running = false
         _applyProc.running = true
     }
