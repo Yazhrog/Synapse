@@ -5,7 +5,8 @@ import "../"
 //
 // `destructive` buttons are red and need a second click within 3s to fire
 // (the first click turns the label into `confirmText`). Space/Enter press
-// the button when the row has focus.
+// the button when the row has focus. Call flashDone(ok) when the action has
+// finished: the label shows `doneText` (or "Failed") for 2s.
 SettingsRow {
     id: root
 
@@ -15,7 +16,22 @@ SettingsRow {
     property bool   busy:        false
     signal activated()
 
+    property string doneText:    "Done ✓"
     property bool _confirming: false
+    property bool _done:       false
+    property bool _doneOk:     true
+
+    function flashDone(ok) {
+        root._doneOk = ok !== false
+        root._done   = true
+        doneTimer.restart()
+    }
+
+    Timer {
+        id: doneTimer
+        interval: 2000
+        onTriggered: root._done = false
+    }
 
     activeFocusOnTab: true
     enabled: !busy
@@ -60,7 +76,8 @@ SettingsRow {
         Text {
             id: label
             anchors.centerIn: parent
-            text:           root._confirming ? root.confirmText : root.buttonText
+            text:           root._done ? (root._doneOk ? root.doneText : "Failed")
+                          : root._confirming ? root.confirmText : root.buttonText
             font.pixelSize: 11
             font.weight:    Font.Medium
             color:          root._tint

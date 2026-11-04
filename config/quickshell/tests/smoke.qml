@@ -15,7 +15,7 @@ import "./src/modules/Right"
 ShellRoot {
     property var _singletons: [Theme, Paths, PrefsService, SurfaceState, Popups, ToastState,
                                ShellState, KeybindService, UpdateService, IpcManager,
-                               FocusModeService, CavaService, AppearanceService]
+                               FocusModeService, CavaService, AppearanceService, DataService]
 
     FloatingWindow {
         implicitWidth: 1920; implicitHeight: 1080
@@ -37,6 +37,7 @@ ShellRoot {
             MiscPage            { width: 600; height: 300 }
             GeneralPage         { width: 600; height: 460 }
             AppearancePage      { width: 600; height: 300 }
+            DataPage            { width: 600; height: 460 }
             Row { Clock {} Battery {} Audio {} }
         }
     }
