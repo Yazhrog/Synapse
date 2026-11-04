@@ -41,6 +41,8 @@ QtObject {
 
     // Emitted when the full apply pipeline exits cleanly (exitCode === 0).
     signal wallpaperApplied(string path)
+    // Every apply ends with this, successful or not.
+    signal applyFinished(bool ok)
 
     // ── File listing ──────────────────────────────────────────────────────────
     function refresh() {
@@ -91,12 +93,15 @@ QtObject {
 
     // ── Reset (Config → Data & Storage) ──────────────────────────────────────
     // Default wallpaper, folder and scheme; wallpaper.json is rewritten once
-    // the default wallpaper is applied.
+    // the default wallpaper is applied. Returns false (and changes nothing)
+    // while another apply is running; applyFinished reports the result.
     function resetToDefaults() {
+        if (root.applying) return false
         root.scheme       = root.defaultScheme
         root.wallpaperDir = root.defaultWallpaperDir
         root.apply(root.defaultWall)
         root.refresh()
+        return true
     }
 
     // ── Config write — called after a successful apply ────────────────────────
@@ -111,7 +116,7 @@ QtObject {
         saveConfigProc.command = [
             "bash", "-c",
             "mkdir -p \"$(dirname '" + root.configPath + "')\" && " +
-            "printf '%s' '" + json.replace(/'/g, "'\\''") + "' > '" + root.configPath + "'"
+            "printf '%s' " + Paths.shellQuote(json) + " > " + Paths.shellQuote(root.configPath)
         ]
         saveConfigProc.running = true
     }
@@ -140,6 +145,7 @@ QtObject {
     property Process applyProc: Process {
         onExited: function(exitCode, exitStatus) {
             root.applying = false
+            root.applyFinished(exitCode === 0)
             if (exitCode === 0) {
                 root.wallpaperApplied(root.currentWall)
                 root.saveConfig()

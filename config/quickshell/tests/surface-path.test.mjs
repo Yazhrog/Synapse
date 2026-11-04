@@ -126,6 +126,9 @@ test("border width and corner radius extremes (Config → Appearance)", () => {
         assert.ok(filled(d, 960, 1000), `bottom panel t=${t} R=${R}`)
         assert.ok(!filled(d, 400, 500), `hole t=${t} R=${R}`)
         if (t > 0) assert.ok(filled(d, t / 2, 500), `left border t=${t} R=${R}`)
+        const clip = build({ ...g, bottomRight: { width: 420, height: 560 } })
+        assert.ok(filled(clip, 1700, 800), `clipboard panel t=${t} R=${R}`)
+        assert.equal((clip.match(/M /g) || []).length, 2, `two loops with the clipboard t=${t} R=${R}`)
     }
 })
 

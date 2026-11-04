@@ -100,7 +100,7 @@ Item {
         var s = JSON.stringify({ tasks: _tasks, nextId: _nextId })
         wrProc.command = [
             "bash", "-c",
-            "printf '%s' '" + s.replace(/'/g, "'\\''") + "' > '" + _filePath + "'"
+            "printf '%s' " + Paths.shellQuote(s) + " > " + Paths.shellQuote(_filePath)
         ]
         wrProc.running = false; wrProc.running = true
     }

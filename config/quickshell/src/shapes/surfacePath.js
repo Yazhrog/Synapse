@@ -173,12 +173,13 @@ function build(geo) {
     _arc(inner, W - t, rc.bot + rc.F, rc.F, true)
 
     // Bottom-right corner, or the bottom-right panel (clipboard) growing out of
-    // it. Below 2 corner radii in either direction the panel isn't drawn and
-    // the corner stays round, so its flares and corner never collapse to a
-    // sharp point.
+    // it. Below 2 corner radii (and 1 px) in either direction the panel isn't
+    // drawn and the corner stays round, so its flares and corner never
+    // collapse to a sharp point. With R = 0 the panel is a plain rectangle.
     const br = geo.bottomRight || {}
     const brW = _num(br.width, 0), brH = _num(br.height, 0)
-    if (Rm > 0 && brW >= 2 * Rm && brH >= 2 * Rm) {
+    const brMin = Math.max(2 * Rm, 1)
+    if (brW >= brMin && brH >= brMin) {
         const L = W - t - brW, T = H - t - brH
         const F = Math.max(EPS / 2, Math.min(Rm, brW / 2, brH / 2))
         const C = F
