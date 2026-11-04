@@ -44,7 +44,7 @@ Scope {
 
                 // Border wider than the default: reserve the difference on
                 // the sides and bottom (none at the default, as before).
-                readonly property int _extraBorder: Math.max(0, Math.round(
+                readonly property int _extraBorder: Theme.barStyle !== "frame" ? 0 : Math.max(0, Math.round(
                     (Theme.borderWidth - PrefsService.defaults.borderWidth) * SurfaceState.scaleFor(modelData)))
 
                 LazyLoader {

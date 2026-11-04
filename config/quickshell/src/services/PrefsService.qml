@@ -54,7 +54,10 @@ Singleton {
         backgroundOpacity:    100,
         backgroundBlur:       false,
         borderWidth:          6,
-        cornerRadius:         17
+        cornerRadius:         17,
+        // "frame" (notches joined by the borders), "bar" (full-width top
+        // bar, no borders) or "pills" (floating capsules).
+        barStyle:             "frame"
     })
 
     // ── Preferences ────────────────────────────────────────────────────────
@@ -73,6 +76,7 @@ Singleton {
     property alias backgroundBlur:              adapter.backgroundBlur
     property alias borderWidth:                 adapter.borderWidth
     property alias cornerRadius:                adapter.cornerRadius
+    property alias barStyle:                    adapter.barStyle
 
     // True once the file has been read (or created). Services that act on a
     // pref at startup should wait for it.
@@ -134,6 +138,7 @@ Singleton {
             property bool   backgroundBlur:              root.defaults.backgroundBlur
             property int    borderWidth:                 root.defaults.borderWidth
             property int    cornerRadius:                root.defaults.cornerRadius
+            property string barStyle:                    root.defaults.barStyle
         }
     }
 
