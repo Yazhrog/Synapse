@@ -7,15 +7,22 @@ import "../"
 
 // Single cava process shared by CenterContent and PlayerCard.
 // 32 bars at 30fps. isPlaying mirrors the active MPRIS player state.
+// `enabled` follows PrefsService.enableVisualiser: when off, cava is stopped
+// and the bars are hidden.
 
 QtObject {
     id: root
 
     readonly property int barCount: 32
+    readonly property bool enabled: PrefsService.ready && PrefsService.enableVisualiser
 
-    property var bars: (function() {
-        var a = []; for (var i = 0; i < 32; i++) a.push(0); return a
-    })()
+    function _zeros() {
+        var a = []; for (var i = 0; i < root.barCount; i++) a.push(0); return a
+    }
+
+    property var bars: _zeros()
+
+    onEnabledChanged: if (!enabled) bars = _zeros()
 
     // isPlaying is true if ANY MPRIS player is currently playing.
     // This ensures bars flow regardless of which player index is active in PlayerCard.
@@ -38,7 +45,7 @@ QtObject {
             "> /tmp/synapse/cava_shared.ini && " +
             "exec cava -p /tmp/synapse/cava_shared.ini 2>/dev/null"
         ]
-        running: true
+        running: root.enabled
         stdout: SplitParser {
             onRead: function(line) {
                 var t = line.trim()
