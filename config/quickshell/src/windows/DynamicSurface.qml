@@ -228,6 +228,7 @@ PanelWindow {
         WallpaperContent {
             fw:   root.notchRadius
             fh:   root.notchRadius
+            edgeInset: root.framed ? root.borderWidth : 0
             open: root.openContent === "wallpaper"
         }
     }
