@@ -25,3 +25,4 @@ singleton KanbanService 1.0 services/KanbanService.qml
 singleton WifiService 1.0 services/network/WifiService.qml
 singleton BluetoothService 1.0 services/network/BluetoothService.qml
 singleton VpnService 1.0 services/network/VpnService.qml
+singleton ActiveWindowService 1.0 services/ActiveWindowService.qml

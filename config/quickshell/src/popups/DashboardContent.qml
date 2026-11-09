@@ -2,6 +2,9 @@ import QtQuick
 import "../components"
 import "../modules/Center/"
 import "../services/"
+// Imported explicitly so quickshell scans services/home: its files reach
+// subdirectories (clock/, components/sliders) that are otherwise not found.
+import "../services/home"
 import "../"
 
 // DashboardContent — the dashboard UI: tab bar (Home / System / Tasks / Apps /
