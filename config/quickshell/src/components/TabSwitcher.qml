@@ -24,6 +24,19 @@ Item {
 	property string orientation: "horizontal"   // "horizontal" | "vertical"
 	// Horizontal only: the line under the tabs (off for a tab bar at the bottom).
 	property bool   divider:     true
+	// Horizontal only: "cells" — equal-width cells, each pill centred in its own;
+	// "evenly" — each tab as wide as its pill, with the same gap between pills
+	// and before the first / after the last.
+	property string spacing:     "cells"
+
+	readonly property bool _evenly: orientation === "horizontal" && spacing === "evenly"
+	property real _pillTotal: 0
+	function _sumPills() {
+		var t = 0
+		for (var i = 0; i < hRep.count; i++) { var it = hRep.itemAt(i); if (it) t += it.pillWidth }
+		_pillTotal = t
+	}
+	readonly property real _gap: Math.max(0, (width - _pillTotal) / (model.length + 1))
 
 	signal pageChanged(string key)
 
@@ -70,22 +83,38 @@ Item {
 		id: hRow
 		anchors.fill: parent
 		visible: root.orientation === "horizontal"
+		spacing:     root._evenly ? root._gap : 0
+		leftPadding: root._evenly ? root._gap : 0
 
 		Repeater {
+			id: hRep
 			model: root.orientation === "horizontal" ? root.model : []
+			onItemAdded:   root._sumPills()
+			onItemRemoved: root._sumPills()
 
 			delegate: Item {
 				id: hTab
 				readonly property bool isActive: root.currentPage === modelData.key
 
-				width:  hRow.width / root.model.length
+				// Sized with the active (Medium) label, so selecting a tab
+				// doesn't shift the others.
+				readonly property real pillWidth:
+					hIcon.implicitWidth + (modelData.label !== undefined ? 6 + labelMetrics.advanceWidth : 0) + 24
+				onPillWidthChanged: root._sumPills()
+				TextMetrics {
+					id: labelMetrics
+					font.pixelSize: 12; font.weight: Font.Medium
+					text: modelData.label ?? ""
+				}
+
+				width:  root._evenly ? pillWidth : hRow.width / root.model.length
 				height: hRow.height
 
 				// Pill background
 				Rectangle {
 					id: hBg
 					anchors.centerIn: parent
-					width:  hIcon.implicitWidth + hLabel.implicitWidth + 24
+					width:  root._evenly ? hTab.pillWidth : hIcon.implicitWidth + hLabel.implicitWidth + 24
 					height: parent.height - 8
 					radius: height / 2
 
