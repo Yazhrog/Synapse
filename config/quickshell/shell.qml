@@ -13,6 +13,7 @@ ShellRoot {
     property var _battery:    BatteryWarningService
     property var _focusMode:  FocusModeService
     property var _appearance: AppearanceService
+    property var _clock:      ClockState
 
     // One Dynamic Surface per screen (#37): frame, bar and every popup.
     ShellHost {}
