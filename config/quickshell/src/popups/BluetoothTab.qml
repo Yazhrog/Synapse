@@ -86,6 +86,7 @@ Item {
         Flickable {
             width: parent.width
             height: parent.height - 57 - (BluetoothService.scanning ? 90 : 0)
+            visible: BluetoothService.powered
             contentWidth: width; contentHeight: devCol.height
             clip: true; boundsBehavior: Flickable.StopAtBounds
             Behavior on height { NumberAnimation { duration: 250; easing.type: Easing.OutCubic } }
@@ -127,7 +128,7 @@ Item {
         }
     }
 
-    // Bluetooth off — covers the list only
+    // Bluetooth off — in place of the list
     RadioOffOverlay {
         anchors { fill: parent; topMargin: 57 }
         visible: !BluetoothService.powered

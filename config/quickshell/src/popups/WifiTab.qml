@@ -70,6 +70,7 @@ Item {
 
         Flickable {
             id: flick; width: parent.width; height: parent.height - 57 - ethBlock.height
+            visible: WifiService.radioOn
             contentWidth: width; contentHeight: contentCol.height; clip: true; boundsBehavior: Flickable.StopAtBounds
             Column {
                 id: contentCol; width: flick.width; height: implicitHeight; spacing: 4
@@ -111,7 +112,7 @@ Item {
         }
     }
 
-    // Wi-Fi off — covers the list only (below the header and the wired row)
+    // Wi-Fi off — in place of the list (below the header and the wired row)
     RadioOffOverlay {
         anchors { fill: parent; topMargin: 57 + ethBlock.height }
         visible: !WifiService.radioOn

@@ -1,8 +1,9 @@
 import QtQuick
 import "../../"
 
-// RadioOffOverlay — covers a tab's list while its radio is off, with a
-// "Turn On" button (the Wi-Fi and Bluetooth tabs).
+// RadioOffOverlay — "<radio> is off" and a "Turn On" button, shown in place
+// of a tab's list while its radio is off (the Wi-Fi and Bluetooth tabs hide
+// the list). No background of its own: the popup's frame shows through.
 
 Item {
     id: root
@@ -12,11 +13,6 @@ Item {
     property string title:   ""      // e.g. "Wi-Fi is off"
 
     signal turnOn()
-
-    Rectangle { anchors.fill: parent; color: Qt.rgba(Theme.background.r, Theme.background.g, Theme.background.b, 0.95) }
-
-    // Swallow clicks so they don't reach the list below
-    MouseArea { anchors.fill: parent }
 
     Column {
         anchors.centerIn: parent; spacing: 16
