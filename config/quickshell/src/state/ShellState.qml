@@ -6,12 +6,12 @@ import "../."
 
 // Global shell state.
 //
-// WiFi / Bluetooth  — owned by QuickSettings (nmcli / bluetoothctl)
-// Night Light       — owned by QuickSettings (hyprsunset)
-// Caffeine          — owned by QuickSettings (systemd-inhibit)
-// Hotspot           — owned by QuickSettings (nmcli hotspot)
-// Airplane Mode     — owned by QuickSettings (rfkill)
-// Focus Mode        — owned by QuickSettings; the surface collapses the bar and its strut reserves nothing
+// WiFi / Bluetooth  — written by QuickToggleService (nmcli / bluetoothctl) and BluetoothTab
+// Night Light       — QuickToggleService (sunsetr)
+// Caffeine          — QuickToggleService (wayland-idle-inhibitor)
+// Hotspot           — written by HotspotService (nmcli hotspot)
+// Airplane Mode     — written by QuickToggleService (rfkill)
+// Focus Mode        — written by FocusModeService; the surface collapses the bar and its strut reserves nothing
 // DND               — read by NotificationService to suppress incoming notifications
 // VPN               — written by VPNTab; read by Network.qml for bar icon
 

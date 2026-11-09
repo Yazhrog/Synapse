@@ -17,3 +17,7 @@ singleton ToastState 1.0 state/ToastState.qml
 singleton FocusModeService 1.0 services/FocusModeService.qml
 singleton AppearanceService 1.0 services/AppearanceService.qml
 singleton DataService 1.0 services/DataService.qml
+singleton BrightnessService 1.0 services/BrightnessService.qml
+singleton QuickToggleService 1.0 services/QuickToggleService.qml
+singleton HotspotService 1.0 services/HotspotService.qml
+singleton ScreenFilterService 1.0 services/ScreenFilterService.qml
