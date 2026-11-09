@@ -13,7 +13,8 @@ Synapse is a Wayland desktop shell for Hyprland: a Quickshell/QML shell UI (`con
 There is no build step. Two automated checks run in CI (`.github/workflows/quickshell.yml`) and locally:
 
 - `node config/quickshell/tests/surface-path.test.mjs` — unit tests of the surface frame path (`shapes/surfacePath.js`).
-- `config/quickshell/tests/smoke.sh` — loads the singletons and the shared UI components offscreen against throwaway data and fails on any QML error. Layer-shell windows can't be created offscreen, so the surface itself still needs a live session.
+- `config/quickshell/tests/smoke.sh` — loads the singletons and the shared UI components offscreen against throwaway data (`tests/smoke.qml`), then the popup contents through the Dynamic Surface's own imports only (`tests/smoke-imports.qml`), and fails on any QML error. Layer-shell windows can't be created offscreen, so the surface itself still needs a live session.
+- **Quickshell only finds files in folders it reaches through `import "…"` lines** from `shell.qml`. A folder that is only listed in a `qmldir` (`services/home`, `services/config_tab`) is not scanned, so imports *inside* its files (a sibling component, a subfolder, a `.js` module) fail at runtime with "X is not a type". `DashboardContent.qml` imports those two folders explicitly for this reason. When you add a component or subfolder used from such a folder, check that `smoke-imports.qml` still passes.
 
 Everything else is the installer and manual verification on a running Hyprland+Quickshell session:
 
