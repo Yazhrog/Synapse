@@ -2,6 +2,11 @@ import QtQuick
 import "../components"
 import "../modules/Center/"
 import "../services/"
+// Imported explicitly so quickshell scans these folders: they are only listed
+// in services/qmldir, and their files' own imports (clock/, components/sliders,
+// KeybindRow, …) are not found otherwise. tests/smoke-imports.qml checks this.
+import "../services/home"
+import "../services/config_tab"
 import "../"
 
 // DashboardContent — the dashboard UI: tab bar (Home / System / Tasks / Apps /
@@ -63,7 +68,7 @@ Item {
             Item {
                 anchors.fill: parent
                 visible:      root.page === "kanban"
-                KanbanBoard { anchors.fill: parent }
+                KanbanBoard { anchors.fill: parent; overlayParent: root }
             }
 
             Item {
