@@ -1,11 +1,10 @@
 import QtQuick
 import Quickshell
-import Quickshell.Io
 import Quickshell.Services.Pipewire
 import "../"
 
 // QuickControlContent — the volume and brightness sliders of the Quick
-// Controls OSD, with their state (default sink, brightnessctl polling).
+// Controls OSD, with the default sink; brightness comes from BrightnessService.
 // Hosted by the right-center region of DynamicSurface.
 Item {
     id: root
@@ -19,58 +18,9 @@ Item {
         objects: root.sink ? [root.sink] : []
     }
 
-    // ── Brightness State ──────────────────────────────────────────────────────
-    property real _bVal:  0.72
-    property int  _bMax:  100
-    property bool _bBusy: false
-
-    Process {
-        id: brightRead
-        command: ["bash", "-c", "brightnessctl -m"]
-        running: false
-        stdout: SplitParser {
-            onRead: function(line) {
-                var parts = line.split(",")
-                if (parts.length >= 5) {
-                    var cur = parseInt(parts[2])
-                    var max = parseInt(parts[4])
-                    if (max > 0) {
-                        root._bMax = max
-                        root._bVal = cur / max
-                    }
-                }
-            }
-        }
-    }
-
-    Process {
-        id: brightWrite
-        command: ["bash", "-c", "brightnessctl set " + (Math.round(root._bVal * root._bMax) <= 0 ? 2 : Math.round(root._bVal * root._bMax))]
-        running: false
-        onRunningChanged: if (!running) root._bBusy = false
-    }
-
-    Timer {
-        id: bDebounce
-        interval: 50; repeat: false
-        onTriggered: { root._bBusy = true; brightWrite.running = true }
-    }
-
-    Timer {
-        // Poll fast while the OSD is actually visible (e.g. holding the
-        // brightness key) so the slider tracks external changes without
-        // a laggy catch-up; idle otherwise to avoid needless polling.
-        interval: root.fastPoll ? 100 : 1000
-        running:  true
-        repeat:   true
-        onTriggered: if (!root._bBusy) brightRead.running = true
-    }
-
-    Component.onCompleted: brightRead.running = true
-
-    function setBrightness(v) {
-        root._bVal = Math.max(0.0, Math.min(1.0, v))
-        bDebounce.restart()
+    Binding {
+        target: BrightnessService; property: "fastPoll"
+        value: true; when: root.fastPoll
     }
 
     // ── Sliders Layout ────────────────────────────────────────────────
@@ -102,12 +52,12 @@ Item {
         // Brightness Slider
         ChannelColumn {
             icon:   "󰃠"
-            value:  root._bVal 
+            value:  BrightnessService.value
             muted:  false
             active: true
 
             onVolumeChanged: function(v) {
-                root.setBrightness(v)
+                BrightnessService.set(v)
             }
         }
     }
