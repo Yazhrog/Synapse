@@ -21,3 +21,4 @@ singleton BrightnessService 1.0 services/BrightnessService.qml
 singleton QuickToggleService 1.0 services/QuickToggleService.qml
 singleton HotspotService 1.0 services/HotspotService.qml
 singleton ScreenFilterService 1.0 services/ScreenFilterService.qml
+singleton KanbanService 1.0 services/KanbanService.qml

@@ -17,6 +17,7 @@ ShellRoot {
     property var _toggles:    QuickToggleService
     property var _hotspot:    HotspotService
     property var _filter:     ScreenFilterService
+    property var _kanban:     KanbanService
 
     // One Dynamic Surface per screen (#37): frame, bar and every popup.
     ShellHost {}
