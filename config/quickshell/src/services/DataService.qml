@@ -14,15 +14,10 @@ Singleton {
     id: root
 
     signal finished(string action, bool ok)
-    // Emitted once tasks.json has been emptied; KanbanBoard then empties its
-    // in-memory columns.
-    signal tasksCleared()
 
     readonly property bool busy: _proc.running
     // Human-readable size of Paths.cacheDir ("" = empty or missing).
     property string cacheSize: ""
-
-    readonly property string _tasksFile: Paths.userData("tasks.json")
 
     // ── Preferences ──────────────────────────────────────────────────────────
     function resetPrefs() {
@@ -64,15 +59,22 @@ Singleton {
             "[ -n \"$dir\" ] && [ \"$dir\" != \"$HOME\" ] || dir=\"$HOME/Documents\"; " +
             "mkdir -p \"$dir\" && " +
             "f=\"$dir/synapse_tasks_$(date +%Y-%m-%d_%H%M%S).json\" && " +
-            "cp " + Paths.shellQuote(root._tasksFile) + " \"$f\" && " +
+            "cp " + Paths.shellQuote(KanbanService.filePath) + " \"$f\" && " +
             "{ notify-send --app-name Synapse --icon document-save 'Tasks exported' \"$f\" || true; }")
     }
 
-    // The board is emptied only once the file is (see _proc), so a refused or
-    // failed write can't leave an empty board that saves over the tasks.
+    // KanbanService empties the file, then the board (only if the write worked).
     function clearTasks() {
-        root._run("tasks",
-            "printf '%s' '{\"tasks\":[],\"nextId\":0}' > " + Paths.shellQuote(root._tasksFile))
+        if (_proc.running) {
+            root.finished("tasks", false)
+            return
+        }
+        KanbanService.clear()
+    }
+
+    property Connections _kanban: Connections {
+        target: KanbanService
+        function onClearFinished(ok) { root.finished("tasks", ok) }
     }
 
     // History and pins.
@@ -132,7 +134,6 @@ Singleton {
             const action = root._action
             root._action = ""
             if (action === "cache") root.refreshCacheSize()
-            if (action === "tasks" && exitCode === 0) root.tasksCleared()
             root.finished(action, exitCode === 0)
         }
     }
