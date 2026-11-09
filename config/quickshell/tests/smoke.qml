@@ -11,13 +11,15 @@ import "./src/popups"
 import "./src/services"
 import "./src/services/config_tab"
 import "./src/modules/Right"
+import "./src/modules/Center"
 
 ShellRoot {
     property var _singletons: [Theme, Paths, PrefsService, SurfaceState, Popups, ToastState,
                                ShellState, KeybindService, UpdateService, IpcManager,
                                FocusModeService, CavaService, AppearanceService, DataService, ClockState,
                                BrightnessService, QuickToggleService, HotspotService, ScreenFilterService,
-                               KanbanService, WifiService, BluetoothService, VpnService]
+                               KanbanService, WifiService, BluetoothService, VpnService,
+                               ActiveWindowService]
 
     FloatingWindow {
         implicitWidth: 1920; implicitHeight: 1080
@@ -41,6 +43,7 @@ ShellRoot {
             AppearancePage      { width: 600; height: 300 }
             DataPage            { width: 600; height: 460 }
             Row { Clock {} Battery {} Audio {} }
+            CenterContent       {}
         }
     }
 
