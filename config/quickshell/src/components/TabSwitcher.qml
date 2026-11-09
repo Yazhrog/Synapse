@@ -24,10 +24,10 @@ Item {
 	property string orientation: "horizontal"   // "horizontal" | "vertical"
 	// Horizontal only: the line under the tabs (off for a tab bar at the bottom).
 	property bool   divider:     true
-	// Horizontal only: "cells" — equal-width cells, each pill centred in its own;
-	// "evenly" — each tab as wide as its pill, with the same gap between pills
-	// and before the first / after the last.
-	property string spacing:     "cells"
+	// Horizontal only: "evenly" — each tab as wide as its pill, with the same
+	// gap between pills and before the first / after the last; "cells" —
+	// equal-width cells, each pill centred in its own.
+	property string spacing:     "evenly"
 
 	readonly property bool _evenly: orientation === "horizontal" && spacing === "evenly"
 	property real _pillTotal: 0
