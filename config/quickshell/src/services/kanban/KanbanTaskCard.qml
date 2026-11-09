@@ -18,8 +18,6 @@ Item {
     property real xEntry:    0
     property real dragX:     0
 
-    readonly property bool isDelConfirm: card.board.delConfirmId === taskData.id
-
     height: cardBg.implicitHeight + 2
 
     transform: [
@@ -280,49 +278,6 @@ Item {
                         HoverHandler { id: dH; cursorShape: Qt.PointingHandCursor }
                         MouseArea { anchors.fill: parent; onClicked: card.board.delConfirmId = card.taskData.id }
                     }
-                }
-            }
-        }
-
-        // ── Delete confirmation overlay ────────────────────────────────────
-        Rectangle {
-            anchors.fill: parent; radius: parent.radius
-            visible: card.isDelConfirm
-            color: Qt.rgba(
-                Math.min(1, Theme.background.r + 0.05),
-                Math.min(1, Theme.background.g + 0.05),
-                Math.min(1, Theme.background.b + 0.05), 0.96)
-
-            Column {
-                anchors.centerIn: parent; spacing: 10
-                Text {
-                    anchors.horizontalCenter: parent.horizontalCenter
-                    text: "Delete task?"; color: Theme.text; font.pixelSize: 12; font.weight: Font.Medium
-                }
-                Row {
-                    anchors.horizontalCenter: parent.horizontalCenter; spacing: 8
-                    Rectangle {
-                        width: 64; height: 24; radius: 6
-                        color: cnH.hovered ? Qt.rgba(1,1,1,0.10) : Qt.rgba(1,1,1,0.05)
-                        border.color: Qt.rgba(1,1,1,0.10); border.width: 1
-                        Behavior on color { ColorAnimation { duration: 80 } }
-                        Text { anchors.centerIn: parent; text: "Cancel"; font.pixelSize: 11; color: Qt.rgba(1,1,1,0.60) }
-                        HoverHandler { id: cnH; cursorShape: Qt.PointingHandCursor }
-                        MouseArea { anchors.fill: parent; onClicked: card.board.delConfirmId = -1 }
-                    }
-                    Rectangle {
-                        width: 64; height: 24; radius: 6
-                        color: cfH.hovered ? "#cc3a3a" : "#993030"
-                        Behavior on color { ColorAnimation { duration: 80 } }
-                        Text { anchors.centerIn: parent; text: "Delete"; font.pixelSize: 11; font.weight: Font.Bold; color: "white" }
-                        HoverHandler { id: cfH; cursorShape: Qt.PointingHandCursor }
-                        MouseArea { anchors.fill: parent; onClicked: card.board.removeTask(card.taskData.id) }
-                    }
-                }
-                Text {
-                    anchors.horizontalCenter: parent.horizontalCenter
-                    text: "↵ confirm · ⎋ cancel"; font.pixelSize: 9
-                    color: Qt.rgba(1,1,1,0.20)
                 }
             }
         }

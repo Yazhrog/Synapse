@@ -12,8 +12,8 @@ import "kanban"
 //     to 0 with OutBack overshoot (rubber-band feel).
 //   • Due date: mini calendar + optional time picker, both optional.
 //     Time-only → today's date prepended automatically.
-//   • Delete confirm: Enter = confirm, Esc = cancel; only active when overlay
-//     is showing; dashboard close cancels automatically.
+//   • Delete confirm: a dialog over the whole dashboard; Enter = confirm,
+//     Esc = cancel; dashboard close cancels automatically.
 
 Item {
     id: root
@@ -25,7 +25,10 @@ Item {
     property var entryDirections: ({})   // id → dir   (x spring on column move)
 
     // ── Delete confirm ────────────────────────────────────────────────────────
-    property int delConfirmId: -1   // task id with overlay open, -1 = none
+    property int delConfirmId: -1   // task id with the dialog open, -1 = none
+
+    // Where the delete dialog is drawn (the whole dashboard); the board itself if unset.
+    property Item overlayParent: null
 
     // ── Actions used by the columns and cards ─────────────────────────────────
     function addTask(col, title) {
@@ -86,6 +89,9 @@ Item {
         }
     }
 
+    // The dialog lives outside the board: cancel it when leaving the Tasks tab.
+    onVisibleChanged: if (!visible) delConfirmId = -1
+
     onDelConfirmIdChanged: {
         if (delConfirmId >= 0) deleteKeyHandler.forceActiveFocus()
     }
@@ -112,6 +118,16 @@ Item {
                 height: mainRow.height
             }
         }
+    }
+
+    // ── Delete confirm dialog (dims the whole dashboard while open) ──────────
+    KanbanDeleteDialog {
+        parent:       root.overlayParent || root
+        anchors.fill: parent
+        z:            40
+        taskId:       root.delConfirmId
+        onConfirmed:  root.removeTask(root.delConfirmId)
+        onCancelled:  root.delConfirmId = -1
     }
 
     // ── Due-date picker (dims the board while open) ───────────────────────────

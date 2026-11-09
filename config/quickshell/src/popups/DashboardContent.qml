@@ -63,7 +63,7 @@ Item {
             Item {
                 anchors.fill: parent
                 visible:      root.page === "kanban"
-                KanbanBoard { anchors.fill: parent }
+                KanbanBoard { anchors.fill: parent; overlayParent: root }
             }
 
             Item {
