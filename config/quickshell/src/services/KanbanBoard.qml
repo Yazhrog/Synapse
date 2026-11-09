@@ -178,8 +178,9 @@ Item {
     // ── Columns ───────────────────────────────────────────────────────────────
     Row {
         id: mainRow
-        anchors.fill: parent
+        anchors { left: parent.left; right: parent.right; top: parent.top; bottom: hints.top }
         anchors.topMargin: 8
+        anchors.bottomMargin: 6
         spacing: 8
 
         Repeater {
@@ -196,6 +197,51 @@ Item {
                 cLabel: modelData.label
                 width:  (mainRow.width - mainRow.spacing * 2) / 3
                 height: mainRow.height
+            }
+        }
+    }
+
+    // ── Keyboard hints ────────────────────────────────────────────────────────
+    Row {
+        id: hints
+        anchors { horizontalCenter: parent.horizontalCenter; bottom: parent.bottom }
+        spacing: 14
+        opacity: root.activeFocus || root.keyNav ? 1 : 0.6
+        Behavior on opacity { NumberAnimation { duration: 150 } }
+
+        Repeater {
+            model: [
+                { keys: ["←", "→"],      label: "column" },
+                { keys: ["↑", "↓"],      label: "task"   },
+                { keys: ["⇧", "←", "→"], label: "move"   },
+                { keys: ["+"],           label: "add"    },
+                { keys: ["Del"],         label: "delete" }
+            ]
+            delegate: Row {
+                required property var modelData
+                spacing: 3
+
+                Repeater {
+                    model: modelData.keys
+                    delegate: Rectangle {
+                        required property string modelData
+                        anchors.verticalCenter: parent.verticalCenter
+                        width: Math.max(16, keyT.implicitWidth + 8); height: 16; radius: 4
+                        color: Qt.rgba(1, 1, 1, 0.06)
+                        border.color: Qt.rgba(1, 1, 1, 0.12); border.width: 1
+                        Text {
+                            id: keyT; anchors.centerIn: parent
+                            text: modelData; font.pixelSize: 9
+                            color: Qt.rgba(1, 1, 1, 0.55)
+                        }
+                    }
+                }
+                Text {
+                    anchors.verticalCenter: parent.verticalCenter
+                    leftPadding: 2
+                    text: modelData.label; font.pixelSize: 9
+                    color: Qt.rgba(1, 1, 1, 0.30)
+                }
             }
         }
     }
