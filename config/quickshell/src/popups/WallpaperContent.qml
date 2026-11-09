@@ -16,6 +16,11 @@ Item {
     property bool open: false
     property int  fw:   Theme.notchRadius
     property int  fh:   Theme.notchRadius
+    // Filled frame below the panel (the bottom border in the frame style; 0 in
+    // bar and pills, where the panel's bottom edge is the shape's edge).
+    property int  edgeInset: 0
+    // Gap between the bottom bar and the visible bottom edge, in every style
+    readonly property int bottomGap: 12
 
     // Reset the picker each time it opens (also when created already open).
     onOpenChanged: if (open) reset()
@@ -197,7 +202,9 @@ Item {
         Item {
             id: utilBar
             anchors.bottom:       parent.bottom
-            anchors.bottomMargin: -20
+            // content stops fh + 8 above the region's bottom; the frame border
+            // (edgeInset) adds to the gap below that.
+            anchors.bottomMargin: root.bottomGap - root.edgeInset - (root.fh + 8)
             anchors.left:         parent.left
             anchors.right:        parent.right
             height: 32
