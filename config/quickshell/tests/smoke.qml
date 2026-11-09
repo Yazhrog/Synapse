@@ -17,7 +17,7 @@ ShellRoot {
                                ShellState, KeybindService, UpdateService, IpcManager,
                                FocusModeService, CavaService, AppearanceService, DataService, ClockState,
                                BrightnessService, QuickToggleService, HotspotService, ScreenFilterService,
-                               KanbanService]
+                               KanbanService, WifiService, BluetoothService, VpnService]
 
     FloatingWindow {
         implicitWidth: 1920; implicitHeight: 1080

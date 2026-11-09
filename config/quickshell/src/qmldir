@@ -22,3 +22,6 @@ singleton QuickToggleService 1.0 services/QuickToggleService.qml
 singleton HotspotService 1.0 services/HotspotService.qml
 singleton ScreenFilterService 1.0 services/ScreenFilterService.qml
 singleton KanbanService 1.0 services/KanbanService.qml
+singleton WifiService 1.0 services/network/WifiService.qml
+singleton BluetoothService 1.0 services/network/BluetoothService.qml
+singleton VpnService 1.0 services/network/VpnService.qml

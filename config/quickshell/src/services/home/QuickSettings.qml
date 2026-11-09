@@ -7,7 +7,8 @@ import "../"
 // QuickSettings — the dashboard's right column: brightness slider and the
 // scrollable grid of toggle tiles, plus the shader picker of the Filter tile.
 // Layout only: the state and actions live in BrightnessService,
-// QuickToggleService, HotspotService, ScreenFilterService, ShellState,
+// QuickToggleService, WifiService, BluetoothService, HotspotService,
+// ScreenFilterService, ShellState,
 // FocusModeService and ScreenRecService.
 
 StatCard {
@@ -68,24 +69,23 @@ StatCard {
 
                     readonly property real btnW: (width - spacing) / 2
                     readonly property real btnH: btnW * 0.85
-                    readonly property bool wifiShown: QuickToggleService.wifiOn && !HotspotService.on
+                    readonly property bool wifiShown: WifiService.radioOn && !HotspotService.on
 
                     QuickToggleTile {
                         width: tileGrid.btnW; height: tileGrid.btnH
                         on: tileGrid.wifiShown
                         icon: tileGrid.wifiShown ? "󰤨" : "󰤭"; label: "Wi-Fi"
-                        sublabel: tileGrid.wifiShown && QuickToggleService.wifiSSID !== ""
-                                  ? QuickToggleService.wifiSSID
+                        sublabel: tileGrid.wifiShown && WifiService.ssid !== ""
+                                  ? WifiService.ssid
                                   : (HotspotService.on ? "Used by Hotspot" : "")
-                        onToggled: QuickToggleService.toggleWifi()
+                        onToggled: WifiService.toggleRadio()
                     }
                     QuickToggleTile {
                         width: tileGrid.btnW; height: tileGrid.btnH
-                        on: QuickToggleService.btOn
-                        icon: QuickToggleService.btOn ? "󰂱" : "󰂲"; label: "Bluetooth"
-                        sublabel: QuickToggleService.btOn && QuickToggleService.btDevice !== ""
-                                  ? QuickToggleService.btDevice : ""
-                        onToggled: QuickToggleService.toggleBluetooth()
+                        on: BluetoothService.powered
+                        icon: BluetoothService.powered ? "󰂱" : "󰂲"; label: "Bluetooth"
+                        sublabel: BluetoothService.powered ? BluetoothService.connectedName : ""
+                        onToggled: BluetoothService.togglePower()
                     }
                     QuickToggleTile {
                         width: tileGrid.btnW; height: tileGrid.btnH

@@ -53,8 +53,8 @@ Item {
                 anchors { left: parent.left; leftMargin: 76;
                 verticalCenter: parent.verticalCenter }
                 spacing: 6
-                Rectangle { width: 7; height: 7; radius: 4; anchors.verticalCenter: parent.verticalCenter; color: ShellState.hotspot ? Theme.active : Qt.rgba(1,1,1,0.22); Behavior on color { ColorAnimation { duration: 200 } } }
-                Text { anchors.verticalCenter: parent.verticalCenter; text: ShellState.hotspot ? "Active" : "Inactive"; font.pixelSize: 11; color: ShellState.hotspot ? Theme.active : Qt.rgba(1,1,1,0.32) }
+                Rectangle { width: 7; height: 7; radius: 4; anchors.verticalCenter: parent.verticalCenter; color: HotspotService.on ? Theme.active : Qt.rgba(1,1,1,0.22); Behavior on color { ColorAnimation { duration: 200 } } }
+                Text { anchors.verticalCenter: parent.verticalCenter; text: HotspotService.on ? "Active" : "Inactive"; font.pixelSize: 11; color: HotspotService.on ? Theme.active : Qt.rgba(1,1,1,0.32) }
             }
         }
 
