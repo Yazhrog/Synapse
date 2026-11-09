@@ -15,7 +15,8 @@ import "./src/modules/Right"
 ShellRoot {
     property var _singletons: [Theme, Paths, PrefsService, SurfaceState, Popups, ToastState,
                                ShellState, KeybindService, UpdateService, IpcManager,
-                               FocusModeService, CavaService, AppearanceService, DataService, ClockState]
+                               FocusModeService, CavaService, AppearanceService, DataService, ClockState,
+                               BrightnessService, QuickToggleService, HotspotService, ScreenFilterService]
 
     FloatingWindow {
         implicitWidth: 1920; implicitHeight: 1080

@@ -1,74 +1,40 @@
 import QtQuick
 import Quickshell
-import Quickshell.Io
 import "../"
 import "../components"
 
-// HotspotTab — config editor for hotspot SSID/password.
-// The actual start/stop toggle lives in QuickSettings tile.
-// Config stored in src/user_data/hotspot.json.
+// HotspotTab — config editor for the hotspot SSID/password.
+// The start/stop toggle is the Quick Settings tile; both use HotspotService,
+// which stores the credentials in src/user_data/hotspot.json.
 
 Item {
     id: root
 
-    property string _ssid:      "Synapse"
-    property string _password:  "changeme1"
+    property string _ssid:      HotspotService.ssid
+    property string _password:  HotspotService.password
     property bool   _showPass:  false
     property bool   _dirty:     false   // unsaved changes
 
-    readonly property string _cfgPath:
-        Paths.userData("hotspot.json")
+    function _save() { HotspotService.saveConfig(root._ssid, root._password) }
 
-    // ── Load ──────────────────────────────────────────────────────────────────
-    Process {
-        id: loadProc
-        command: ["bash", "-c",
-            "[ -f '" + root._cfgPath + "' ] || " +
-            "(mkdir -p \"$(dirname '" + root._cfgPath + "')\" && " +
-            "printf '%s' '{\"ssid\":\"Synapse\",\"password\":\"changeme1\"}' " +
-            "> '" + root._cfgPath + "'); " +
-            "cat '" + root._cfgPath + "'"]
-        running: false
-        stdout: StdioCollector {
-            onStreamFinished: {
-                if (text.trim() === "") return
-                try {
-                    var o = JSON.parse(text)
-                    if (o.ssid)     root._ssid     = o.ssid
-                    if (o.password) root._password = o.password
-                } catch(e) {}
-            }
+    Connections {
+        target: HotspotService
+        function onConfigLoaded() {
+            root._ssid     = HotspotService.ssid
+            root._password = HotspotService.password
         }
-    }
-
-    // ── Save ──────────────────────────────────────────────────────────────────
-    Process {
-        id: saveProc; command: []; running: false
-        onRunningChanged: if (!running) root._dirty = false
-    }
-
-    function _save() {
-        var j = JSON.stringify({ ssid: root._ssid, password: root._password })
-        saveProc.command = ["bash", "-c",
-            "printf '%s' " + Paths.shellQuote(j) + " > " + Paths.shellQuote(root._cfgPath)]
-        saveProc.running = false; saveProc.running = true
-    }
-
-    // Also update QuickSettings in-memory values so the tile uses new creds immediately
-    function _applyToQuickSettings() {
-        // Walk to the parent DashHome → QuickSettings sibling is not accessible,
-        // so we just save to disk; QS reads from disk on next hotspot start.
+        function onConfigSaved() { root._dirty = false }
     }
 
     Connections {
         target: Popups
         function onNetworkOpenChanged() {
             if (Popups.networkOpen && root.visible)
-                loadProc.running = true
+                HotspotService.loadConfig()
         }
     }
 
-    Component.onCompleted: loadProc.running = true
+    Component.onCompleted: HotspotService.loadConfig()
 
     // ── Layout ────────────────────────────────────────────────────────────────
     Column {

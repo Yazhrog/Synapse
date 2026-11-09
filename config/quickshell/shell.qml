@@ -14,6 +14,9 @@ ShellRoot {
     property var _focusMode:  FocusModeService
     property var _appearance: AppearanceService
     property var _clock:      ClockState
+    property var _toggles:    QuickToggleService
+    property var _hotspot:    HotspotService
+    property var _filter:     ScreenFilterService
 
     // One Dynamic Surface per screen (#37): frame, bar and every popup.
     ShellHost {}
