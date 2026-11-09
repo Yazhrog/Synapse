@@ -32,7 +32,7 @@ Item {
 
         // Header
         Item {
-            width: parent.width; height: 40
+            width: parent.width; height: 48   // header: 8 px around the 32 px buttons
 
             Text { anchors { left: parent.left; leftMargin: 2; verticalCenter: parent.verticalCenter }
             text: "Bluetooth"; font.pixelSize: 15; font.weight: Font.Bold; color: Theme.text }
@@ -85,7 +85,7 @@ Item {
 
         Flickable {
             width: parent.width
-            height: parent.height - 49 - (BluetoothService.scanning ? 90 : 0)
+            height: parent.height - 57 - (BluetoothService.scanning ? 90 : 0)
             contentWidth: width; contentHeight: devCol.height
             clip: true; boundsBehavior: Flickable.StopAtBounds
             Behavior on height { NumberAnimation { duration: 250; easing.type: Easing.OutCubic } }
@@ -129,7 +129,7 @@ Item {
 
     // Bluetooth off — covers the list only
     RadioOffOverlay {
-        anchors { fill: parent; topMargin: 49 }
+        anchors { fill: parent; topMargin: 57 }
         visible: !BluetoothService.powered
         z: 2
         glyph: "󰂲"; buttonGlyph: "󰂯"; title: "Bluetooth is off"

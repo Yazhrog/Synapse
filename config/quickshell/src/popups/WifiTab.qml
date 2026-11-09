@@ -40,7 +40,7 @@ Item {
         anchors.fill: parent; spacing: 0
 
         Item {
-            width: parent.width; height: 40
+            width: parent.width; height: 48   // header: 8 px around the 32 px buttons
             Text { anchors { left: parent.left; leftMargin: 2; verticalCenter: parent.verticalCenter }
             text: "Wi-Fi"; font.pixelSize: 15; font.weight: Font.Bold; color: Theme.text }
             Row {
@@ -69,7 +69,7 @@ Item {
         }
 
         Flickable {
-            id: flick; width: parent.width; height: parent.height - 49 - ethBlock.height
+            id: flick; width: parent.width; height: parent.height - 57 - ethBlock.height
             contentWidth: width; contentHeight: contentCol.height; clip: true; boundsBehavior: Flickable.StopAtBounds
             Column {
                 id: contentCol; width: flick.width; height: implicitHeight; spacing: 4
@@ -113,7 +113,7 @@ Item {
 
     // Wi-Fi off — covers the list only (below the header and the wired row)
     RadioOffOverlay {
-        anchors { fill: parent; topMargin: 49 + ethBlock.height }
+        anchors { fill: parent; topMargin: 57 + ethBlock.height }
         visible: !WifiService.radioOn
         z: 2
         glyph: "󰤭"; buttonGlyph: "󰤨"; title: "Wi-Fi is off"

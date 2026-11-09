@@ -17,6 +17,7 @@ Item {
             left:   parent.left
             right:  parent.right
             bottom: tabBar.top
+            bottomMargin: 8
         }
 
         Loader {

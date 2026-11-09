@@ -23,7 +23,7 @@ Item {
 
         // Header
         Item {
-            width: parent.width; height: 40
+            width: parent.width; height: 48   // header: 8 px around the 32 px buttons
 
             Text {
                 anchors { left: parent.left; leftMargin: 2; verticalCenter: parent.verticalCenter }
@@ -78,7 +78,7 @@ Item {
 
         // Connection list
         Flickable {
-            width: parent.width; height: parent.height - 49
+            width: parent.width; height: parent.height - 57
             contentWidth: width; contentHeight: conCol.height
             clip: true; boundsBehavior: Flickable.StopAtBounds
 
