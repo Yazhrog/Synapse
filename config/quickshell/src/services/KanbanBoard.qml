@@ -14,6 +14,8 @@ import "kanban"
 //     Time-only → today's date prepended automatically.
 //   • Delete confirm: a dialog over the whole dashboard; Enter = confirm,
 //     Esc = cancel; dashboard close cancels automatically.
+//   • Keyboard: ↑ ↓ select a task in its column, ← → the next column with
+//     tasks, Shift+← → move the selected task, Delete asks to delete it.
 
 Item {
     id: root
@@ -26,6 +28,9 @@ Item {
 
     // ── Delete confirm ────────────────────────────────────────────────────────
     property int delConfirmId: -1   // task id with the dialog open, -1 = none
+
+    // ── Keyboard selection ────────────────────────────────────────────────────
+    property int selectedId: -1     // task highlighted by the arrow keys, -1 = none
 
     // Where the delete dialog is drawn (the whole dashboard); the board itself if unset.
     property Item overlayParent: null
@@ -46,7 +51,76 @@ Item {
 
     function removeTask(id) {
         if (delConfirmId === id) delConfirmId = -1
+        if (selectedId === id) {
+            // Keep a selection in the same column: the next task, else the previous
+            var t = KanbanService.task(id)
+            var list = t ? tasksIn(t.column) : []
+            var i = list.findIndex(function(x) { return x.id === id })
+            var next = list[i + 1] || list[i - 1]
+            selectedId = next ? next.id : -1
+        }
         KanbanService.removeTask(id)
+    }
+
+    function tasksIn(col) {
+        return KanbanService.tasks.filter(function(t) { return t.column === col })
+    }
+
+    // dy: ±1 within the column; dx: ±1 to the next column that has tasks,
+    // keeping the row where possible. Nothing selected yet → the first task.
+    function navigate(dx, dy) {
+        var cols = [tasksIn(0), tasksIn(1), tasksIn(2)]
+        var sel  = KanbanService.task(selectedId)
+        if (!sel) {
+            for (var c0 = 0; c0 < 3; c0++)
+                if (cols[c0].length) { selectedId = cols[c0][0].id; return }
+            return
+        }
+        var c = sel.column
+        var i = cols[c].findIndex(function(t) { return t.id === sel.id })
+        if (dy !== 0) {
+            var ni = i + dy
+            if (ni >= 0 && ni < cols[c].length) selectedId = cols[c][ni].id
+            return
+        }
+        for (var nc = c + dx; nc >= 0 && nc <= 2; nc += dx) {
+            if (cols[nc].length) {
+                selectedId = cols[nc][Math.min(i, cols[nc].length - 1)].id
+                return
+            }
+        }
+    }
+
+    Keys.onPressed: function(ev) {
+        // Delete dialog open: Enter confirms, Esc cancels, nothing else
+        if (delConfirmId >= 0) {
+            if (ev.key === Qt.Key_Return || ev.key === Qt.Key_Enter) removeTask(delConfirmId)
+            else if (ev.key === Qt.Key_Escape) delConfirmId = -1
+            ev.accepted = true
+            return
+        }
+        // Date picker open: Esc closes it
+        if (datePicker.pickerTaskId >= 0) {
+            if (ev.key === Qt.Key_Escape) { datePicker.close(); ev.accepted = true }
+            return
+        }
+        var shift = ev.modifiers & Qt.ShiftModifier
+        switch (ev.key) {
+        case Qt.Key_Up:    navigate(0, -1); break
+        case Qt.Key_Down:  navigate(0,  1); break
+        case Qt.Key_Left:
+            if (shift) { if (selectedId >= 0) moveTask(selectedId, -1) } else navigate(-1, 0)
+            break
+        case Qt.Key_Right:
+            if (shift) { if (selectedId >= 0) moveTask(selectedId, 1) } else navigate(1, 0)
+            break
+        case Qt.Key_Delete:
+            if (KanbanService.task(selectedId)) delConfirmId = selectedId
+            break
+        default:
+            return
+        }
+        ev.accepted = true
     }
 
     function openPicker(taskId) { datePicker.open(taskId) }
@@ -56,6 +130,7 @@ Item {
         target: KanbanService
         function onCleared() {
             root.delConfirmId = -1
+            root.selectedId   = -1
             datePicker.close()
         }
     }
@@ -66,34 +141,22 @@ Item {
         function onDashboardOpenChanged() {
             if (!Popups.dashboardOpen) {
                 root.delConfirmId = -1
+                root.selectedId   = -1
                 datePicker.close()
             }
         }
     }
 
-    // ── Delete keyboard handler ───────────────────────────────────────────────
-    // Grabs focus when delete confirm opens; Enter = delete, Esc = cancel.
-    Item {
-        id: deleteKeyHandler
-        Keys.onReturnPressed: function(ev) {
-            if (root.delConfirmId >= 0) {
-                root.removeTask(root.delConfirmId)
-                ev.accepted = true
-            }
-        }
-        Keys.onEscapePressed: function(ev) {
-            if (root.delConfirmId >= 0) {
-                root.delConfirmId = -1
-                ev.accepted = true
-            }
-        }
+    // The dialog lives outside the board: cancel it when leaving the Tasks tab.
+    // Shown: take the keyboard for the arrows and Delete.
+    onVisibleChanged: {
+        if (visible) forceActiveFocus()
+        else delConfirmId = -1
     }
 
-    // The dialog lives outside the board: cancel it when leaving the Tasks tab.
-    onVisibleChanged: if (!visible) delConfirmId = -1
-
+    // The dialog's Enter / Esc reach the board (e.g. after a click on ✕).
     onDelConfirmIdChanged: {
-        if (delConfirmId >= 0) deleteKeyHandler.forceActiveFocus()
+        if (delConfirmId >= 0) forceActiveFocus()
     }
 
     // ── Columns ───────────────────────────────────────────────────────────────

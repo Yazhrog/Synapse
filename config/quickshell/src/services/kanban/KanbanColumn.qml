@@ -131,6 +131,7 @@ Item {
 
             // Task list
             Flickable {
+                id: taskFlick
                 anchors.top:       draftWrap.bottom
                 anchors.left:      parent.left
                 anchors.right:     parent.right
@@ -140,6 +141,15 @@ Item {
                 contentHeight:     taskCol.implicitHeight + 4
                 clip:              true
                 boundsBehavior:    Flickable.StopAtBounds
+
+                // Scrolls so the keyboard-selected card is fully shown.
+                function ensureVisible(item) {
+                    if (item.y < contentY)
+                        contentY = item.y
+                    else if (item.y + item.height > contentY + height)
+                        contentY = Math.min(item.y + item.height - height,
+                                            Math.max(0, contentHeight - height))
+                }
 
                 Column {
                     id: taskCol
@@ -153,6 +163,8 @@ Item {
                             width:    parent.width
                             taskData: modelData
                             colIdx:   colItem.cIdx
+                            onSelectedChanged: if (selected) Qt.callLater(taskFlick.ensureVisible, this)
+                            Component.onCompleted: if (selected) Qt.callLater(taskFlick.ensureVisible, this)
                         }
                     }
                 }

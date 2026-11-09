@@ -3,7 +3,7 @@ import "../../"
 
 // KanbanTaskCard — one task: inline-editable title, urgency and due badges,
 // the expandable urgency / due-date fields, ← → move and delete buttons,
-// swipe to move (with tilt and tint) and the delete-confirm overlay.
+// swipe to move (with tilt and tint), and a ring while selected by the keyboard.
 
 Item {
     id: card
@@ -13,6 +13,8 @@ Item {
     required property Item board
     property var taskData
     property int colIdx
+
+    readonly property bool selected: board.selectedId === taskData.id
 
     property bool showExtra: false
     property real xEntry:    0
@@ -124,6 +126,15 @@ Item {
             Behavior on color { ColorAnimation { duration: 60 } }
         }
 
+        // Keyboard selection ring
+        Rectangle {
+            anchors.fill: parent; radius: parent.radius
+            color: Qt.rgba(Theme.active.r, Theme.active.g, Theme.active.b, card.selected ? 0.06 : 0)
+            border.color: Theme.active; border.width: 1.5
+            opacity: card.selected ? 1 : 0
+            Behavior on opacity { NumberAnimation { duration: 100 } }
+        }
+
         Column {
             id: body
             anchors { left: parent.left; right: parent.right; leftMargin: 10; rightMargin: 10; top: parent.top; topMargin: 9 }
@@ -137,6 +148,14 @@ Item {
                 wrapMode:       TextInput.WordWrap
                 selectionColor: Qt.rgba(Theme.active.r, Theme.active.g, Theme.active.b, 0.35)
                 onEditingFinished: { var t = text.trim(); if (t !== "") KanbanService.patchTask(card.taskData.id, "title", t) }
+                // Editing selects the card; Enter / Esc hand the keyboard back to the board.
+                onActiveFocusChanged: if (activeFocus) card.board.selectedId = card.taskData.id
+                onAccepted: card.board.forceActiveFocus()
+                Keys.onEscapePressed: function(ev) {
+                    text = card.taskData.title
+                    card.board.forceActiveFocus()
+                    ev.accepted = true
+                }
             }
 
             // Badges row
