@@ -11,6 +11,7 @@ import "../services/"
 import "../popups/"
 import "../theme/"
 import "../"
+import "surface"
 
 // DynamicSurface — one fullscreen, transparent layer surface per screen that
 // draws the whole frame (top notches + borders) as a single morphing shape
@@ -248,7 +249,7 @@ PanelWindow {
 
     // Quick Controls OSD: right-center region, on the focused monitor or while
     // its border trigger is hovered, unless a popup owns that region.
-    readonly property bool quickShown: ((Popups.quickOpen && _focusedHere) || _quickHoverOpen)
+    readonly property bool quickShown: ((Popups.quickOpen && _focusedHere) || triggers.quickHoverOpen)
                                        && openRegion !== "rightCenter" && _quickFits
     readonly property int  quickWidth:  px(Metrics.osdWidth)
     readonly property int  sideHeight:  px(Metrics.sideRegionHeight)
@@ -293,11 +294,11 @@ PanelWindow {
 
     readonly property int lWidth: Math.max(
         px(Theme.lNotchMinWidth),
-        Math.min(px(Theme.lNotchMaxWidth), leftContent.implicitWidth + notchPadding * 2))
+        Math.min(px(Theme.lNotchMaxWidth), bar.leftContentWidth + notchPadding * 2))
 
     property real cWidth: _topT[0] > 0 ? _topT[0]
         : Math.max(px(Theme.cNotchMinWidth),
-                   Math.min(px(Theme.cNotchMaxWidth), centerContent.implicitWidth + notchPadding * 2))
+                   Math.min(px(Theme.cNotchMaxWidth), bar.centerContentWidth + notchPadding * 2))
     Behavior on cWidth { Anim {} }
     property real _cDrop: Math.max(0, _topT[1] - notchBottom)
     Behavior on _cDrop { Anim {} }
@@ -307,7 +308,7 @@ PanelWindow {
     // toast morph it.
     readonly property int _rBase: Math.max(
         px(Theme.rNotchMinWidth),
-        Math.min(px(Theme.rNotchMaxWidth), rightContent.implicitWidth + notchPadding * 2))
+        Math.min(px(Theme.rNotchMaxWidth), bar.rightContentWidth + notchPadding * 2))
     property real _rGrow: _rightT[0]
     Behavior on _rGrow { Anim {} }
     property real _rDrop: Math.max(0, _rightT[1] - notchBottom)
@@ -361,33 +362,10 @@ PanelWindow {
     // popups and the bar still get their own clicks first.
     readonly property bool shieldActive: openContent !== "none" || (recSetup && _focusedHere)
 
-    MouseArea {
-        id: clickShield
-        anchors.fill:    parent
-        enabled:         root.shieldActive
-        acceptedButtons: Qt.LeftButton | Qt.RightButton
-        onClicked: function(mouse) {
-            if (root._insideFrameOrPopup(mouse.x, mouse.y)) return
-            Popups.closeAll()
-        }
-    }
-
-    function _inRect(r, x, y) {
-        return x >= r.x && x <= r.x + r.width && y >= r.y && y <= r.y + r.height
-    }
-
-    function _insideFrameOrPopup(x, y) {
-        if (framed && (x < borderWidth || x > width - borderWidth || y < borderWidth || y > height - borderWidth))
-            return true
-        if (barStyle === "bar" && y < notchBottom)
-            return true
-        if (_inRect(Qt.rect(0, 0, lWidth, notchBottom), x, y)
-                || _inRect(Qt.rect((width - cWidth) / 2, 0, cWidth, centerBottom), x, y)
-                || _inRect(Qt.rect(width - rWidth, 0, rWidth, rightBottom), x, y))
-            return true
-        if (recOptions.visible && _inRect(Qt.rect(recOptions.x, recOptions.y, recOptions.width, recOptions.height), x, y))
-            return true
-        return openSpec !== null && _inRect(regionRect(openSpec.region), x, y)
+    SurfaceClickShield {
+        anchors.fill: parent
+        surface:      root
+        recOptions:   recOptions
     }
 
     // ── Shape ────────────────────────────────────────────────────────────────
@@ -414,59 +392,10 @@ PanelWindow {
     }
 
     // ── Bar content (fades out in focus mode) ────────────────────────────────
-    Item {
+    SurfaceBar {
+        id: bar
         anchors.fill: parent
-        opacity: ShellState.focusMode ? 0 : 1
-        Behavior on opacity { Anim {} }
-
-        // In pills the capsules start one gap from the edges: center the
-        // contents in them.
-        readonly property real _pillShift: root.pills ? root.borderWidth / 2 : 0
-
-        Item {
-            id: leftNotch
-            x: parent._pillShift; y: parent._pillShift
-            width:  root.lWidth
-            height: root.notchHeight
-
-            LeftContent {
-                id: leftContent
-                localScale: root.localScale
-                anchors.centerIn: parent
-            }
-        }
-
-        Item {
-            id: centerNotch
-            x: (root.width - root.cWidth) / 2; y: parent._pillShift
-            width:  root.cWidth
-            height: root.notchHeight
-
-            CenterContent {
-                id: centerContent
-                localScale: root.localScale
-                anchors.centerIn: parent
-                // The dashboard covers the notch while open.
-                opacity: root.openRegion === "top" ? 0 : 1
-                Behavior on opacity { Fade {} }
-            }
-        }
-
-        Item {
-            id: rightNotch
-            x: root.width - root.rWidth - parent._pillShift; y: parent._pillShift
-            width:  root.rWidth
-            height: root.notchHeight
-            clip:   true
-
-            RightContent {
-                id: rightContent
-                localScale: root.localScale
-                anchors.right:          parent.right
-                anchors.verticalCenter: parent.verticalCenter
-                anchors.rightMargin:    root.notchPadding
-            }
-        }
+        surface:      root
     }
 
     // ── Toast, inside the grown right notch ──────────────────────────────────
@@ -504,134 +433,19 @@ PanelWindow {
     }
 
     // ── Interactive popups ───────────────────────────────────────────────────
-    // One clip item per content, following its region's animated rectangle
-    // (so the content appears to grow out of the frame) and fading with its
-    // content flag. Contents are created on this screen the first time they
-    // open here, then kept. The scope gets keyboard focus while one is open;
-    // Escape closes the popup from anywhere inside.
-    property var _loaded: ({})
-    property var _items:  ({})
-
-    FocusScope {
+    // Each content grows out of its region; see SurfacePopupHost.
+    SurfacePopupHost {
         id: popupScope
         anchors.fill: parent
-        Keys.onEscapePressed: {
-            Popups.closeAll()
-            if (root.recSetup) ScreenRecService.cancelSetup()
-        }
-
-        Repeater {
-            model: root.contentKeys
-            delegate: Item {
-                id: regionClip
-                required property string modelData
-                readonly property var  spec: root.contents[modelData]
-                readonly property rect r:    root.regionRect(spec.region)
-                x: r.x; y: r.y; width: r.width; height: r.height
-                clip:    true
-                visible: opacity > 0
-                opacity: root.openContent === modelData ? 1 : 0
-                Behavior on opacity { Fade {} }
-
-                Loader {
-                    readonly property rect p: regionClip.spec.place(regionClip.width, regionClip.height)
-                    x: p.x; y: p.y; width: p.width; height: p.height
-                    active:          !!root._loaded[regionClip.modelData]
-                    sourceComponent: regionClip.spec.component
-                    onLoaded:        root._items[regionClip.modelData] = item
-                }
-            }
-        }
+        surface:      root
     }
 
-    // Hand the keyboard to the opened popup once the compositor has given it
-    // to the surface, and clean up the previous one after its close animation.
-    property string _lastContent: "none"
-    onOpenContentChanged: {
-        const prev = _lastContent
-        _lastContent = openContent
-        if (prev !== "none" && contents[prev] && contents[prev].afterClose) {
-            afterCloseTimer.key = prev
-            afterCloseTimer.restart()
-        }
-        // (openSpec may not be re-evaluated yet inside this handler.)
-        if (!contents[openContent]) return
-        if (!_loaded[openContent]) {
-            const loaded = Object.assign({}, _loaded)
-            loaded[openContent] = true
-            _loaded = loaded
-        }
-        focusTimer.restart()
-    }
-    onWantsKeyboardChanged: if (wantsKeyboard && !openSpec) focusTimer.restart()
-
-    Timer {
-        id: focusTimer
-        interval: 50
-        onTriggered: {
-            const spec = root.contents[root.openContent]
-            const item = root._items[root.openContent]
-            if (spec && item) spec.focus(item)
-            else popupScope.forceActiveFocus()
-        }
-    }
-
-    Timer {
-        id: afterCloseTimer
-        property string key: ""
-        interval: Theme.animDuration + 20
-        onTriggered: {
-            const item = root._items[key]
-            if (item && root.openContent !== key) root.contents[key].afterClose(item)
-        }
-    }
-
-    // ── Border triggers (#42) ────────────────────────────────────────────────
-    // Each zone is Metrics.edgeTriggerDepth deep (Hyprland's gaps_out), so
-    // it's easy to hit at the screen edge without covering windows, and at
-    // least as deep as the border.
-    readonly property int _triggerDepth: Math.max(px(Metrics.edgeTriggerDepth), borderWidth)
-
-    // Right border middle: hovering shows the Quick Controls OSD.
-    Item {
-        id: rightTrigger
-        x: root.width - width; y: (root.height - height) / 2
-        width: root._triggerDepth; height: root.px(Metrics.sideTriggerLength)
-        HoverHandler { id: rightTriggerHover }
-    }
-
-    // Bottom border centre: tap toggles the wallpaper picker.
-    Item {
-        id: bottomTrigger
-        x: (root.width - width) / 2; y: root.height - height
-        width: root.px(Metrics.bottomTriggerWidth); height: root._triggerDepth
-        TapHandler   { onTapped: Popups.toggle("wallpaper", root.screenName) }
-    }
-
-    // Bottom-right corner: tap toggles the clipboard.
-    Item {
-        id: cornerTrigger
-        x: root.width - width; y: root.height - height
-        width: root.px(Metrics.cornerTriggerWidth); height: root._triggerDepth
-        TapHandler { onTapped: Popups.toggle("clipboard", root.screenName) }
-    }
-
-    // Hover-open of the OSD: opens at once on the trigger, closes after
-    // Popups.hoverCloseDelay once neither the trigger nor the OSD is hovered.
-    property bool _quickHoverOpen: false
-    readonly property bool _quickHovered: rightTriggerHover.hovered || quickHover.hovered
-    on_QuickHoveredChanged: {
-        if (_quickHovered) {
-            quickHoverCloseTimer.stop()
-            if (rightTriggerHover.hovered) _quickHoverOpen = true
-        } else if (_quickHoverOpen) {
-            quickHoverCloseTimer.restart()
-        }
-    }
-    Timer {
-        id: quickHoverCloseTimer
-        interval: Popups.hoverCloseDelay
-        onTriggered: if (!root._quickHovered) root._quickHoverOpen = false
+    // ── Border triggers (#42): OSD hover, wallpaper and clipboard taps ───────
+    SurfaceTriggers {
+        id: triggers
+        anchors.fill: parent
+        surface:      root
+        osdHovered:   quickHover.hovered
     }
 
     // ── Screen-recording options (capture / audio), under the center notch ──
@@ -664,51 +478,11 @@ PanelWindow {
     }
 
     // ── Input mask: only the visible frame takes clicks ──────────────────────
-    // The screen edges only take clicks where there is a border (frame) or
-    // the bar (bar); in pills the gaps let clicks through.
-    readonly property int _edge:    framed ? Math.max(1, borderWidth) : 0
-    // At least 1 px, so the focus-mode dashboard strip stays clickable.
-    readonly property int _topEdge: barStyle === "bar" ? Math.max(1, Math.ceil(notchBottom)) : _edge
-
-    component RegionMask: Item {
-        property rect r
-        x: r.x; y: r.y; width: r.width; height: r.height
+    SurfaceInputMask {
+        id: inputMask
+        surface:    root
+        triggers:   triggers
+        recOptions: recOptions
     }
-
-    Item { id: maskTop;    x: 0; y: 0; width: root.width; height: root._topEdge }
-    Item { id: maskLeft;   x: 0; y: 0; width: root._edge; height: root.height }
-    Item { id: maskRight;  x: root.width - root._edge; y: 0; width: root._edge; height: root.height }
-    Item { id: maskBottom; x: 0; y: root.height - root._edge; width: root.width; height: root._edge }
-    Item { id: maskLeftNotch;   x: 0; y: 0; width: root.lWidth; height: root.notchBottom }
-    Item { id: maskCenterNotch; x: (root.width - root.cWidth) / 2; y: 0; width: root.cWidth; height: root.centerBottom }
-    Item { id: maskRightNotch;  x: root.width - root.rWidth; y: 0; width: root.rWidth; height: root.rightBottom }
-    RegionMask { id: maskLeftCenter; r: root.regionRect("leftCenter") }
-    RegionMask { id: maskRightCenter; r: root.regionRect("rightCenter") }
-    RegionMask { id: maskBottomCenter; r: root.regionRect("bottomCenter") }
-    RegionMask { id: maskBottomRight; r: root.regionRect("bottomRight") }
-    Item { id: maskRecOptions; x: recOptions.x; y: recOptions.y
-           width: recOptions.visible ? recOptions.width : 0; height: recOptions.visible ? recOptions.height : 0 }
-    Item { id: maskShield;  width: root.shieldActive ? root.width : 0; height: root.shieldActive ? root.height : 0 }
-    Item { id: maskVisible; width: root.frameHidden ? 0 : root.width; height: root.frameHidden ? 0 : root.height }
-
-    mask: Region {
-        Region { item: maskTop;          intersection: Intersection.Combine }
-        Region { item: maskLeft;         intersection: Intersection.Combine }
-        Region { item: maskRight;        intersection: Intersection.Combine }
-        Region { item: maskBottom;       intersection: Intersection.Combine }
-        Region { item: maskLeftNotch;    intersection: Intersection.Combine }
-        Region { item: maskCenterNotch;  intersection: Intersection.Combine }
-        Region { item: maskRightNotch;   intersection: Intersection.Combine }
-        Region { item: maskLeftCenter;   intersection: Intersection.Combine }
-        Region { item: maskRightCenter;  intersection: Intersection.Combine }
-        Region { item: maskBottomCenter; intersection: Intersection.Combine }
-        Region { item: maskBottomRight;  intersection: Intersection.Combine }
-        Region { item: rightTrigger;     intersection: Intersection.Combine }
-        Region { item: bottomTrigger;    intersection: Intersection.Combine }
-        Region { item: cornerTrigger;    intersection: Intersection.Combine }
-        Region { item: maskShield;       intersection: Intersection.Combine }
-        Region { item: maskRecOptions;   intersection: Intersection.Combine }
-        // Hidden over a fullscreen window: take no input at all.
-        Region { item: maskVisible;      intersection: Intersection.Intersect }
-    }
+    mask: inputMask.region
 }
