@@ -446,7 +446,7 @@ Item {
 									MouseArea {
 										anchors.fill: parent
 										cursorShape: Qt.PointingHandCursor
-										onClicked: ClockState.timerRunning = !ClockState.timerRunning
+										onClicked: ClockState.toggleTimer()
 									}
 								}
 								Text {
@@ -461,7 +461,7 @@ Item {
 										anchors.fill: parent
 										cursorShape: Qt.PointingHandCursor
 										onClicked: {
-											ClockState.requestTimerReset()
+											ClockState.resetTimer()
 										}
 									}
 								}
@@ -521,7 +521,7 @@ Item {
 										anchors.fill: parent
 										cursorShape: Qt.PointingHandCursor
 										onClicked: {
-										ClockState.swRunning = !ClockState.swRunning
+										ClockState.toggleStopwatch()
 										}
 									}
 								}
@@ -538,7 +538,7 @@ Item {
 											anchors.fill: parent
 											cursorShape: Qt.PointingHandCursor
 											onClicked: {
-												ClockState.requestStopwatchReset()
+												ClockState.resetStopwatch()
 											}
 										}
 									}
