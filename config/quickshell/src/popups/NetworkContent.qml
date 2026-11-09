@@ -57,6 +57,7 @@ Item {
             bottomMargin: 8
         }
         orientation: "horizontal"
+        divider:      false
         width:        parent.width
         currentPage:  root.page
         model: [

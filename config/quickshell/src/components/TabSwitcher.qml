@@ -22,6 +22,8 @@ Item {
 	property var    model:       []
 	property string currentPage: ""
 	property string orientation: "horizontal"   // "horizontal" | "vertical"
+	// Horizontal only: the line under the tabs (off for a tab bar at the bottom).
+	property bool   divider:     true
 
 	signal pageChanged(string key)
 
@@ -135,7 +137,7 @@ Item {
 
 	// Bottom divider — horizontal only
 	Rectangle {
-		visible:        root.orientation === "horizontal"
+		visible:        root.orientation === "horizontal" && root.divider
 		anchors.bottom: parent.bottom
 		anchors.left:   parent.left
 		anchors.right:  parent.right
