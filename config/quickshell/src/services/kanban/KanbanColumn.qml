@@ -18,10 +18,19 @@ Item {
 
     property bool draftOpen: false
 
+    function openDraft() { draftOpen = true; draftTimer.restart() }
+
+    // Keyboard focus on this column (after the arrow / + keys were used)
+    readonly property bool keyFocused: board.keyNav && board.focusCol === cIdx
+
     Rectangle {
         anchors.fill: parent; radius: Theme.cornerRadius
         color:        Qt.rgba(1, 1, 1, 0.03)
-        border.color: Qt.rgba(1, 1, 1, 0.07); border.width: 1
+        border.color: colItem.keyFocused
+                      ? Qt.rgba(Theme.active.r, Theme.active.g, Theme.active.b, 0.35)
+                      : Qt.rgba(1, 1, 1, 0.07)
+        border.width: 1
+        Behavior on border.color { ColorAnimation { duration: 100 } }
     }
 
     Column {
@@ -66,7 +75,7 @@ Item {
                 HoverHandler { id: addH; cursorShape: Qt.PointingHandCursor }
                 MouseArea {
                     anchors.fill: parent
-                    onClicked: { colItem.draftOpen = true; draftTimer.restart() }
+                    onClicked: colItem.openDraft()
                 }
             }
         }

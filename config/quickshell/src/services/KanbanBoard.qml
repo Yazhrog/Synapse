@@ -14,8 +14,9 @@ import "kanban"
 //     Time-only → today's date prepended automatically.
 //   • Delete confirm: a dialog over the whole dashboard; Enter = confirm,
 //     Esc = cancel; dashboard close cancels automatically.
-//   • Keyboard: ↑ ↓ select a task in its column, ← → the next column with
-//     tasks, Shift+← → move the selected task, Delete asks to delete it.
+//   • Keyboard: ← → focus a column, ↑ ↓ select a task in it, Shift+← → move
+//     the selected task, + adds a task to the focused column, Delete asks to
+//     delete the selected one.
 
 Item {
     id: root
@@ -30,7 +31,14 @@ Item {
     property int delConfirmId: -1   // task id with the dialog open, -1 = none
 
     // ── Keyboard selection ────────────────────────────────────────────────────
-    property int selectedId: -1     // task highlighted by the arrow keys, -1 = none
+    property int  selectedId: -1    // task highlighted by the arrow keys, -1 = none
+    property int  focusCol:   0     // column the keys act on (follows the selection)
+    property bool keyNav:     false // the keys have been used: show the column focus
+
+    onSelectedIdChanged: {
+        var t = KanbanService.task(selectedId)
+        if (t) focusCol = t.column
+    }
 
     // Where the delete dialog is drawn (the whole dashboard); the board itself if unset.
     property Item overlayParent: null
@@ -39,7 +47,8 @@ Item {
     function addTask(col, title) {
         // Recorded before the model changes, so the new card can read it
         newCardIds[KanbanService.nextId] = true
-        KanbanService.addTask(col, title)
+        var id = KanbanService.addTask(col, title)
+        if (keyNav) selectedId = id
     }
 
     function moveTask(id, dir) {
@@ -47,6 +56,7 @@ Item {
         if (!t || t.column + dir < 0 || t.column + dir > 2) return
         entryDirections[id] = dir
         KanbanService.moveTask(id, dir)
+        if (id === selectedId) focusCol = t.column + dir
     }
 
     function removeTask(id) {
@@ -66,29 +76,31 @@ Item {
         return KanbanService.tasks.filter(function(t) { return t.column === col })
     }
 
-    // dy: ±1 within the column; dx: ±1 to the next column that has tasks,
-    // keeping the row where possible. Nothing selected yet → the first task.
+    // dx: ±1 to the next column (empty ones too), keeping the row where
+    // possible; dy: ±1 within the focused column (nothing selected → its first task).
     function navigate(dx, dy) {
-        var cols = [tasksIn(0), tasksIn(1), tasksIn(2)]
+        keyNav = true
         var sel  = KanbanService.task(selectedId)
-        if (!sel) {
-            for (var c0 = 0; c0 < 3; c0++)
-                if (cols[c0].length) { selectedId = cols[c0][0].id; return }
-            return
-        }
-        var c = sel.column
-        var i = cols[c].findIndex(function(t) { return t.id === sel.id })
+        var list = tasksIn(focusCol)
+        var row  = sel ? list.findIndex(function(t) { return t.id === sel.id }) : -1
         if (dy !== 0) {
-            var ni = i + dy
-            if (ni >= 0 && ni < cols[c].length) selectedId = cols[c][ni].id
+            if (row < 0) { if (list.length) selectedId = list[0].id; return }
+            var ni = row + dy
+            if (ni >= 0 && ni < list.length) selectedId = list[ni].id
             return
         }
-        for (var nc = c + dx; nc >= 0 && nc <= 2; nc += dx) {
-            if (cols[nc].length) {
-                selectedId = cols[nc][Math.min(i, cols[nc].length - 1)].id
-                return
-            }
-        }
+        var nc = focusCol + dx
+        if (nc < 0 || nc > 2) return
+        var next = tasksIn(nc)
+        focusCol   = nc
+        selectedId = next.length ? next[Math.min(Math.max(row, 0), next.length - 1)].id : -1
+    }
+
+    // Opens the draft card of the focused column.
+    function addInFocusedColumn() {
+        keyNav = true
+        var col = columns.itemAt(focusCol)
+        if (col) col.openDraft()
     }
 
     Keys.onPressed: function(ev) {
@@ -113,6 +125,9 @@ Item {
             break
         case Qt.Key_Right:
             if (shift) { if (selectedId >= 0) moveTask(selectedId, 1) } else navigate(1, 0)
+            break
+        case Qt.Key_Plus:
+            addInFocusedColumn()
             break
         case Qt.Key_Delete:
             if (KanbanService.task(selectedId)) delConfirmId = selectedId
@@ -142,6 +157,7 @@ Item {
             if (!Popups.dashboardOpen) {
                 root.delConfirmId = -1
                 root.selectedId   = -1
+                root.keyNav       = false
                 datePicker.close()
             }
         }
@@ -167,6 +183,7 @@ Item {
         spacing: 8
 
         Repeater {
+            id: columns
             model: [
                 { idx: 0, label: "To Do"   },
                 { idx: 1, label: "Ongoing" },
