@@ -27,7 +27,7 @@ StatCard {
         TabSwitcher {
             id: tabs
             anchors { left: parent.left; right: parent.right; bottom: parent.bottom }
-            orientation: "horizontal"; width: parent.width
+            orientation: "horizontal"; divider: false; width: parent.width
             currentPage: root._mode
             model: [
                 { key: "clock",     icon: "󰥔", label: "Clock"     },

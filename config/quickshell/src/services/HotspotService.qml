@@ -11,7 +11,7 @@ import "../"
 // Needs an ethernet connection: toggle() checks it first, and a running
 // hotspot is torn down when the cable goes. The Wi-Fi radio is brought up
 // for the hotspot and turned back off on stop if it was off before.
-// Credentials live in user_data/hotspot.json; mirrors `on` into ShellState.hotspot.
+// Credentials live in user_data/hotspot.json.
 // ============================================================
 
 Singleton {
@@ -123,11 +123,8 @@ Singleton {
         running: false
         stdout: StdioCollector {
             onStreamFinished: {
-                root.on            = parseInt(text.trim()) > 0
-                ShellState.hotspot = root.on
-                root.label         = root.on ? "Active" : ""
-                // The Wi-Fi interface is owned by the hotspot
-                if (root.on) ShellState.wifiOn = false
+                root.on    = parseInt(text.trim()) > 0
+                root.label = root.on ? "Active" : ""
             }
         }
     }
@@ -145,7 +142,7 @@ Singleton {
                     root.busy  = false
                     return
                 }
-                root._wifiWasOff = !QuickToggleService.wifiOn
+                root._wifiWasOff = !WifiService.radioOn
                 root._start()
             }
         }
@@ -162,14 +159,11 @@ Singleton {
         }
         onExited: function(code, status) {
             if (code === 0) {
-                root.on            = true
-                root.label         = "Active"
-                ShellState.hotspot = true
-                ShellState.wifiOn  = false
+                root.on    = true
+                root.label = "Active"
             } else {
-                root.on            = false
-                root.label         = "Failed"
-                ShellState.hotspot = false
+                root.on    = false
+                root.label = "Failed"
                 labelResetTimer.restart()
             }
         }
@@ -180,16 +174,14 @@ Singleton {
         command: []
         running: false
         onRunningChanged: if (!running) {
-            root.busy          = false
-            root.on            = false
-            ShellState.hotspot = false
+            root.busy = false
+            root.on   = false
             if (root._wifiWasOff) {
                 // The radio was off before the hotspot started: turn it back off
-                QuickToggleService.setWifiRadio(false)
+                WifiService.setRadio(false)
                 root._wifiWasOff = false
             } else {
-                ShellState.wifiOn = QuickToggleService.wifiOn
-                QuickToggleService.pollWifi()
+                WifiService.poll()
             }
         }
     }

@@ -17,6 +17,7 @@ Item {
             left:   parent.left
             right:  parent.right
             bottom: tabBar.top
+            bottomMargin: 8
         }
 
         Loader {
@@ -46,16 +47,17 @@ Item {
         }
     }
 
-    // ── Tab bar — lifted by cornerRadius from the popup bottom ────────
+    // ── Tab bar — kept clear of the popup's bottom edge ───────────────
     TabSwitcher {
         id: tabBar
         anchors {
             left:         parent.left
             right:        parent.right
             bottom:       parent.bottom
-            bottomMargin: -16
+            bottomMargin: 8
         }
         orientation: "horizontal"
+        divider:      false
         width:        parent.width
         currentPage:  root.page
         model: [
