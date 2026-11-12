@@ -60,6 +60,12 @@ Singleton {
         _save()
     }
 
+    // Removes every task of one column, with a single save.
+    function clearColumn(column) {
+        tasks = tasks.filter(function(t) { return t.column !== column })
+        _save()
+    }
+
     function patchTask(id, key, val) {
         var list = tasks.slice()
         for (var i = 0; i < list.length; i++) {

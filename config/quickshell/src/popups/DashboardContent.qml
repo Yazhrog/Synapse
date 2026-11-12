@@ -40,6 +40,9 @@ Item {
                 { key: "config",   icon: "󰒓", label: "Config" },
             ]
             onPageChanged: function(key) { Popups.dashboardPage = key }
+            // Fades with the board behind the task delete dialog
+            opacity: kanbanBoard.delConfirmId >= 0 ? kanbanBoard.dimOpacity : 1
+            Behavior on opacity { NumberAnimation { duration: 150 } }
         }
 
         // ── Page area ─────────────────────────────────────────────────
@@ -68,7 +71,7 @@ Item {
             Item {
                 anchors.fill: parent
                 visible:      root.page === "kanban"
-                KanbanBoard { anchors.fill: parent; overlayParent: root }
+                KanbanBoard { id: kanbanBoard; anchors.fill: parent; overlayParent: root }
             }
 
             Item {
