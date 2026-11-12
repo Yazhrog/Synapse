@@ -4,7 +4,8 @@ import "../../"
 // KanbanDeleteDialog — a delete confirmation centred over whatever it fills:
 // the whole dashboard for one task ("Delete task?"), a single column for
 // "Clear" ("Delete N tasks?"). Shown while `shown`; a click around the box
-// cancels. Enter / Esc are handled by the board. It draws no dim of its own
+// cancels. The board forwards its keys to handleKey(): ← → / Tab pick a
+// button (Delete first), Enter runs it, Esc cancels. It draws no dim of its own
 // (a black layer showed as a box on a translucent frame): the content behind
 // it fades instead (KanbanBoard.modalOpen, DashboardContent's tab bar).
 
@@ -16,6 +17,25 @@ Item {
     property string detail:  ""
     signal confirmed()
     signal cancelled()
+
+    // Keyboard choice: 0 = Cancel, 1 = Delete. Back to Delete on every open.
+    property int choice: 1
+    onShownChanged: if (shown) choice = 1
+
+    // Returns true when the key was used.
+    function handleKey(ev) {
+        switch (ev.key) {
+        case Qt.Key_Left:    choice = 0; return true
+        case Qt.Key_Right:   choice = 1; return true
+        case Qt.Key_Tab:
+        case Qt.Key_Backtab: choice = 1 - choice; return true
+        case Qt.Key_Return:
+        case Qt.Key_Enter:
+        case Qt.Key_Space:   if (choice === 1) confirmed(); else cancelled(); return true
+        case Qt.Key_Escape:  cancelled(); return true
+        }
+        return false
+    }
 
     visible: shown
 
@@ -57,25 +77,28 @@ Item {
                 anchors.horizontalCenter: parent.horizontalCenter; spacing: 8
                 Rectangle {
                     width: 64; height: 24; radius: 6
-                    color: cnH.hovered ? Qt.rgba(1,1,1,0.10) : Qt.rgba(1,1,1,0.05)
-                    border.color: Qt.rgba(1,1,1,0.10); border.width: 1
+                    color: cnH.hovered || root.choice === 0 ? Qt.rgba(1,1,1,0.12) : Qt.rgba(1,1,1,0.05)
+                    border.color: root.choice === 0 ? Theme.active : Qt.rgba(1,1,1,0.10)
+                    border.width: root.choice === 0 ? 2 : 1
                     Behavior on color { ColorAnimation { duration: 80 } }
                     Text { anchors.centerIn: parent; text: "Cancel"; font.pixelSize: 11; color: Qt.rgba(1,1,1,0.60) }
-                    HoverHandler { id: cnH; cursorShape: Qt.PointingHandCursor }
+                    HoverHandler { id: cnH; cursorShape: Qt.PointingHandCursor; onHoveredChanged: if (hovered) root.choice = 0 }
                     MouseArea { anchors.fill: parent; onClicked: root.cancelled() }
                 }
                 Rectangle {
                     width: 64; height: 24; radius: 6
-                    color: cfH.hovered ? "#cc3a3a" : "#993030"
+                    color: cfH.hovered || root.choice === 1 ? "#cc3a3a" : "#993030"
+                    border.color: root.choice === 1 ? Theme.active : "transparent"
+                    border.width: 2
                     Behavior on color { ColorAnimation { duration: 80 } }
                     Text { anchors.centerIn: parent; text: "Delete"; font.pixelSize: 11; font.weight: Font.Bold; color: "white" }
-                    HoverHandler { id: cfH; cursorShape: Qt.PointingHandCursor }
+                    HoverHandler { id: cfH; cursorShape: Qt.PointingHandCursor; onHoveredChanged: if (hovered) root.choice = 1 }
                     MouseArea { anchors.fill: parent; onClicked: root.confirmed() }
                 }
             }
             Text {
                 anchors.horizontalCenter: parent.horizontalCenter
-                text: "↵ confirm · ⎋ cancel"; font.pixelSize: 9
+                text: "← → choose · ↵ select · ⎋ cancel"; font.pixelSize: 9
                 color: Qt.rgba(1,1,1,0.20)
             }
         }

@@ -14,8 +14,10 @@ import "kanban"
 //     Time-only → today's date prepended automatically.
 //   • Delete confirm: a dialog over the whole dashboard; Enter = confirm,
 //     Esc = cancel; dashboard close cancels automatically.
-//   • Clear column: the header's "Clear" dims that column with "Delete N
-//     tasks?"; Enter = confirm, Esc / click outside = cancel.
+//   • Clear column: the header's "Clear" (or Shift+Delete on the focused
+//     column) fades that column under "Delete N tasks?".
+//   • Both confirmations: ← → / Tab pick Cancel or Delete, Enter / Space run
+//     it, Esc or a click outside cancels.
 //   • Keyboard: ← → focus a column, ↑ ↓ select a task in it, Shift+← → move
 //     the selected task, + adds a task to the focused column, Delete asks to
 //     delete the selected one.
@@ -128,20 +130,10 @@ Item {
     }
 
     Keys.onPressed: function(ev) {
-        // Clear overlay open: Enter confirms, Esc cancels, nothing else
-        if (clearConfirmCol >= 0) {
-            if (ev.key === Qt.Key_Return || ev.key === Qt.Key_Enter) clearColumn(clearConfirmCol)
-            else if (ev.key === Qt.Key_Escape) clearConfirmCol = -1
-            ev.accepted = true
-            return
-        }
-        // Delete dialog open: Enter confirms, Esc cancels, nothing else
-        if (delConfirmId >= 0) {
-            if (ev.key === Qt.Key_Return || ev.key === Qt.Key_Enter) removeTask(delConfirmId)
-            else if (ev.key === Qt.Key_Escape) delConfirmId = -1
-            ev.accepted = true
-            return
-        }
+        // A confirmation is open: it gets the keys, nothing else does
+        // (Esc included, so it doesn't close the dashboard)
+        if (clearConfirmCol >= 0) { clearDialog.handleKey(ev); ev.accepted = true; return }
+        if (delConfirmId >= 0)    { delDialog.handleKey(ev);   ev.accepted = true; return }
         // Date picker open: Esc closes it
         if (datePicker.pickerTaskId >= 0) {
             if (ev.key === Qt.Key_Escape) { datePicker.close(); ev.accepted = true }
@@ -161,7 +153,8 @@ Item {
             addInFocusedColumn()
             break
         case Qt.Key_Delete:
-            if (KanbanService.task(selectedId)) delConfirmId = selectedId
+            if (shift) { keyNav = true; askClearColumn(focusCol) }
+            else if (KanbanService.task(selectedId)) delConfirmId = selectedId
             break
         default:
             return
@@ -254,7 +247,8 @@ Item {
                 { keys: ["↑", "↓"],      label: "task"   },
                 { keys: ["⇧", "←", "→"], label: "move"   },
                 { keys: ["+"],           label: "add"    },
-                { keys: ["Del"],         label: "delete" }
+                { keys: ["Del"],         label: "delete" },
+                { keys: ["⇧", "Del"],    label: "clear"  }
             ]
             delegate: Row {
                 required property var modelData
@@ -287,6 +281,7 @@ Item {
 
     // ── Delete confirm dialog (dims the whole dashboard while open) ──────────
     KanbanDeleteDialog {
+        id:           delDialog
         parent:       root.overlayParent || root
         anchors.fill: parent
         z:            40
@@ -305,6 +300,7 @@ Item {
     }
 
     KanbanDeleteDialog {
+        id: clearDialog
         readonly property real colW: (mainRow.width - mainRow.spacing * 2) / 3
         // Stays on the last column while hiding, so it doesn't jump.
         property int col: 0
