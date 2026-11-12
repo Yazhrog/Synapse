@@ -22,7 +22,7 @@ ShellRoot {
     FloatingWindow {
         implicitWidth: 1920; implicitHeight: 1080
         Column {
-            DashboardContent { width: 884;  height: 489 }
+            DashboardContent { id: dash; width: 884;  height: 489 }
             NetworkContent   { width: 467;  height: 576; page: Popups.networkPage || "wifi" }
             WallpaperContent { width: 1010; height: 420; open: true }
             CenterContent    {}
@@ -35,6 +35,7 @@ ShellRoot {
         () => Popups.dashboardPage = "kanban",
         () => Popups.dashboardPage = "launcher",
         () => Popups.dashboardPage = "config",
+        () => dash.reset(),
         () => Popups.networkPage   = "bluetooth",
         () => Popups.networkPage   = "vpn",
         () => Popups.networkPage   = "hotspot"

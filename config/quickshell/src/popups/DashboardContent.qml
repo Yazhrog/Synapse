@@ -17,8 +17,13 @@ Item {
 
     property string page: Popups.dashboardPage
 
-    // Back to the default tab look after the popup closed.
-    function reset() { tabBar.reset() }
+    // Runs after the close animation (DynamicSurface's afterClose): back to the
+    // default tab, Config's first tab scrolled to the top and the clock view.
+    function reset() {
+        tabBar.reset()
+        shellConfig.reset()
+        dashHome.reset()
+    }
     // Gives focus back to whichever page item last had it (e.g. the launcher search).
     function focusPage() { pageArea.forceActiveFocus() }
 
@@ -56,7 +61,7 @@ Item {
             Item {
                 anchors.fill: parent
                 visible:      root.page === "home"
-                DashHome { anchors.fill: parent }
+                DashHome { id: dashHome; anchors.fill: parent }
             }
 
             Item {
@@ -83,7 +88,7 @@ Item {
                 Item {
                     anchors.fill: parent
                     visible:      root.page === "config"
-                    ShellConfig { anchors.fill: parent }
+                    ShellConfig { id: shellConfig; anchors.fill: parent }
                 }
             }
 

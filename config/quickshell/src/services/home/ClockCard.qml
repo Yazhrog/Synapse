@@ -12,6 +12,10 @@ StatCard {
 
     property string _mode: "clock"
 
+    // Back to the clock (the dashboard closed). Running timers, stopwatches
+    // and alarms keep going in ClockState.
+    function reset() { _mode = "clock" }
+
     Item {
         anchors.fill: parent
 

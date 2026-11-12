@@ -21,6 +21,9 @@ Item {
     readonly property int profileH: 160
     readonly property int clockH:   220
 
+    // The dashboard closed: back to the clock view.
+    function reset() { clockCard.reset() }
+
     // ── Avatar path ───────────────────────────────────────────────────────────
     // Both gif (magick frame) and non-gif (symlink) cases land at the same
     // curr_wall_static.jpg, so no readlink resolution is needed.
