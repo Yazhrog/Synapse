@@ -11,6 +11,9 @@ import "../../"
 Item {
     id: root
 
+    // Back to the top (the dashboard closed).
+    function reset() { flick.cancelFlick(); flick.contentY = 0 }
+
     // ── Capture state ─────────────────────────────────────────────────────────
     // The action whose row is recording a combo, "" = none
     property string capturingAction: ""
@@ -141,6 +144,7 @@ Item {
 
     // ── Scrollable list ───────────────────────────────────────────────────────
     Flickable {
+        id: flick
         anchors {
             top:         _saveBanner.bottom
             left:        parent.left

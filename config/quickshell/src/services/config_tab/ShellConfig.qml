@@ -8,6 +8,12 @@ Item {
 
     property string _page: "general"
 
+    // First tab, every page scrolled to the top (the dashboard closed).
+    function reset() {
+        _page = _tabs[0].key
+        generalPage.reset(); dataPage.reset(); keybindsPage.reset()
+    }
+
     readonly property var _tabs: [
         { key: "general",    icon: "󰒓", label: "General"           },
         { key: "appearance", icon: "󰏘", label: "Appearance"        },
@@ -59,7 +65,7 @@ Item {
             Item {
                 anchors.fill: parent
                 visible: root._page === "general"
-                GeneralPage { anchors.fill: parent }
+                GeneralPage { id: generalPage; anchors.fill: parent }
             }
             Item {
                 anchors.fill: parent
@@ -74,12 +80,12 @@ Item {
             Item {
                 anchors.fill: parent
                 visible: root._page === "data"
-                DataPage { anchors.fill: parent }
+                DataPage { id: dataPage; anchors.fill: parent }
             }
             Item {
                 anchors.fill: parent
                 visible: root._page === "keybinds"
-                KeybindsPage { anchors.fill: parent }
+                KeybindsPage { id: keybindsPage; anchors.fill: parent }
             }
             Item {
                 anchors.fill: parent

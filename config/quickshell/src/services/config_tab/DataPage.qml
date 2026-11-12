@@ -12,6 +12,9 @@ import "../../components"
 Item {
     id: root
 
+    // Back to the top (the dashboard closed).
+    function reset() { flick.cancelFlick(); flick.contentY = 0 }
+
     onVisibleChanged: if (visible) DataService.refreshCacheSize()
     Component.onCompleted: DataService.refreshCacheSize()
 
@@ -34,6 +37,7 @@ Item {
     }
 
     Flickable {
+        id: flick
         anchors {
             fill:         parent
             topMargin:    14

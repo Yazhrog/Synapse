@@ -10,7 +10,11 @@ import "../../components"
 Item {
     id: root
 
+    // Back to the top (the dashboard closed).
+    function reset() { flick.cancelFlick(); flick.contentY = 0 }
+
     Flickable {
+        id: flick
         anchors {
             fill:         parent
             topMargin:    14

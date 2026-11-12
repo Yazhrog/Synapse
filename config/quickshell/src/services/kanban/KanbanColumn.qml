@@ -1,7 +1,8 @@
 import QtQuick
 import "../../"
 
-// KanbanColumn — one board column: header (name, task count, + button),
+// KanbanColumn — one board column: header (name, task count, Clear and +
+// buttons; Clear asks the board to confirm),
 // the draft card for a new task (saved on Enter or focus loss with text)
 // and the scrollable task list.
 
@@ -22,6 +23,10 @@ Item {
 
     // Keyboard focus on this column (after the arrow / + keys were used)
     readonly property bool keyFocused: board.keyNav && board.focusCol === cIdx
+
+    // Faded behind its own "Clear" confirmation
+    opacity: board.clearConfirmCol === cIdx ? board.dimOpacity : 1
+    Behavior on opacity { NumberAnimation { duration: 150 } }
 
     Rectangle {
         anchors.fill: parent; radius: Theme.cornerRadius
@@ -61,8 +66,30 @@ Item {
                 }
             }
 
+            // Clear button — only when the column has tasks
+            Rectangle {
+                anchors { right: addBtn.left; rightMargin: 6; verticalCenter: parent.verticalCenter }
+                visible: colItem.cTasks.length > 0
+                width: clrT.implicitWidth + 14; height: 22; radius: 6
+                color: clrH.hovered ? Qt.rgba(0.8, 0.23, 0.23, 0.22) : Qt.rgba(1, 1, 1, 0.05)
+                border.color: clrH.hovered ? Qt.rgba(0.8, 0.23, 0.23, 0.45) : Qt.rgba(1, 1, 1, 0.10)
+                border.width: 1
+                Behavior on color { ColorAnimation { duration: 100 } }
+                Text {
+                    id: clrT; anchors.centerIn: parent
+                    text: "Clear"; font.pixelSize: 10
+                    color: clrH.hovered ? "#f38ba8" : Qt.rgba(1, 1, 1, 0.45)
+                }
+                HoverHandler { id: clrH; cursorShape: Qt.PointingHandCursor }
+                MouseArea {
+                    anchors.fill: parent
+                    onClicked: colItem.board.askClearColumn(colItem.cIdx)
+                }
+            }
+
             // Add (+) button
             Rectangle {
+                id: addBtn
                 anchors { right: parent.right; verticalCenter: parent.verticalCenter }
                 width: 22; height: 22; radius: 6
                 color: addH.hovered
