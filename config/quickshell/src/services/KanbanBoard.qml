@@ -14,6 +14,8 @@ import "kanban"
 //     Time-only → today's date prepended automatically.
 //   • Delete confirm: a dialog over the whole dashboard; Enter = confirm,
 //     Esc = cancel; dashboard close cancels automatically.
+//   • Clear column: the header's "Clear" dims that column with "Delete N
+//     tasks?"; Enter = confirm, Esc / click outside = cancel.
 //   • Keyboard: ← → focus a column, ↑ ↓ select a task in it, Shift+← → move
 //     the selected task, + adds a task to the focused column, Delete asks to
 //     delete the selected one.
@@ -29,6 +31,9 @@ Item {
 
     // ── Delete confirm ────────────────────────────────────────────────────────
     property int delConfirmId: -1   // task id with the dialog open, -1 = none
+
+    // ── Clear column confirm ──────────────────────────────────────────────────
+    property int clearConfirmCol: -1   // column with the overlay open, -1 = none
 
     // ── Keyboard selection ────────────────────────────────────────────────────
     property int  selectedId: -1    // task highlighted by the arrow keys, -1 = none
@@ -72,6 +77,21 @@ Item {
         KanbanService.removeTask(id)
     }
 
+    // Asks to clear a column (its header's "Clear"); closes the other dialogs.
+    function askClearColumn(col) {
+        if (!tasksIn(col).length) return
+        delConfirmId = -1
+        datePicker.close()
+        clearConfirmCol = col
+    }
+
+    function clearColumn(col) {
+        clearConfirmCol = -1
+        var sel = KanbanService.task(selectedId)
+        if (sel && sel.column === col) selectedId = -1
+        KanbanService.clearColumn(col)
+    }
+
     function tasksIn(col) {
         return KanbanService.tasks.filter(function(t) { return t.column === col })
     }
@@ -104,6 +124,13 @@ Item {
     }
 
     Keys.onPressed: function(ev) {
+        // Clear overlay open: Enter confirms, Esc cancels, nothing else
+        if (clearConfirmCol >= 0) {
+            if (ev.key === Qt.Key_Return || ev.key === Qt.Key_Enter) clearColumn(clearConfirmCol)
+            else if (ev.key === Qt.Key_Escape) clearConfirmCol = -1
+            ev.accepted = true
+            return
+        }
         // Delete dialog open: Enter confirms, Esc cancels, nothing else
         if (delConfirmId >= 0) {
             if (ev.key === Qt.Key_Return || ev.key === Qt.Key_Enter) removeTask(delConfirmId)
@@ -144,7 +171,8 @@ Item {
     Connections {
         target: KanbanService
         function onCleared() {
-            root.delConfirmId = -1
+            root.delConfirmId    = -1
+            root.clearConfirmCol = -1
             root.selectedId   = -1
             datePicker.close()
         }
@@ -155,7 +183,8 @@ Item {
         target: Popups
         function onDashboardOpenChanged() {
             if (!Popups.dashboardOpen) {
-                root.delConfirmId = -1
+                root.delConfirmId    = -1
+                root.clearConfirmCol = -1
                 root.selectedId   = -1
                 root.keyNav       = false
                 datePicker.close()
@@ -167,12 +196,15 @@ Item {
     // Shown: take the keyboard for the arrows and Delete.
     onVisibleChanged: {
         if (visible) forceActiveFocus()
-        else delConfirmId = -1
+        else { delConfirmId = -1; clearConfirmCol = -1 }
     }
 
     // The dialog's Enter / Esc reach the board (e.g. after a click on ✕).
     onDelConfirmIdChanged: {
         if (delConfirmId >= 0) forceActiveFocus()
+    }
+    onClearConfirmColChanged: {
+        if (clearConfirmCol >= 0) forceActiveFocus()
     }
 
     // ── Columns ───────────────────────────────────────────────────────────────
@@ -251,9 +283,35 @@ Item {
         parent:       root.overlayParent || root
         anchors.fill: parent
         z:            40
-        taskId:       root.delConfirmId
+        shown:        root.delConfirmId >= 0
+        detail:       { var t = KanbanService.task(root.delConfirmId); return t ? t.title : "" }
         onConfirmed:  root.removeTask(root.delConfirmId)
         onCancelled:  root.delConfirmId = -1
+    }
+
+    // ── Clear column confirm (dims that column; a click anywhere else cancels) ─
+    MouseArea {
+        anchors.fill: parent
+        z:            30
+        visible:      root.clearConfirmCol >= 0
+        onClicked:    root.clearConfirmCol = -1
+    }
+
+    KanbanDeleteDialog {
+        readonly property real colW: (mainRow.width - mainRow.spacing * 2) / 3
+        // Stays on the last column while hiding, so it doesn't jump.
+        property int col: 0
+        x:      mainRow.x + col * (colW + mainRow.spacing)
+        y:      mainRow.y
+        width:  colW
+        height: mainRow.height
+        z:      31
+        shown:   root.clearConfirmCol >= 0
+        heading: { var n = root.tasksIn(col).length; return "Delete " + n + (n === 1 ? " task?" : " tasks?") }
+        detail:  columns.model[col].label
+        onShownChanged: if (shown) col = root.clearConfirmCol
+        onConfirmed:    root.clearColumn(root.clearConfirmCol)
+        onCancelled:    root.clearConfirmCol = -1
     }
 
     // ── Due-date picker (dims the board while open) ───────────────────────────

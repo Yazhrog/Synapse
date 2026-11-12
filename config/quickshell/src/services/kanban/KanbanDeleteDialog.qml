@@ -1,20 +1,21 @@
 import QtQuick
 import "../../"
 
-// KanbanDeleteDialog — "Delete task?" confirmation, centred over the whole
-// dashboard with a dim behind it. Shown while `taskId` >= 0; a click on the
-// dim cancels. Enter / Esc are handled by the board.
+// KanbanDeleteDialog — a delete confirmation centred over whatever it fills,
+// with a dim behind it: the whole dashboard for one task ("Delete task?"),
+// a single column for "Clear" ("Delete N tasks?"). Shown while `shown`; a click
+// on the dim cancels. Enter / Esc are handled by the board.
 
 Item {
     id: root
 
-    property int taskId: -1
+    property bool   shown:   false
+    property string heading: "Delete task?"
+    property string detail:  ""
     signal confirmed()
     signal cancelled()
 
-    readonly property var _task: taskId >= 0 ? KanbanService.task(taskId) : null
-
-    visible: taskId >= 0
+    visible: shown
 
     // Dim — swallows clicks and cancels
     Rectangle {
@@ -26,7 +27,7 @@ Item {
 
     Rectangle {
         anchors.centerIn: parent
-        width:  Math.max(230, col.implicitWidth + 32)
+        width:  Math.min(root.width - 16, Math.max(230, col.implicitWidth + 32))
         height: col.implicitHeight + 28
         radius: Theme.cornerRadius
         color: Qt.rgba(
@@ -44,13 +45,13 @@ Item {
 
             Text {
                 anchors.horizontalCenter: parent.horizontalCenter
-                text: "Delete task?"; color: Theme.text; font.pixelSize: 12; font.weight: Font.Medium
+                text: root.heading; color: Theme.text; font.pixelSize: 12; font.weight: Font.Medium
             }
             Text {
                 anchors.horizontalCenter: parent.horizontalCenter
-                width: Math.min(implicitWidth, 260)
+                width: Math.min(implicitWidth, root.width - 64, 260)
                 visible: text !== ""
-                text: root._task ? root._task.title : ""
+                text: root.detail
                 horizontalAlignment: Text.AlignHCenter
                 elide: Text.ElideRight
                 font.pixelSize: 11; color: Qt.rgba(1,1,1,0.50)
