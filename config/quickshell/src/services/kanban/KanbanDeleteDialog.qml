@@ -1,10 +1,12 @@
 import QtQuick
 import "../../"
 
-// KanbanDeleteDialog — a delete confirmation centred over whatever it fills,
-// with a dim behind it: the whole dashboard for one task ("Delete task?"),
-// a single column for "Clear" ("Delete N tasks?"). Shown while `shown`; a click
-// on the dim cancels. Enter / Esc are handled by the board.
+// KanbanDeleteDialog — a delete confirmation centred over whatever it fills:
+// the whole dashboard for one task ("Delete task?"), a single column for
+// "Clear" ("Delete N tasks?"). Shown while `shown`; a click around the box
+// cancels. Enter / Esc are handled by the board. It draws no dim of its own
+// (a black layer showed as a box on a translucent frame): the content behind
+// it fades instead (KanbanBoard.modalOpen, DashboardContent's tab bar).
 
 Item {
     id: root
@@ -17,13 +19,8 @@ Item {
 
     visible: shown
 
-    // Dim — swallows clicks and cancels
-    Rectangle {
-        anchors.fill: parent
-        radius: Theme.cornerRadius
-        color: Qt.rgba(0, 0, 0, 0.35)
-        MouseArea { anchors.fill: parent; onClicked: root.cancelled() }
-    }
+    // Click catcher — swallows clicks around the box and cancels
+    MouseArea { anchors.fill: parent; onClicked: root.cancelled() }
 
     Rectangle {
         anchors.centerIn: parent

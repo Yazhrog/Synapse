@@ -45,6 +45,10 @@ Item {
         if (t) focusCol = t.column
     }
 
+    // A dialog is up over the whole board: the columns and hints fade behind it.
+    readonly property bool modalOpen: delConfirmId >= 0 || datePicker.pickerTaskId >= 0
+    readonly property real dimOpacity: 0.3
+
     // Where the delete dialog is drawn (the whole dashboard); the board itself if unset.
     property Item overlayParent: null
 
@@ -214,6 +218,8 @@ Item {
         anchors.topMargin: 8
         anchors.bottomMargin: 6
         spacing: 8
+        opacity: root.modalOpen ? root.dimOpacity : 1
+        Behavior on opacity { NumberAnimation { duration: 150 } }
 
         Repeater {
             id: columns
@@ -238,7 +244,8 @@ Item {
         id: hints
         anchors { horizontalCenter: parent.horizontalCenter; bottom: parent.bottom }
         spacing: 14
-        opacity: root.activeFocus || root.keyNav ? 1 : 0.6
+        opacity: root.modalOpen || root.clearConfirmCol >= 0 ? root.dimOpacity
+               : root.activeFocus || root.keyNav ? 1 : 0.6
         Behavior on opacity { NumberAnimation { duration: 150 } }
 
         Repeater {
@@ -289,7 +296,7 @@ Item {
         onCancelled:  root.delConfirmId = -1
     }
 
-    // ── Clear column confirm (dims that column; a click anywhere else cancels) ─
+    // ── Clear column confirm (fades that column; a click anywhere else cancels) ─
     MouseArea {
         anchors.fill: parent
         z:            30

@@ -4,7 +4,8 @@ import "../../"
 // KanbanDatePicker — the due-date picker: dims the board and shows a month
 // calendar with an optional time. open(taskId) loads the task's due date;
 // Done saves it (time only → today), Clear removes it, a click outside cancels.
-// Fills the board; shown while pickerTaskId >= 0.
+// Fills the board; shown while pickerTaskId >= 0. The board fades its
+// columns behind it (a black dim showed as a box on a translucent frame).
 
 Item {
     id: root
@@ -95,12 +96,11 @@ Item {
         root.pickerTaskId = -1
     }
 
-    // ── Picker dim overlay ────────────────────────────────────────────────────
-    Rectangle {
+    // ── Click catcher: a click outside the picker cancels ─────────────────────
+    MouseArea {
         anchors.fill: parent; z: 29
         visible: root.pickerTaskId >= 0
-        color:   Qt.rgba(0, 0, 0, 0.35)
-        MouseArea { anchors.fill: parent; onClicked: root.pickerTaskId = -1 }
+        onClicked: root.pickerTaskId = -1
     }
 
     // ── Date / time picker popup ──────────────────────────────────────────────

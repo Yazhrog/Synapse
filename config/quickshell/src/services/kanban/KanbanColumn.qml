@@ -24,6 +24,10 @@ Item {
     // Keyboard focus on this column (after the arrow / + keys were used)
     readonly property bool keyFocused: board.keyNav && board.focusCol === cIdx
 
+    // Faded behind its own "Clear" confirmation
+    opacity: board.clearConfirmCol === cIdx ? board.dimOpacity : 1
+    Behavior on opacity { NumberAnimation { duration: 150 } }
+
     Rectangle {
         anchors.fill: parent; radius: Theme.cornerRadius
         color:        Qt.rgba(1, 1, 1, 0.03)
