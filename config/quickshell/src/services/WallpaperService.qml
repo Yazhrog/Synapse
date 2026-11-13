@@ -57,7 +57,9 @@ QtObject {
             "find \"$1\" -maxdepth 1 -type f " +
             "\\( -iname '*.jpg' -o -iname '*.jpeg' -o -iname '*.png' " +
             "-o -iname '*.gif' -o -iname '*.webp' \\) | sort",
-            "--", root.wallpaperDir
+            // Quoted, so bash no longer expands "~" (the default folder is
+            // "~/Pictures/Wallpapers"): expand it here.
+            "--", Paths.expand(root.wallpaperDir)
         ]
         stdout: SplitParser {
             onRead: function(line) {
