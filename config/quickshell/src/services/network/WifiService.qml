@@ -54,7 +54,7 @@ Singleton {
     // Turns the radio on/off (optimistically) and re-polls once nmcli is done.
     function setRadio(on) {
         radioOn = on
-        radioProc.command = ["bash", "-c", "nmcli radio wifi " + (on ? "on" : "off")]
+        radioProc.command = ["nmcli", "radio", "wifi", on ? "on" : "off"]
         radioProc.running = false; radioProc.running = true
     }
 
@@ -86,9 +86,11 @@ Singleton {
     function connect(ssid) {
         connectingTo = ssid; promptSsid = ""
         connectProc._ssid = ssid
+        // The SSID comes from the scan (anyone nearby picks it): it is passed
+        // as an argument ($1), never pasted into the script.
         connectProc.command = ["bash", "-c",
-            "nmcli con up id \"" + ssid + "\" 2>&1 ||" +
-            " nmcli dev wifi connect \"" + ssid + "\" 2>&1"]
+            "nmcli con up id \"$1\" 2>&1 || nmcli dev wifi connect \"$1\" 2>&1",
+            "--", ssid]
         connectProc.running = false; connectProc.running = true
     }
 
@@ -98,7 +100,8 @@ Singleton {
         delete np[ssid]
         needsPassword = np
         passProc.command = ["bash", "-c",
-            "nmcli dev wifi connect \"" + ssid + "\" password \"" + password + "\" 2>/dev/null"]
+            "nmcli dev wifi connect \"$1\" password \"$2\" 2>/dev/null",
+            "--", ssid, password]
         passProc.running = false; passProc.running = true
     }
 

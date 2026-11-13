@@ -59,6 +59,9 @@ Singleton {
         scanPollTimer.restart()
     }
 
+    // A device address as bluetoothctl prints it (AA:BB:CC:DD:EE:FF).
+    function _validMac(mac) { return /^([0-9A-Fa-f]{2}:){5}[0-9A-Fa-f]{2}$/.test(String(mac)) }
+
     function connect(mac) {
         actionMac = mac
         actionProc.command = ["bluetoothctl", "connect", mac]
@@ -73,19 +76,24 @@ Singleton {
 
     // Trusts and pairs; `pin` answers a legacy PIN prompt ("" = confirm "yes").
     function pair(mac, pin) {
+        if (!_validMac(mac)) return
         actionMac = mac
         var answer = pin !== "" ? pin : "yes"
+        // MAC and PIN as arguments ($1, $2), never pasted into the script
         actionProc.command = ["bash", "-c",
-            "(echo 'default-agent'; echo 'trust " + mac + "'; echo 'pair " + mac + "'; sleep 1; echo '" + answer + "'; sleep 4) | timeout 12 bluetoothctl 2>/dev/null"]
+            "(echo 'default-agent'; echo \"trust $1\"; echo \"pair $1\"; sleep 1; echo \"$2\"; sleep 4) | timeout 12 bluetoothctl 2>/dev/null",
+            "--", mac, answer]
         actionProc.running = false; actionProc.running = true
     }
 
     function remove(mac) {
+        if (!_validMac(mac)) return
         removingMac = mac
         removeProc.command = ["bash", "-c",
-            "bluetoothctl untrust " + mac + " 2>/dev/null; " +
-            "bluetoothctl disconnect " + mac + " 2>/dev/null; " +
-            "bluetoothctl remove " + mac + " 2>/dev/null"]
+            "bluetoothctl untrust \"$1\" 2>/dev/null; " +
+            "bluetoothctl disconnect \"$1\" 2>/dev/null; " +
+            "bluetoothctl remove \"$1\" 2>/dev/null",
+            "--", mac]
         removeProc.running = false; removeProc.running = true
     }
 

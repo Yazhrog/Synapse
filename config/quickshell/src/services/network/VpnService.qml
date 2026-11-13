@@ -58,7 +58,8 @@ Singleton {
         activeName = name
 
         connectProc._name   = name
-        connectProc.command = ["bash", "-c", _downAllCmd + "; nmcli con up \"" + name + "\" 2>&1"]
+        // The name is passed as an argument ($1), never pasted into the script.
+        connectProc.command = ["bash", "-c", _downAllCmd + "; nmcli con up \"$1\" 2>&1", "--", name]
         connectProc.running = false; connectProc.running = true
     }
 
@@ -72,7 +73,7 @@ Singleton {
         connections = cons
 
         disconnectProc._name   = name
-        disconnectProc.command = ["bash", "-c", "nmcli con down \"" + name + "\" 2>/dev/null"]
+        disconnectProc.command = ["bash", "-c", "nmcli con down \"$1\" 2>/dev/null", "--", name]
         disconnectProc.running = false; disconnectProc.running = true
     }
 
