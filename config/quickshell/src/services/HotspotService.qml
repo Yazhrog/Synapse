@@ -56,8 +56,9 @@ Singleton {
 
     function _stop() {
         stopProc.command = ["bash", "-c",
-            "nmcli device disconnect \"" + _iface + "\" 2>/dev/null; " +
-            "nmcli con delete SynapseHotspot 2>/dev/null; true"]
+            "nmcli device disconnect \"$1\" 2>/dev/null; " +
+            "nmcli con delete SynapseHotspot 2>/dev/null; true",
+            "--", _iface]
         stopProc.running = false; stopProc.running = true
     }
 
@@ -66,13 +67,13 @@ Singleton {
             // nmcli needs the radio up before it can create an AP connection
             "nmcli radio wifi on 2>/dev/null; " +
             "sleep 1; " +
-            "nmcli device disconnect \"" + _iface + "\" 2>/dev/null; " +
+            "nmcli device disconnect \"$1\" 2>/dev/null; " +
             "nmcli con delete SynapseHotspot 2>/dev/null; " +
             "nmcli device wifi hotspot " +
-                "ifname \"" + _iface + "\" " +
-                "ssid \"" + ssid + "\" " +
-                "password \"" + password + "\" " +
-                "con-name SynapseHotspot 2>&1"]
+                "ifname \"$1\" ssid \"$2\" password \"$3\" " +
+                "con-name SynapseHotspot 2>&1",
+            // Interface, SSID and password as arguments, never pasted into the script
+            "--", _iface, ssid, password]
         startProc.running = false; startProc.running = true
     }
 
@@ -82,10 +83,11 @@ Singleton {
     Process {
         id: cfgLoadProc
         command: ["bash", "-c",
-            "[ -f '" + root._cfgPath + "' ] || " +
-            "(mkdir -p \"$(dirname '" + root._cfgPath + "')\" && " +
-            "printf '%s' '{\"ssid\":\"Synapse\",\"password\":\"changeme1\"}' > '" + root._cfgPath + "'); " +
-            "cat '" + root._cfgPath + "'"]
+            "[ -f \"$1\" ] || " +
+            "(mkdir -p \"$(dirname \"$1\")\" && " +
+            "printf '%s' '{\"ssid\":\"Synapse\",\"password\":\"changeme1\"}' > \"$1\"); " +
+            "cat \"$1\"",
+            "--", root._cfgPath]
         running: false
         stdout: StdioCollector {
             onStreamFinished: {

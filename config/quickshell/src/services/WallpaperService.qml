@@ -54,9 +54,12 @@ QtObject {
     property var listProc: Process {
         command: [
             "bash", "-c",
-            "find " + root.wallpaperDir + " -maxdepth 1 -type f " +
+            "find \"$1\" -maxdepth 1 -type f " +
             "\\( -iname '*.jpg' -o -iname '*.jpeg' -o -iname '*.png' " +
-            "-o -iname '*.gif' -o -iname '*.webp' \\) | sort"
+            "-o -iname '*.gif' -o -iname '*.webp' \\) | sort",
+            // Quoted, so bash no longer expands "~" (the default folder is
+            // "~/Pictures/Wallpapers"): expand it here.
+            "--", Paths.expand(root.wallpaperDir)
         ]
         stdout: SplitParser {
             onRead: function(line) {
@@ -73,7 +76,7 @@ QtObject {
     // ── Config read — runs on startup, then calls refresh() ──────────────────
     property string _cfgBuf: ""
     property var readConfigProc: Process {
-        command: ["bash", "-c", "cat '" + root.configPath + "' 2>/dev/null"]
+        command: ["cat", root.configPath]
         stdout: SplitParser {
             onRead: function(line) { root._cfgBuf += line }
         }
@@ -111,12 +114,11 @@ QtObject {
             wallpaperDir: root.wallpaperDir,
             scheme:       root.scheme
         })
-        // Use printf so the content is never misinterpreted as shell commands.
-        // Single-quote the config path (paths rarely contain single quotes).
+        // Path and content as arguments ($1, $2), never pasted into the script.
         saveConfigProc.command = [
             "bash", "-c",
-            "mkdir -p \"$(dirname '" + root.configPath + "')\" && " +
-            "printf '%s' " + Paths.shellQuote(json) + " > " + Paths.shellQuote(root.configPath)
+            "mkdir -p \"$(dirname \"$1\")\" && printf '%s' \"$2\" > \"$1\"",
+            "--", root.configPath, json
         ]
         saveConfigProc.running = true
     }
@@ -128,16 +130,22 @@ QtObject {
         if (root.applying || path === "") return
         root.applying    = true
         root.currentWall = path
+        // Every path (the wallpaper's file name can be anything) and the scheme
+        // are passed as arguments, never pasted into the script:
+        //   $1 wallpaper  $2 wallpaper state dir  $3 curr_wall link
+        //   $4 curr_wall_static  $5 matugen.toml  $6 scheme
         applyProc.command = [
             "bash", "-c",
-            "mkdir -p '" + root._wallDir + "' " +
-            "&& awww img --transition-type grow --transition-step 200 --transition-duration 1.2 --transition-fps 60 --transition-pos bottom \"" + path + "\" " +
-            "&& ln -sf \"" + path + "\" '" + root._currWall + "' " +
-            "&& (if [[ \"" + path + "\" == *.gif ]]; then " +
-            "rm -f '" + root._currWallStatic + "'; magick \"" + path + "[0]\" '" + root._currWallStatic + "' || true; " +
-            "else ln -sf \"" + path + "\" '" + root._currWallStatic + "'; fi) " +
-            "&& matugen image \"$(readlink -f '" + root._currWallStatic + "')\" -c \"" + Quickshell.shellDir + "/src/config/matugen.toml\" --source-color-index 0 --type scheme-" + root.scheme + " " +
-            "&& matugen image \"$(readlink -f '" + root._currWallStatic + "')\" --source-color-index 0 --type scheme-" + root.scheme + " || true"
+            "mkdir -p \"$2\" " +
+            "&& awww img --transition-type grow --transition-step 200 --transition-duration 1.2 --transition-fps 60 --transition-pos bottom \"$1\" " +
+            "&& ln -sf \"$1\" \"$3\" " +
+            "&& (if [[ \"$1\" == *.gif ]]; then " +
+            "rm -f \"$4\"; magick \"${1}[0]\" \"$4\" || true; " +
+            "else ln -sf \"$1\" \"$4\"; fi) " +
+            "&& matugen image \"$(readlink -f \"$4\")\" -c \"$5\" --source-color-index 0 --type \"scheme-$6\" " +
+            "&& matugen image \"$(readlink -f \"$4\")\" --source-color-index 0 --type \"scheme-$6\" || true",
+            "--", path, root._wallDir, root._currWall, root._currWallStatic,
+            Quickshell.shellDir + "/src/config/matugen.toml", root.scheme
         ]
         applyProc.running = true
     }
