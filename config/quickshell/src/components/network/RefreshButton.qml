@@ -19,7 +19,9 @@ Rectangle {
         id: rfIcon; anchors.centerIn: parent; text: "󰑐"; font.pixelSize: 15
         color: root.busy ? Qt.rgba(Theme.active.r, Theme.active.g, Theme.active.b, 0.4) : (root.available ? Theme.active : Qt.rgba(1,1,1,0.18))
         Behavior on color { ColorAnimation { duration: 150 } }
-        RotationAnimator { target: rfIcon; from: 0; to: 360; duration: 900; loops: Animation.Infinite; running: root.busy; easing.type: Easing.Linear }
+        RotationAnimator { target: rfIcon; from: 0; to: 360; duration: 900; loops: Animation.Infinite; running: root.busy; easing.type: Easing.Linear
+            // Stopping leaves the icon at whatever angle it reached: straighten it.
+            onRunningChanged: if (!running) rfIcon.rotation = 0 }
     }
     HoverHandler { id: rfH; cursorShape: root.available ? Qt.PointingHandCursor : Qt.ArrowCursor }
     MouseArea { anchors.fill: parent; onClicked: if (!root.busy && root.available) root.clicked() }

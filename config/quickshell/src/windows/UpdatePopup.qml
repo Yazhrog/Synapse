@@ -143,6 +143,9 @@ PanelWindow {
                         loops:       Animation.Infinite
                         running:     UpdateService.updating || UpdateService.checking
                         easing.type: Easing.Linear
+                        // Stopping leaves the icon at whatever angle it reached:
+                        // straighten it, or the next state's icon (✓, ✕) shows tilted.
+                        onRunningChanged: if (!running) headerIcon.rotation = 0
                     }
                 }
 
