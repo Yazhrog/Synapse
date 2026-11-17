@@ -883,7 +883,7 @@ Golden images use Qt's software renderer offscreen, which differs from the live 
 
 ## 12. Migration plan for v0.7.0
 
-**Workflow:** stack branch `stack/111-source-layout` from `dev`, one PR per step into the stack, the stack to `dev` as one PR (as in `CLAUDE.md`). Every file moves, so no other stack is open meanwhile; merge `dev` into the stack after each release. Each PR: smoke + contracts + golden images green, live check on the install (§`CLAUDE.md` live testing), `CLAUDE.md` paths updated in the same PR.
+**Workflow:** a native GitHub stack (`gh stack`, see `CLAUDE.md` "Project workflow") on `dev`: one branch and PR per step, each based on the step below, #141 at the bottom. Layers merge bottom-first with `gh stack merge`, whole or in part, only when asked. Every file moves, so no other stack is open meanwhile; `gh stack sync` after each release. Each PR: smoke + contracts + golden images green, live check on the install (§`CLAUDE.md` live testing), `CLAUDE.md` paths updated in the same PR.
 
 The sub-issues of #111 were rewritten on 2026-11-13 to match these steps: #112, #113, #115, #116 and #117 were rewritten, #114 was folded into #113 and closed, and #141–#147 were created. Each step is blocked by the previous one.
 
