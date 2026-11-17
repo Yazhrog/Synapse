@@ -2,7 +2,6 @@ pragma Singleton
 import QtQuick
 import Quickshell
 import qs.src.core
-
 // FanControl — fan mode through nbfc-linux. The mode is assumed "auto" at
 // start (set by Hyprland's exec-once). Each command is wrapped in
 // `timeout 5`, as nbfc can hang on unavailable sensors.

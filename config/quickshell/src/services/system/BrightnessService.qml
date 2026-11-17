@@ -2,7 +2,6 @@ pragma Singleton
 import QtQuick
 import Quickshell
 import qs.src.core
-
 // ============================================================
 // BrightnessService — screen brightness through brightnessctl.
 //

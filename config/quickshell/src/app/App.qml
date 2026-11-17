@@ -8,7 +8,6 @@ import qs.src.services.system
 import qs.src.services.time
 import qs.src.state
 import qs.src.surface
-
 // App — the composition root: starts the services that must run from boot
 // and creates the per-screen shell. Everything that wires features into the
 // framework lives in this folder (popup and action manifests join in #144 and
