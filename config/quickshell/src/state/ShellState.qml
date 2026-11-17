@@ -7,7 +7,7 @@ import qs.src.services.desktop
 // Global shell state.
 //
 // Airplane Mode     — written by QuickToggleService (rfkill)
-// Focus Mode        — written by FocusModeService; the surface collapses the bar and its strut reserves nothing
+// Focus Mode        — FocusModeService.active; the surface collapses the bar and its strut reserves nothing
 // DND               — read by NotificationService to suppress incoming notifications
 //
 // Wi-Fi, Bluetooth, VPN, the hotspot, Night Light and Caffeine are read
@@ -19,7 +19,7 @@ Singleton {
 
     
     
-    property bool focusMode:    false
+    readonly property bool focusMode: FocusModeService.active
     property bool dnd:          false
     property bool screenRecord: false
     property bool airplane:     false
