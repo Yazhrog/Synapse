@@ -1,17 +1,17 @@
 pragma Singleton
 import QtQuick
 import Quickshell
-import Quickshell.Io
 import qs.src.core
-import qs.src.state
 // ============================================================
 // WallpaperService — wallpaper list + apply pipeline
 //
 // Flow:
-//   Component.onCompleted → readConfigProc (sets currentWall etc.)
-//                         → refresh() (populates wallpapers list)
-//   apply(path)           → awww img + ln -sf curr_wall + matugen
-//                         → saveConfig() (writes src/user_data/wallpaper.json)
+//   wallpaper.json loaded (JsonStore) → currentWall etc.
+//                                     → refresh() (populates wallpapers list)
+//   apply(path) → awww img + ln -sf curr_wall + matugen
+//               → saveConfig() (writes src/user_data/wallpaper.json)
+//               → border colour through Hypr
+// Every path goes to the commands as an argument, never into a script.
 // ============================================================
 
 Singleton {
@@ -28,7 +28,6 @@ Singleton {
 
     // ── State ─────────────────────────────────────────────────────────────────
     property var    wallpapers:   []
-    property var    tempWalls:   []
     property string currentWall:  ""
     property string previewWall:  ""
     property string scheme:       defaultScheme
@@ -46,12 +45,10 @@ Singleton {
 
     // ── File listing ──────────────────────────────────────────────────────────
     function refresh() {
-        if (listProc.running) return
-        root.tempWalls = [] // Clear the temp array, not the live one yet
-        listProc.running = true
+        if (!listProc.busy) listProc.run()
     }
 
-    property var listProc: Process {
+    property Exec listProc: Exec {
         command: [
             "bash", "-c",
             "find \"$1\" -maxdepth 1 -type f " +
@@ -61,34 +58,20 @@ Singleton {
             // "~/Pictures/Wallpapers"): expand it here.
             "--", Paths.expand(root.wallpaperDir)
         ]
-        stdout: SplitParser {
-            onRead: function(line) {
-                var t = line.trim()
-                if (t !== "") root.tempWalls.push(t)
-            }
-        }
-        onExited: function() {
-            // Push everything to the UI at once
-            root.wallpapers = root.tempWalls
-        }
+        // Push everything to the UI at once
+        onFinished: root.wallpapers = lastOutput.split("\n").map(l => l.trim()).filter(l => l !== "")
     }
 
-    // ── Config read — runs on startup, then calls refresh() ──────────────────
-    property string _cfgBuf: ""
-    property var readConfigProc: Process {
-        command: ["cat", root.configPath]
-        stdout: SplitParser {
-            onRead: function(line) { root._cfgBuf += line }
-        }
-        onExited: function() {
-            if (root._cfgBuf !== "") {
-                try {
-                    var obj = JSON.parse(root._cfgBuf)
-                    if (obj.currentWall  && obj.currentWall  !== "") root.currentWall  = obj.currentWall
-                    if (obj.wallpaperDir && obj.wallpaperDir !== "") root.wallpaperDir = obj.wallpaperDir
-                    if (obj.scheme       && obj.scheme       !== "") root.scheme       = obj.scheme
-                } catch(e) {}
-            }
+    // ── Config — read at startup, then refresh() ─────────────────────────────
+    property JsonStore _cfg: JsonStore {
+        path:            root.configPath
+        defaults:        ({ currentWall: "", wallpaperDir: "", scheme: "" })
+        createIfMissing: false
+        onLoaded: {
+            const d = data
+            if (d.currentWall)  root.currentWall  = d.currentWall
+            if (d.wallpaperDir) root.wallpaperDir = d.wallpaperDir
+            if (d.scheme)       root.scheme       = d.scheme
             if (root.currentWall === "") root.apply(root.defaultWall)
             root.refresh()
         }
@@ -109,21 +92,12 @@ Singleton {
 
     // ── Config write — called after a successful apply ────────────────────────
     function saveConfig() {
-        var json = JSON.stringify({
+        _cfg.set({
             currentWall:  root.currentWall,
             wallpaperDir: root.wallpaperDir,
             scheme:       root.scheme
         })
-        // Path and content as arguments ($1, $2), never pasted into the script.
-        saveConfigProc.command = [
-            "bash", "-c",
-            "mkdir -p \"$(dirname \"$1\")\" && printf '%s' \"$2\" > \"$1\"",
-            "--", root.configPath, json
-        ]
-        saveConfigProc.running = true
     }
-
-    property var saveConfigProc: Process {}   // silent — no stdout/stderr needed
 
     // ── Apply pipeline ────────────────────────────────────────────────────────
     function apply(path) {
@@ -134,7 +108,7 @@ Singleton {
         // are passed as arguments, never pasted into the script:
         //   $1 wallpaper  $2 wallpaper state dir  $3 curr_wall link
         //   $4 curr_wall_static  $5 matugen.toml  $6 scheme
-        applyProc.command = [
+        applyProc.run([
             "bash", "-c",
             "mkdir -p \"$2\" " +
             "&& awww img --transition-type grow --transition-step 200 --transition-duration 1.2 --transition-fps 60 --transition-pos bottom \"$1\" " +
@@ -146,15 +120,14 @@ Singleton {
             "&& matugen image \"$(readlink -f \"$4\")\" --source-color-index 0 --type \"scheme-$6\" || true",
             "--", path, root._wallDir, root._currWall, root._currWallStatic,
             Quickshell.shellDir + "/src/config/matugen.toml", root.scheme
-        ]
-        applyProc.running = true
+        ])
     }
-    
-    property Process applyProc: Process {
-        onExited: function(exitCode, exitStatus) {
+
+    property Exec applyProc: Exec {
+        onFinished: ok => {
             root.applying = false
-            root.applyFinished(exitCode === 0)
-            if (exitCode === 0) {
+            root.applyFinished(ok)
+            if (ok) {
                 root.wallpaperApplied(root.currentWall)
                 root.saveConfig()
 
@@ -170,25 +143,19 @@ Singleton {
     // the previous or fallback color.
     // Not called at startup: appearance.lua already loads colors.lua.
     function updateBorders() {
-        if (ShellState.configProvider === "lua") {
-            borderUpdateProc.command = [
-                "bash", "-c",
-                "p=$(sed -n 's/^M\\.primary *= *\"\\([0-9a-fA-F]\\{6\\}\\)\".*/\\1/p' \"$HOME/.config/hypr/modules/colors.lua\"); " +
-                "[ -n \"$p\" ] && hyprctl eval \"hl.config({ general = { [\\\"col.active_border\\\"] = { colors = { \\\"rgb($p)\\\" } } } })\""
-            ]
-        } else {
-            borderUpdateProc.command = [
-                "bash", "-c",
-                "p=$(sed -n 's/^\\$primary *= *\\([0-9a-fA-F]\\{6\\}\\).*/\\1/p' \"$HOME/.config/hypr/colors.conf\"); " +
-                "[ -n \"$p\" ] && hyprctl keyword general:col.active_border \"rgb($p)\""
-            ]
+        if (Hypr.provider === "lua")
+            primaryRead.run(["sed", "-n", 's/^M\\.primary *= *"\\([0-9a-fA-F]\\{6\\}\\)".*/\\1/p',
+                             Paths.home + "/.config/hypr/modules/colors.lua"])
+        else
+            primaryRead.run(["sed", "-n", 's/^\\$primary *= *\\([0-9a-fA-F]\\{6\\}\\).*/\\1/p',
+                             Paths.home + "/.config/hypr/colors.conf"])
+    }
+
+    property Exec primaryRead: Exec {
+        onSucceeded: out => {
+            const p = out.trim().split("\n")[0]
+            if (/^[0-9a-fA-F]{6}$/.test(p))
+                Hypr.setOptions("general", { "col.active_border": { colors: ["rgb(" + p + ")"] } })
         }
-        borderUpdateProc.running = true
     }
-
-    property Process borderUpdateProc: Process {
-        command: []
-    }
-
-    Component.onCompleted: readConfigProc.running = true
 }

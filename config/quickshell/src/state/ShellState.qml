@@ -6,7 +6,7 @@ import qs.src.core
 import qs.src.services.desktop
 // Global shell state.
 //
-// Airplane Mode     — written by QuickToggleService (rfkill)
+// Airplane Mode     — QuickToggleService.airplaneOn (rfkill)
 // Focus Mode        — FocusModeService.active; the surface collapses the bar and its strut reserves nothing
 // DND               — read by NotificationService to suppress incoming notifications
 //
@@ -22,7 +22,7 @@ Singleton {
     readonly property bool focusMode: FocusModeService.active
     property bool dnd:          false
     property bool screenRecord: false
-    property bool airplane:     false
+    readonly property bool airplane: QuickToggleService.airplaneOn
 
     // ── Keybind Interception / Hyprland Submap Controller ─────────────────────
     
