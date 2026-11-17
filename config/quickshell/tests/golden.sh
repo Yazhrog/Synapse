@@ -65,7 +65,11 @@ capture() {
 
     env -i "${env_args[@]}" "$(command -v timeout)" 180 "$qs_bin" -p "$tmp/qs" > "$out/.log" 2>&1 || true
     sed -i 's/\x1b\[[0-9;]*m//g' "$out/.log"
-    grep -q 'SMOKE OK' "$out/.log" || { echo "golden: capture of $tree did not finish (see $out/.log)"; return 1; }
+    if ! grep -q 'SMOKE OK' "$out/.log"; then
+        echo "golden: capture of $tree did not finish; last lines of $out/.log:"
+        tail -n 40 "$out/.log" | sed 's/^/    /'
+        return 1
+    fi
     echo "golden: captured $(ls "$out"/*.png | wc -l) scenes from $tree"
 }
 
