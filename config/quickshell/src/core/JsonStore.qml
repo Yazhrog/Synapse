@@ -96,7 +96,10 @@ QtObject {
 
     function _clone(v) { return v === undefined ? undefined : JSON.parse(JSON.stringify(v)) }
 
+    // An array document (defaults: []) is kept as is when the file holds one.
     function _withDefaults(doc) {
+        // (cloned first: a QML list property reads back as a list type, not an Array)
+        if (Array.isArray(_clone(defaults))) return Array.isArray(doc) ? doc : _clone(defaults)
         if (doc === null || typeof doc !== "object" || Array.isArray(doc)) return _clone(defaults)
         for (const k in defaults)
             if (!(k in doc)) doc[k] = _clone(defaults[k])

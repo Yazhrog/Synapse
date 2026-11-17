@@ -129,6 +129,12 @@ ShellRoot {
                 settle(() => readFile(dir + "/mig.json", text =>
                     check("store migrates once and records _version",
                           text === '{"a":1,"b":0,"_version":2}', text))))),
+        () => writeFile(dir + "/arr.json", '["a","b"]', () =>
+            store({ path: dir + "/arr.json", defaults: [] }, s => {
+                s.update(d => d.push("c"))
+                settle(() => readFile(dir + "/arr.json", text =>
+                    check("store keeps an array document", text === '["a","b","c"]', text)))
+            })),
         () => writeFile(dir + "/ro.json", '{"a":1}', () =>
             store({ path: dir + "/ro.json", defaults: ({ a: 0 }), readOnly: true }, s => {
                 s.update(d => d.a = 2)
