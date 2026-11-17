@@ -1,8 +1,8 @@
 pragma Singleton
 import QtQuick
 import Quickshell
-import Quickshell.Io
 import Quickshell.Services.Mpris
+import qs.src.core
 import qs.src.services.data
 // Single cava process shared by CenterContent and PlayerCard.
 // 32 bars at 30fps. isPlaying mirrors the active MPRIS player state.
@@ -21,7 +21,11 @@ Singleton {
 
     property var bars: _zeros()
 
-    onEnabledChanged: if (!enabled) bars = _zeros()
+    onEnabledChanged: {
+        if (enabled) _cava.run()
+        else { _cava.cancel(); bars = _zeros() }
+    }
+    Component.onCompleted: if (enabled) _cava.run()
 
     // isPlaying is true if ANY MPRIS player is currently playing.
     // This ensures bars flow regardless of which player index is active in PlayerCard.
@@ -33,7 +37,8 @@ Singleton {
         return false
     }
 
-    property var _proc: Process {
+    property Exec _cava: Exec {
+        stream: true
         command: [
             "bash", "-c",
             "mkdir -p /tmp/synapse && " +
@@ -44,19 +49,16 @@ Singleton {
             "> /tmp/synapse/cava_shared.ini && " +
             "exec cava -p /tmp/synapse/cava_shared.ini 2>/dev/null"
         ]
-        running: root.enabled
-        stdout: SplitParser {
-            onRead: function(line) {
-                var t = line.trim()
-                if (t === "") return
-                if (t.endsWith(";")) t = t.slice(0, -1)
-                var parts = t.split(";")
-                if (parts.length !== root.barCount) return
-                var arr = []
-                for (var i = 0; i < parts.length; i++)
-                    arr.push(parseInt(parts[i]) || 0)
-                root.bars = arr
-            }
+        onLine: line => {
+            var t = line.trim()
+            if (t === "") return
+            if (t.endsWith(";")) t = t.slice(0, -1)
+            var parts = t.split(";")
+            if (parts.length !== root.barCount) return
+            var arr = []
+            for (var i = 0; i < parts.length; i++)
+                arr.push(parseInt(parts[i]) || 0)
+            root.bars = arr
         }
     }
 }
