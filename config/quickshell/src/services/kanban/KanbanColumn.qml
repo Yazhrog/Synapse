@@ -1,6 +1,6 @@
 import QtQuick
-import "../../"
-
+import qs.src.services
+import qs.src.theme
 // KanbanColumn — one board column: header (name, task count, Clear and +
 // buttons; Clear asks the board to confirm),
 // the draft card for a new task (saved on Enter or focus loss with text)

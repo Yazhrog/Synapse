@@ -1,6 +1,7 @@
 import QtQuick
-import "../../../"
-
+import qs.src.services
+import qs.src.state
+import qs.src.theme
 // ClockView — the big stacked HH / MM clock with seconds (and AM/PM).
 
 Item {

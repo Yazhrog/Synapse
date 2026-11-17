@@ -2,9 +2,9 @@ import QtQuick
 import QtQuick.Controls
 import Quickshell.Io
 import Quickshell
-import "../components"
-import "../"
-
+import qs.src.components
+import qs.src.state
+import qs.src.theme
 // AppLauncher — scrollable app list + bottom search bar.
 // Lives inside DashboardContent on the "launcher" page.
 // The surface gets the keyboard while the dashboard is open, but that doesn't

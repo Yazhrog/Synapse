@@ -2,8 +2,8 @@ pragma Singleton
 import QtQuick
 import Quickshell
 import Quickshell.Io
-import "../"
-
+import qs.src.state
+import qs.src.utils
 // FocusModeService — Focus Mode: hides the bar and tightens Hyprland's gaps.
 //
 // Turning it on saves the current gaps_in/gaps_out and sets 0/10; turning it

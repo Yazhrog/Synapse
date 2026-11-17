@@ -1,6 +1,5 @@
 import QtQuick
-import "../../"
-
+import qs.src.theme
 // KanbanDeleteDialog — a delete confirmation centred over whatever it fills:
 // the whole dashboard for one task ("Delete task?"), a single column for
 // "Clear" ("Delete N tasks?"). Shown while `shown`; a click around the box

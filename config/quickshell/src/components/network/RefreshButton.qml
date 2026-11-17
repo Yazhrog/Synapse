@@ -1,6 +1,5 @@
 import QtQuick
-import "../../"
-
+import qs.src.theme
 // RefreshButton — the 󰑐 header button; spins while `busy`, dimmed when not
 // `available`. Clicks are ignored while busy or unavailable.
 

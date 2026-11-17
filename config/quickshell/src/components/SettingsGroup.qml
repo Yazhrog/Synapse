@@ -1,6 +1,5 @@
 import QtQuick
-import "../"
-
+import qs.src.theme
 // SettingsGroup — a titled card stacking settings rows.
 //
 //   SettingsGroup {

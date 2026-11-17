@@ -1,7 +1,7 @@
 import QtQuick
 import Quickshell.Io
-import "../"
-
+import qs.src.state
+import qs.src.theme
 // Power menu — vertical list of power action buttons.
 
 Column {

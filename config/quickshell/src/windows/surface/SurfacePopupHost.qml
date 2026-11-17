@@ -1,8 +1,7 @@
 import QtQuick
-import "../../"
-import "../../theme/"
-import "../../services/"
-
+import qs.src.services
+import qs.src.state
+import qs.src.theme
 // SurfacePopupHost — the interactive popups of a DynamicSurface.
 //
 // One clip item per content, following its region's animated rectangle

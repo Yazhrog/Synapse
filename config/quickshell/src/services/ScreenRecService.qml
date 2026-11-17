@@ -2,8 +2,8 @@ pragma Singleton
 import QtQuick
 import Quickshell
 import Quickshell.Io
-import "../"
-
+import qs.src.state
+import qs.src.utils
 // ScreenRecService — owns all screen recording state.
 //
 // Audio routing (fixed):
@@ -17,7 +17,7 @@ import "../"
 // Notifications are sent via notify-send with action buttons (requires
 // libnotify ≥ 0.8 and a daemon that supports actions, e.g. dunst/mako).
 
-QtObject {
+Singleton {
     id: root
 
     // ── Persisted options ─────────────────────────────────────────────────────

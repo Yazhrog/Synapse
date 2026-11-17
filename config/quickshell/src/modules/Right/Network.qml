@@ -1,8 +1,9 @@
 import QtQuick
 import Quickshell
-import "../../components"
-import "../../"
-
+import qs.src.services
+import qs.src.services.network
+import qs.src.state
+import qs.src.theme
 // Network — the bar's network icons: Wi-Fi / ethernet (with connectivity),
 // VPN, Bluetooth and hotspot, each opening its tab of the network popup.
 // State comes from WifiService, VpnService, BluetoothService and HotspotService.

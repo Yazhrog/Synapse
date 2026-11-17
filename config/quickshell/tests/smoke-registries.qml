@@ -6,8 +6,6 @@
 // then also captured to <dir>/<name>.png after its animations settle.
 import Quickshell
 import QtQuick
-import "./src"
-
 ShellRoot {
     id: shell
 

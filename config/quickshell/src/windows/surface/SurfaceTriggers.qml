@@ -1,7 +1,6 @@
 import QtQuick
-import "../../"
-import "../../theme/"
-
+import qs.src.state
+import qs.src.theme
 // SurfaceTriggers — the border trigger zones of a DynamicSurface (#42).
 //
 // Each zone is Metrics.edgeTriggerDepth deep (Hyprland's gaps_out), so it's

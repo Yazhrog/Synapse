@@ -1,6 +1,6 @@
 import QtQuick
-import "../"
-
+import qs.src.services
+import qs.src.theme
 // SettingsTextField — a row with a one-line text field (paths, names).
 //
 // The value is committed on Enter or when the field loses focus, not on every

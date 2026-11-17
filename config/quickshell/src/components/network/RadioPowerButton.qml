@@ -1,6 +1,5 @@
 import QtQuick
-import "../../"
-
+import qs.src.theme
 // RadioPowerButton — the ⏻ header button of the Wi-Fi and Bluetooth tabs:
 // red on hover while on, accent while off.
 

@@ -1,13 +1,10 @@
 import QtQuick
-import "../components"
-import "../modules/Center/"
-import "../services/"
-// Imported explicitly so quickshell scans these folders: they are only listed
-// in services/qmldir, and their files' own imports (clock/, components/sliders,
-// KeybindRow, …) are not found otherwise. tests/smoke-imports.qml checks this.
-import "../services/home"
-import "../services/config_tab"
-import "../"
+import qs.src.components
+import qs.src.modules.Center
+import qs.src.services
+import qs.src.services.config_tab
+import qs.src.services.home
+import qs.src.state
 
 // DashboardContent — the dashboard UI: tab bar (Home / System / Tasks / Apps /
 // Config) and the page area. Hosted by the top region of DynamicSurface. The popup width per page comes from

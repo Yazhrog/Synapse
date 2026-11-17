@@ -1,6 +1,5 @@
 import QtQuick
-import "../"
-
+import qs.src.theme
 // A single horizontal label / value pair.
 // Label is dimmed, value is bright by default.
 // valueColor can be overridden for highlights (e.g. up/down arrows).

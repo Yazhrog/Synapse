@@ -1,8 +1,7 @@
 import QtQuick
 import QtQuick.Effects
-import "../../"
-import "../../services"
-
+import qs.src.services
+import qs.src.theme
 // WallpaperCard — one wallpaper in the strip: rounded thumbnail and name,
 // wider with an accent ring while previewed, a faint ring if current.
 // The picker decides what a click does (preview, then apply).

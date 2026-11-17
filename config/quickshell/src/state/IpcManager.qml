@@ -2,8 +2,7 @@ pragma Singleton
 import QtQuick
 import Quickshell
 import Quickshell.Io
-import "../"
-
+import qs.src.services
 // ─────────────────────────────────────────────────────────────
 // IpcManager — centralized entry point for all external IPC signals.
 //
@@ -11,7 +10,7 @@ import "../"
 // only ONE handler reacts to a signal.
 // ─────────────────────────────────────────────────────────────
 
-QtObject {
+Singleton {
     id: root
 
     // ── Dashboard Toggles ────────────────────────────────────

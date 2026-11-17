@@ -1,8 +1,8 @@
 import QtQuick
 import Quickshell
 import Quickshell.Services.Pipewire
-import "../"
-
+import qs.src.services
+import qs.src.theme
 // QuickControlContent — the volume and brightness sliders of the Quick
 // Controls OSD, with the default sink; brightness comes from BrightnessService.
 // Hosted by the right-center region of DynamicSurface.

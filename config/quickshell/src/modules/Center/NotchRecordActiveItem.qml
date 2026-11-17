@@ -1,6 +1,6 @@
 import QtQuick
-import "../../"
-
+import qs.src.services
+import qs.src.theme
 // NotchRecordActiveItem — while recording: pulsing dot and elapsed time on
 // the left, the audio level in the middle, discard and stop on the right.
 

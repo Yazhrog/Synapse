@@ -1,6 +1,5 @@
 import QtQuick
-import "../../"
-
+import qs.src.theme
 // SignalBars — four bars lit by Wi-Fi signal strength (0–100).
 
 Item {

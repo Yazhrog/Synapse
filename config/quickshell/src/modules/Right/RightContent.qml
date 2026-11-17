@@ -1,9 +1,6 @@
 import QtQuick
 import Quickshell
-import "../../components"
-import "../../windows"
-import "../../"
-
+import qs.src.state
 Item {
     // Set by the Dynamic Surface host (#39); contents adopt it progressively.
     property real localScale: 1.0

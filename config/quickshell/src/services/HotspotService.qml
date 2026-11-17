@@ -2,8 +2,8 @@ pragma Singleton
 import QtQuick
 import Quickshell
 import Quickshell.Io
-import "../"
-
+import qs.src.services.network
+import qs.src.utils
 // ============================================================
 // HotspotService — the Wi-Fi hotspot (nmcli), shared by the Quick Settings
 // tile (toggle) and the network popup's Hotspot tab (credentials).

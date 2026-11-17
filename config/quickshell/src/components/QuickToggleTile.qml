@@ -1,6 +1,5 @@
 import QtQuick
-import "../"
-
+import qs.src.theme
 // QuickToggleTile — one Quick Settings tile: icon, label, optional sublabel
 // and an on/off state (accent fill + dot). Emits toggled() on click.
 

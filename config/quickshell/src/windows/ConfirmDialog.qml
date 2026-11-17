@@ -2,10 +2,10 @@ import QtQuick
 import Quickshell
 import Quickshell.Wayland
 import Quickshell.Io
-import "../"
-import "../components/"
-import "../services/"
-
+import qs.src.components
+import qs.src.services
+import qs.src.state
+import qs.src.theme
 // Unified confirmation modal — replaces GfxWarning.qml.
 // Driven entirely by Popups.confirm* props.
 // Call Popups.showConfirm() to open, Popups.cancelConfirm() to close.

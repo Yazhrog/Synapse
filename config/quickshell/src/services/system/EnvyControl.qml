@@ -1,8 +1,8 @@
 import QtQuick
 import Quickshell.Io
 import Quickshell.Services.UPower
-import "../"
-
+import qs.src.state
+import qs.src.theme
 // Graphics & power status panel.
 
 Column {

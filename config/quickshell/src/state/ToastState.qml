@@ -2,9 +2,8 @@ pragma Singleton
 import QtQuick
 import Quickshell
 import Quickshell.Hyprland
-import "../"
-import "../services/"
-
+import qs.src.services.notifications
+import qs.src.theme
 // ============================================================
 // ToastState — the notification toast queue, shared by every screen.
 //

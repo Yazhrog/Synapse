@@ -1,6 +1,5 @@
 import QtQuick
-import "../"
-
+import qs.src.theme
 // Unified tab switcher — horizontal or vertical.
 //
 // orientation: "horizontal" (default) — Row, fills parent width, tabs spaced equally
