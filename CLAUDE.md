@@ -103,18 +103,34 @@ If you add/rename a shell action: update `keybind-defaults.json` and the matchin
 
 ## Project workflow
 
-Planning lives on the **Synapse Roadmap** GitHub Project (board columns: Backlog → Ready → In progress → In review → Done), with one **milestone per release** (`v0.3.0` = #27 config foundation, `v0.4.0` = #37 Dynamic Surface, `v0.5.0` = #31 config pages).
+Planning lives on the **Synapse Roadmap** GitHub Project (board columns: Backlog → Ready → In progress → In review → Done), with one **milestone per release** (`v0.3.0` = #27 config foundation, `v0.4.0` = #37 Dynamic Surface, `v0.5.0` = #31 config pages, `v0.6.0` = #73 monolith split, `v0.7.0` = #111 architecture). Until v0.6.x, parent issues used a `stack/<issue>-<slug>` integration branch merged into `dev` in one PR; from #111 on they use native stacked PRs.
 
 Branches:
 - `main` — released code; what the in-shell updater pulls. Only `dev` → `main` release PRs land here.
-- `dev` — integration branch; must stay releasable.
-- `stack/<issue>-<slug>` — one per **parent issue** (label `epic`), cut from `dev`. Each sub-issue is its own branch and PR **into the stack**. A draft PR (label `stack`) from the stack into `dev`, opened after the first sub-PR is merged, tracks progress with a checklist; it's marked ready and merged once every sub-issue is done.
-- `fix/…`, `feat/…`, `chore/…`, `docs/…`, `refactor/…` — one per PR. Standalone bugs and small features target `dev` directly.
+- `dev` — integration branch and the **trunk of every stack**; must stay releasable.
+- `fix/…`, `feat/…`, `chore/…`, `docs/…`, `refactor/…`, `test/…` — one per PR, named `<keyword>/<issue>-<slug>` when there is an issue. Standalone bugs and small features are one PR into `dev`.
+
+**Stacked pull requests** (GitHub's native stacks, `gh stack` extension). A parent issue (label `epic`) whose sub-issues build on each other ships as a stack: one branch and one PR per sub-issue, each PR based on the branch of the one below it, the bottom one on `dev`. GitHub shows the whole stack on every PR and each PR shows only its own layer's diff. Parts that don't depend on each other are separate PRs into `dev`, not a stack.
+
+- Create: `gh stack init --base dev <branch>` for the first layer (it adopts an existing branch), commit, then `gh stack add <branch>` for each next layer, then `gh stack submit --auto` (opens the new PRs as drafts and links the stack on GitHub; a stack needs at least two PRs). Then give each PR its real title and body (`gh pr edit`), list the whole stack in merge order under `## Stack`, and `gh pr ready` it.
+- Always pass the arguments that keep `gh stack` non-interactive: `init <branch>`, `add <branch>`, `submit --auto`, `view --json`, `checkout <branch-or-pr>` / `up` / `down` / `top`, `merge <pr> --yes --squash`. Never run bare `gh stack init`, `add`, `submit`, `view`, `checkout`, `switch` or `modify` (they open an editor or a picker), and never `gh pr merge` a stacked PR.
+- Fix a lower layer in its own branch, never on the top one: `gh stack checkout <branch>`, commit, `gh stack rebase --upstack`, `gh stack push`, `gh stack top`.
+- `gh stack sync` fetches, rebases every layer on the updated `dev`, pushes (with lease) and refreshes the stack on GitHub; run it after `dev` moves (a release, a standalone fix). On a conflict it restores every branch and exits 3: `gh stack rebase`, resolve, `git add`, `gh stack rebase --continue`.
+- Merge only when the user asks: `gh stack merge <pr> --yes --squash` merges that PR **and every unmerged one below it** into `dev`, all or nothing (each PR must be ready, not draft, with its checks green); then `gh stack sync`. A stack can land part by part, bottom first.
+- Exit code 9 means stacked PRs aren't enabled on the repo: say so and don't fall back to plain PRs on your own.
+- Claude's shell can't push over SSH (`origin` is `git@github.com:…`). Without touching the repo config, give `gh stack` (and `git`) an environment that rewrites it to HTTPS with the `gh` credentials:
+  ```sh
+  export GIT_CONFIG_COUNT=3 \
+    GIT_CONFIG_KEY_0=url.https://github.com/.insteadOf GIT_CONFIG_VALUE_0=git@github.com: \
+    GIT_CONFIG_KEY_1=credential.helper GIT_CONFIG_VALUE_1= \
+    GIT_CONFIG_KEY_2=credential.helper GIT_CONFIG_VALUE_2='!gh auth git-credential'
+  ```
+  Pushing a change to `.github/workflows/` also needs the `workflow` scope on the `gh` token (`gh auth refresh -h github.com -s workflow`, run by the user).
 
 Rules:
-- Merge `dev` into active stacks regularly so they don't drift. Finish one stack before starting the next when they touch the same files.
-- `Closes #N` only auto-closes issues on merge into `main`, so close an issue by hand (with a comment pointing to the PR) when its PR is merged into `dev` or a stack. Tick it in the stack PR's checklist and move it to Done on the board.
-- Shell changes are tested on the live install (`~/.local/src/Synapse`) by applying the PR's diff there as uncommitted edits; once confirmed, `git restore .` it so the updater's `git pull` keeps working.
+- Finish one stack before starting the next when they touch the same files.
+- `Closes #N` only auto-closes issues on merge into `main`, so close an issue by hand (with a comment pointing to the PR) when its PR is merged into `dev`, tick it in the parent issue's sub-issue list and move it to Done on the board.
+- Shell changes are tested on the live install (`~/.local/src/Synapse`) by applying the PR's diff there as uncommitted edits (for a stack layer, the diff from `dev` up to that layer: `git diff origin/dev...<branch>`); once confirmed, `git restore .` it so the updater's `git pull` keeps working.
 - Releasing: bump the version (README badge + note, `boot.sh` banner) in a `chore(release)` PR to `dev`, open the `dev` → `main` release PR, merge it, push an annotated tag `vX.Y.Z` on the merge commit, publish a GitHub Release from the notes, close the milestone.
 
 ## Commit conventions for Claude agents
