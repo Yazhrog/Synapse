@@ -1,8 +1,9 @@
 pragma Singleton
 import QtQuick
 import Quickshell
-import Quickshell.Io
+import qs.src.core
 import qs.src.services
+import "nmcli.js" as Nmcli
 // ============================================================
 // WifiService — Wi-Fi and wired status through nmcli, shared by the bar
 // icon, the Quick Settings tile and the network popup's Wi-Fi tab.
@@ -12,6 +13,8 @@ import qs.src.services
 // Wi-Fi tab does it when the popup opens). Connecting first tries a saved
 // profile / open network; if nmcli asks for a secret, the network is marked
 // as needing a password and `promptSsid` asks the tab to show the field.
+// Commands run through Exec (argument lists); nmcli output is parsed by
+// nmcli.js (unit-tested).
 // ============================================================
 
 Singleton {
@@ -44,17 +47,16 @@ Singleton {
 
     // ── Status actions ──────────────────────────────────────────────────────
     function poll() {
-        radioRead.running   = false; radioRead.running   = true
-        activeRead.running  = false; activeRead.running  = true
-        wiredRead.running   = false; wiredRead.running   = true
-        connRead.running    = false; connRead.running    = true
+        radioRead.run()
+        activeRead.run()
+        wiredRead.run()
+        connRead.run()
     }
 
     // Turns the radio on/off (optimistically) and re-polls once nmcli is done.
     function setRadio(on) {
         radioOn = on
-        radioProc.command = ["nmcli", "radio", "wifi", on ? "on" : "off"]
-        radioProc.running = false; radioProc.running = true
+        radioExec.run(["nmcli", "radio", "wifi", on ? "on" : "off"])
     }
 
     // Quick Settings tile: not while the hotspot is using the interface.
@@ -63,7 +65,7 @@ Singleton {
         setRadio(!radioOn)
     }
 
-    function openSettings() { nmtuiProc.running = false; nmtuiProc.running = true }
+    function openSettings() { nmtuiExec.run() }
 
     // ── List actions ────────────────────────────────────────────────────────
     // Clears the connect / password state (the tab does it when the popup opens).
@@ -76,21 +78,18 @@ Singleton {
     function scan(rescan) {
         if (scanning || !radioOn) return
         scanning = true; networks = []
-        scanProc.command = ["bash", "-c",
-            "nmcli -t -f IN-USE,SSID,SIGNAL,SECURITY dev wifi list " +
-            (rescan ? "--rescan yes" : "--rescan no") + " 2>/dev/null"]
-        scanProc.running = false; scanProc.running = true
+        scanExec.run(["nmcli", "-t", "-f", "IN-USE,SSID,SIGNAL,SECURITY", "dev", "wifi", "list",
+                      "--rescan", rescan ? "yes" : "no"])
     }
 
     function connect(ssid) {
         connectingTo = ssid; promptSsid = ""
-        connectProc._ssid = ssid
+        connectExec._ssid = ssid
         // The SSID comes from the scan (anyone nearby picks it): it is passed
         // as an argument ($1), never pasted into the script.
-        connectProc.command = ["bash", "-c",
+        connectExec.run(["bash", "-c",
             "nmcli con up id \"$1\" 2>&1 || nmcli dev wifi connect \"$1\" 2>&1",
-            "--", ssid]
-        connectProc.running = false; connectProc.running = true
+            "--", ssid])
     }
 
     function connectWithPassword(ssid, password) {
@@ -98,152 +97,87 @@ Singleton {
         var np = Object.assign({}, needsPassword)
         delete np[ssid]
         needsPassword = np
-        passProc.command = ["bash", "-c",
+        passExec.run(["bash", "-c",
             "nmcli dev wifi connect \"$1\" password \"$2\" 2>/dev/null",
-            "--", ssid, password]
-        passProc.running = false; passProc.running = true
+            "--", ssid, password])
     }
 
     function disconnect() {
-        actionProc.command = ["bash", "-c",
+        actionExec.run(["bash", "-c",
             "nmcli con down \"$(nmcli -t -f NAME,TYPE con show --active" +
-            " | grep ':802-11-wireless' | head -1 | cut -d: -f1)\" 2>/dev/null"]
-        actionProc.running = false; actionProc.running = true
+            " | grep ':802-11-wireless' | head -1 | cut -d: -f1)\" 2>/dev/null"])
     }
 
     // Deletes every saved profile of that SSID.
     function forget(ssid) {
-        actionProc.running = false
-        actionProc.command = ["bash", "-c",
+        actionExec.run(["bash", "-c",
             "for uuid in $(nmcli -g UUID,TYPE connection show | awk -F: '$2==\"802-11-wireless\"{print $1}'); do " +
             "if [ \"$(nmcli -g 802-11-wireless.ssid connection show \"$uuid\" 2>/dev/null)\" = \"$1\" ]; then " +
             "nmcli connection delete \"$uuid\"; " +
             "fi; done",
-            "--", ssid]
-        actionProc.running = true
+            "--", ssid])
     }
 
-    // ── Status processes ────────────────────────────────────────────────────
-    Process {
+    // ── Status commands ─────────────────────────────────────────────────────
+    // A failed read counts as empty output, as the old `… 2>/dev/null` did.
+    Exec {
         id: radioRead
-        command: ["bash", "-c", "nmcli radio wifi"]
-        running: false
-        stdout: StdioCollector { onStreamFinished: root.radioOn = text.trim() === "enabled" }
+        command: ["nmcli", "radio", "wifi"]
+        onSucceeded: out => root.radioOn = Nmcli.parseRadio(out)
+        onFailed: root.radioOn = false
     }
 
-    // "yes:<signal>:<ssid>" for the active network, nothing when there is none
-    Process {
+    Exec {
         id: activeRead
-        command: ["bash", "-c",
-            "nmcli -t -f ACTIVE,SIGNAL,SSID dev wifi 2>/dev/null | grep '^yes:' | head -1"]
-        running: false
-        stdout: StdioCollector {
-            onStreamFinished: {
-                var t = text.trim()
-                if (t === "") { root.signal = 0; root.ssid = ""; return }
-                var rest = t.substring(4)
-                var c = rest.indexOf(":")
-                var s = parseInt(rest.substring(0, c))
-                root.signal = isNaN(s) ? 0 : s
-                root.ssid   = rest.substring(c + 1).replace(/\\:/g, ":")
-            }
-        }
+        command: ["nmcli", "-t", "-f", "ACTIVE,SIGNAL,SSID", "dev", "wifi"]
+        function _apply(out) { const a = Nmcli.parseActive(out); root.signal = a.signal; root.ssid = a.ssid }
+        onSucceeded: out => _apply(out)
+        onFailed: _apply("")
     }
 
-    // First connected ethernet device: "ethernet:connected:<connection name>"
-    Process {
+    Exec {
         id: wiredRead
-        command: ["bash", "-c", "nmcli -t -f TYPE,STATE,CONNECTION dev 2>/dev/null"]
-        running: false
-        stdout: StdioCollector {
-            onStreamFinished: {
-                var lines = text.split("\n"), name = null
-                for (var i = 0; i < lines.length; i++) {
-                    if (lines[i].indexOf("ethernet:connected:") === 0) {
-                        name = lines[i].substring(19).replace(/\\:/g, ":")
-                        break
-                    }
-                }
-                root.ethernet     = name !== null
-                root.ethernetName = name || ""
-            }
-        }
+        command: ["nmcli", "-t", "-f", "TYPE,STATE,CONNECTION", "dev"]
+        function _apply(out) { const n = Nmcli.parseEthernet(out); root.ethernet = n !== null; root.ethernetName = n ?? "" }
+        onSucceeded: out => _apply(out)
+        onFailed: _apply("")
     }
 
-    Process {
+    Exec {
         id: connRead
-        command: ["bash", "-c", "nmcli -t -f CONNECTIVITY general 2>/dev/null | head -1"]
-        running: false
-        stdout: StdioCollector {
-            onStreamFinished: { var v = text.trim().toLowerCase(); if (v !== "") root.connectivity = v }
-        }
+        command: ["nmcli", "-t", "-f", "CONNECTIVITY", "general"]
+        onSucceeded: out => { const v = Nmcli.parseConnectivity(out); if (v !== "") root.connectivity = v }
     }
 
-    Process { id: radioProc; command: []; running: false
-        onRunningChanged: if (!running) root.poll() }
+    Exec { id: radioExec; onFinished: root.poll() }
 
-    Process { id: nmtuiProc; command: ["kitty", "--title", "nmtui", "nmtui"]; running: false }
+    Exec { id: nmtuiExec; command: ["kitty", "--title", "nmtui", "nmtui"] }
 
-    // ── List processes ──────────────────────────────────────────────────────
-    Process {
-        id: scanProc
-        command: []
-        running: false
-        stdout: SplitParser {
-            onRead: function(line) {
-                // IN-USE:SSID:SIGNAL:SECURITY — the SSID may hold escaped colons
-                var t = line.trim()
-                if (t === "") return
-                var lastC = t.lastIndexOf(":")
-                if (lastC < 0) return
-                var security  = t.substring(lastC + 1)
-                var t2        = t.substring(0, lastC)
-                var secC      = t2.lastIndexOf(":")
-                if (secC < 0) return
-                var signalStr = t2.substring(secC + 1)
-                var t3        = t2.substring(0, secC)
-                var firstC    = t3.indexOf(":")
-                if (firstC < 0) return
-                var inUseStr  = t3.substring(0, firstC)
-                var ssid      = t3.substring(firstC + 1).replace(/\\:/g, ":")
-                if (ssid === "" || ssid === "--") return
-                var inUse   = inUseStr.trim() === "*"
-                var signal  = parseInt(signalStr.trim()) || 0
-                var secured = security.trim() !== "" && security.trim() !== "--"
-                var nets = root.networks.slice()
-                var found = false
-                for (var i = 0; i < nets.length; i++) {
-                    if (nets[i].ssid === ssid) {
-                        if (inUse || signal > nets[i].signal)
-                            nets[i] = { ssid: ssid, signal: signal, secured: secured, inUse: inUse }
-                        found = true; break
-                    }
-                }
-                if (!found) nets.push({ ssid: ssid, signal: signal, secured: secured, inUse: inUse })
-                root.networks = nets
-            }
-        }
-        onRunningChanged: if (!running) root.scanning = false
+    // ── List commands ───────────────────────────────────────────────────────
+    Exec {
+        id: scanExec
+        parse: Nmcli.parseWifiList
+        onSucceeded: nets => root.networks = nets
+        onFinished: root.scanning = false
     }
 
     // First attempt — stderr tells whether a secret is needed
-    Process {
-        id: connectProc
-        command: []
-        running: false
+    Exec {
+        id: connectExec
         property string _ssid: ""
-        stderr: StdioCollector { id: connectStderr }
-        onExited: function(code, status) {
+        onSucceeded: _done(true, "")
+        onFailed: (code, err) => _done(false, err)
+        function _done(ok, err) {
             var np = Object.assign({}, root.needsPassword)
-            if (code === 0) {
-                delete np[connectProc._ssid]
+            if (ok) {
+                delete np[_ssid]
                 root.promptSsid = ""
             } else {
-                var err = connectStderr.text.toLowerCase()
+                err = err.toLowerCase()
                 if (err.indexOf("secret") >= 0 || err.indexOf("password") >= 0
                         || err.indexOf("no network") < 0) {
-                    np[connectProc._ssid] = true
-                    root.promptSsid = connectProc._ssid
+                    np[_ssid] = true
+                    root.promptSsid = _ssid
                 }
             }
             root.needsPassword = np
@@ -253,11 +187,9 @@ Singleton {
         }
     }
 
-    Process {
-        id: passProc
-        command: []
-        running: false
-        onRunningChanged: if (!running) {
+    Exec {
+        id: passExec
+        onFinished: {
             root.connectingTo = ""
             root.promptSsid   = ""
             root.scan(false)
@@ -266,11 +198,9 @@ Singleton {
     }
 
     // Disconnect / forget
-    Process {
-        id: actionProc
-        command: []
-        running: false
-        onRunningChanged: if (!running) {
+    Exec {
+        id: actionExec
+        onFinished: {
             root.resetPrompts()
             root.scan(false)
             root.poll()
@@ -278,7 +208,5 @@ Singleton {
     }
 
     // ── Polling ─────────────────────────────────────────────────────────────
-    Timer { interval: 5000; running: true; repeat: true; onTriggered: root.poll() }
-
-    Component.onCompleted: poll()
+    Poller { interval: 5000; running: true; onTick: root.poll() }
 }

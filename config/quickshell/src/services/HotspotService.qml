@@ -1,7 +1,7 @@
 pragma Singleton
 import QtQuick
 import Quickshell
-import Quickshell.Io
+import qs.src.core
 import qs.src.services.network
 import qs.src.utils
 // ============================================================
@@ -11,7 +11,8 @@ import qs.src.utils
 // Needs an ethernet connection: toggle() checks it first, and a running
 // hotspot is torn down when the cable goes. The Wi-Fi radio is brought up
 // for the hotspot and turned back off on stop if it was off before.
-// Credentials live in user_data/hotspot.json.
+// Credentials live in user_data/hotspot.json (a JsonStore, created with the
+// defaults when missing and followed when edited by hand).
 // ============================================================
 
 Singleton {
@@ -20,8 +21,8 @@ Singleton {
     property bool   on:       false
     property bool   busy:     false
     property string label:    ""     // tile sublabel: "Active" | "Not on ethernet" | "Failed" | "Ethernet lost" | ""
-    property string ssid:     "Synapse"
-    property string password: "changeme1"
+    readonly property string ssid:     _cfg.data.ssid     || "Synapse"
+    readonly property string password: _cfg.data.password || "changeme1"
 
     property bool   _wifiWasOff: false   // radio was off when the hotspot started; restore on stop
     property string _iface:      "wlan0"
@@ -32,14 +33,14 @@ Singleton {
     signal configLoaded()
     signal configSaved()
 
-    function loadConfig() { cfgLoadProc.running = false; cfgLoadProc.running = true }
+    // The store follows the file; this tells the tab to take the current values.
+    function loadConfig() {
+        if (_cfg.ready) Qt.callLater(root.configLoaded)
+        else _loadPending = true
+    }
 
     function saveConfig(newSsid, newPassword) {
-        ssid = newSsid; password = newPassword
-        var j = JSON.stringify({ ssid: newSsid, password: newPassword })
-        cfgSaveProc.command = ["bash", "-c",
-            "printf '%s' " + Paths.shellQuote(j) + " > " + Paths.shellQuote(_cfgPath)]
-        cfgSaveProc.running = false; cfgSaveProc.running = true
+        _cfg.set({ ssid: newSsid, password: newPassword })
     }
 
     function toggle() {
@@ -50,20 +51,19 @@ Singleton {
             _stop()
         } else {
             // Check ethernet first, then start
-            ethernetCheck.running = false; ethernetCheck.running = true
+            ethernetCheck.run()
         }
     }
 
     function _stop() {
-        stopProc.command = ["bash", "-c",
+        stopExec.run(["bash", "-c",
             "nmcli device disconnect \"$1\" 2>/dev/null; " +
             "nmcli con delete SynapseHotspot 2>/dev/null; true",
-            "--", _iface]
-        stopProc.running = false; stopProc.running = true
+            "--", _iface])
     }
 
     function _start() {
-        startProc.command = ["bash", "-c",
+        startExec.run(["bash", "-c",
             // nmcli needs the radio up before it can create an AP connection
             "nmcli radio wifi on 2>/dev/null; " +
             "sleep 1; " +
@@ -73,109 +73,81 @@ Singleton {
                 "ifname \"$1\" ssid \"$2\" password \"$3\" " +
                 "con-name SynapseHotspot 2>&1",
             // Interface, SSID and password as arguments, never pasted into the script
-            "--", _iface, ssid, password]
-        startProc.running = false; startProc.running = true
+            "--", _iface, ssid, password])
     }
 
-    function _checkActive() { activeCheck.running = false; activeCheck.running = true }
+    function _checkActive() { activeCheck.run() }
 
     // ── Credentials ─────────────────────────────────────────────────────────
-    Process {
-        id: cfgLoadProc
-        command: ["bash", "-c",
-            "[ -f \"$1\" ] || " +
-            "(mkdir -p \"$(dirname \"$1\")\" && " +
-            "printf '%s' '{\"ssid\":\"Synapse\",\"password\":\"changeme1\"}' > \"$1\"); " +
-            "cat \"$1\"",
-            "--", root._cfgPath]
-        running: false
-        stdout: StdioCollector {
-            onStreamFinished: {
-                try {
-                    var o = JSON.parse(text.trim())
-                    if (o.ssid)     root.ssid     = o.ssid
-                    if (o.password) root.password = o.password
-                } catch(e) {}
-                root.configLoaded()
-            }
-        }
-    }
+    property bool _loadPending: false
 
-    Process {
-        id: cfgSaveProc; command: []; running: false
-        onRunningChanged: if (!running) root.configSaved()
+    property JsonStore _cfg: JsonStore {
+        path:     root._cfgPath
+        defaults: ({ ssid: "Synapse", password: "changeme1" })
+        watch:    true
+        onLoaded: if (root._loadPending) { root._loadPending = false; root.configLoaded() }
+        onSaved:  root.configSaved()
+        onFailed: root.configSaved()
     }
 
     // ── Interface and status ────────────────────────────────────────────────
-    Process {
-        id: ifaceProc
+    Exec {
+        id: ifaceExec
         command: ["bash", "-c",
             "nmcli -g DEVICE,TYPE dev 2>/dev/null | awk -F: '$2==\"wifi\"{print $1; exit}'"]
-        running: false
-        stdout: StdioCollector {
-            onStreamFinished: { var n = text.trim(); if (n !== "") root._iface = n }
-        }
+        onSucceeded: out => { const n = out.trim(); if (n !== "") root._iface = n }
     }
 
-    Process {
+    Exec {
         id: activeCheck
         command: ["bash", "-c",
             "nmcli -t -f NAME,STATE,DEVICE con show --active 2>/dev/null" +
             " | awk -F: '$1~/[Hh]otspot/{found=1} END{print found+0}'"]
-        running: false
-        stdout: StdioCollector {
-            onStreamFinished: {
-                root.on    = parseInt(text.trim()) > 0
-                root.label = root.on ? "Active" : ""
-            }
+        onSucceeded: out => {
+            root.on    = parseInt(out.trim()) > 0
+            root.label = root.on ? "Active" : ""
         }
     }
 
     // ── Start / stop ────────────────────────────────────────────────────────
-    Process {
+    // grep -c exits 1 when it counts 0: "|| true" keeps that a success.
+    Exec {
         id: ethernetCheck
         command: ["bash", "-c",
-            "nmcli -t -f TYPE,STATE dev 2>/dev/null | grep -c 'ethernet:connected'"]
-        running: false
-        stdout: StdioCollector {
-            onStreamFinished: {
-                if (!(parseInt(text.trim()) > 0)) {
-                    root.label = "Not on ethernet"
-                    root.busy  = false
-                    return
-                }
-                root._wifiWasOff = !WifiService.radioOn
-                root._start()
+            "nmcli -t -f TYPE,STATE dev 2>/dev/null | grep -c 'ethernet:connected' || true"]
+        onSucceeded: out => {
+            if (!(parseInt(out.trim()) > 0)) {
+                root.label = "Not on ethernet"
+                root.busy  = false
+                return
             }
+            root._wifiWasOff = !WifiService.radioOn
+            root._start()
         }
+        onFailed: root.busy = false
     }
 
-    Process {
-        id: startProc
-        command: []
-        running: false
-        onRunningChanged: if (!running) {
+    Exec {
+        id: startExec
+        onSucceeded: {
+            root.on    = true
+            root.label = "Active"
+        }
+        onFailed: {
+            root.on    = false
+            root.label = "Failed"
+            labelResetTimer.restart()
+        }
+        onFinished: {
             root.busy = false
             // Re-check the actual state after nmcli exits
             root._checkActive()
         }
-        onExited: function(code, status) {
-            if (code === 0) {
-                root.on    = true
-                root.label = "Active"
-            } else {
-                root.on    = false
-                root.label = "Failed"
-                labelResetTimer.restart()
-            }
-        }
     }
 
-    Process {
-        id: stopProc
-        command: []
-        running: false
-        onRunningChanged: if (!running) {
+    Exec {
+        id: stopExec
+        onFinished: {
             root.busy = false
             root.on   = false
             if (root._wifiWasOff) {
@@ -192,20 +164,16 @@ Singleton {
         onTriggered: if (root.label === "Failed") root.label = "" }
 
     // Tears the hotspot down when ethernet goes away
-    Process {
+    Exec {
         id: ethernetLiveCheck
-        command: ["bash", "-c",
-            "nmcli -t -f TYPE,STATE dev 2>/dev/null | grep -c 'ethernet:connected'"]
-        running: false
-        stdout: StdioCollector {
-            onStreamFinished: {
-                if (!root.on || root.busy) return
-                if (!(parseInt(text.trim()) > 0)) {
-                    root.label = "Ethernet lost"
-                    root.busy  = true
-                    root._stop()
-                    labelResetTimer.restart()
-                }
+        command: ethernetCheck.command
+        onSucceeded: out => {
+            if (!root.on || root.busy) return
+            if (!(parseInt(out.trim()) > 0)) {
+                root.label = "Ethernet lost"
+                root.busy  = true
+                root._stop()
+                labelResetTimer.restart()
             }
         }
     }
@@ -216,14 +184,13 @@ Singleton {
         onTriggered: {
             root._checkActive()
             if (root.on && !root.busy) {
-                ethernetLiveCheck.running = false; ethernetLiveCheck.running = true
+                ethernetLiveCheck.run()
             }
         }
     }
 
     Component.onCompleted: {
-        loadConfig()
-        ifaceProc.running = true
+        ifaceExec.run()
         _checkActive()
     }
 }

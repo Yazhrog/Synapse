@@ -25,8 +25,6 @@ io	services/CavaService.qml
 io	services/ClipboardService.qml
 io	services/DataService.qml
 io	services/FocusModeService.qml
-io	services/HotspotService.qml
-io	services/KanbanService.qml
 io	services/PowerMenu.qml
 io	services/PrefsService.qml
 io	services/QuickToggleService.qml
@@ -37,8 +35,6 @@ io	services/WallpaperService.qml
 io	services/config_tab/KeybindService.qml
 io	services/home/ProfileCard.qml
 io	services/network/BluetoothService.qml
-io	services/network/VpnService.qml
-io	services/network/WifiService.qml
 io	services/system/CpuFreqService.qml
 io	services/system/CpuService.qml
 io	services/system/DiskService.qml
@@ -63,7 +59,6 @@ service-ui	services/KanbanBoard.qml
 service-ui	services/PowerMenu.qml
 service-ui	services/config_tab/DataPage.qml
 service-ui	services/home/QuickSettings.qml
-service-ui	services/network/VpnService.qml
 service-ui	services/system/EnvyControl.qml
 service-ui	services/system/EnvyControlService.qml
 shell-c	popups/HistoryTab.qml
@@ -73,15 +68,12 @@ shell-c	services/BrightnessService.qml
 shell-c	services/ClipboardService.qml
 shell-c	services/DataService.qml
 shell-c	services/FocusModeService.qml
-shell-c	services/HotspotService.qml
-shell-c	services/KanbanService.qml
 shell-c	services/ScreenFilterService.qml
 shell-c	services/ScreenRecService.qml
 shell-c	services/UpdateService.qml
 shell-c	services/WallpaperService.qml
 shell-c	services/config_tab/KeybindService.qml
 shell-c	services/network/VpnService.qml
-shell-c	services/network/WifiService.qml
 shell-c	services/system/CpuFreqService.qml
 visual	services/AppLauncher.qml
 visual	services/AudioControl.qml

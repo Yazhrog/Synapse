@@ -1,7 +1,7 @@
 pragma Singleton
 import QtQuick
 import Quickshell
-import Quickshell.Io
+import qs.src.core
 import qs.src.utils
 // ============================================================
 // KanbanService — the task board's data: user_data/tasks.json, the task
@@ -9,17 +9,17 @@ import qs.src.utils
 //
 // Task: { id, title, column (0 To Do, 1 Ongoing, 2 Done), urgency
 // ("" | "low" | "medium" | "high"), dueDate ("" | "YYYY-MM-DD" | "YYYY-MM-DD HH:MM") }.
-// File: { tasks: [...], nextId }. Created empty if missing, loaded at startup;
-// every mutation saves the whole file. Nothing is saved before the load is
-// done, so an early change can't overwrite the tasks on disk.
+// File: { tasks: [...], nextId }, owned by a JsonStore: created empty if
+// missing, loaded at startup, written atomically after every mutation, never
+// before the load is done (so an early change can't overwrite the tasks).
 // ============================================================
 
 Singleton {
     id: root
 
-    property var  tasks:  []
-    property int  nextId: 0
-    property bool loaded: false
+    readonly property var  tasks:  _store.data.tasks ?? []
+    readonly property int  nextId: _store.data.nextId ?? 0
+    readonly property bool loaded: _store.ready
 
     readonly property string filePath: Paths.userData("tasks.json")
 
@@ -31,48 +31,35 @@ Singleton {
     // ── Mutations ───────────────────────────────────────────────────────────
     // Returns the new task's id.
     function addTask(column, title) {
-        var id   = nextId++
-        var list = tasks.slice()
-        list.unshift({ id: id, title: title, column: column, urgency: "", dueDate: "" })
-        tasks = list
-        _save()
-        return id
+        return _store.update(d => {
+            const id = d.nextId++
+            d.tasks.unshift({ id: id, title: title, column: column, urgency: "", dueDate: "" })
+            return id
+        })
     }
 
     // Moves a task one column left (-1) or right (+1); false if it can't move.
     function moveTask(id, dir) {
-        var list = tasks.slice()
-        for (var i = 0; i < list.length; i++) {
-            if (list[i].id !== id) continue
-            var nc = list[i].column + dir
-            if (nc < 0 || nc > 2) return false
-            list[i] = Object.assign({}, list[i], { column: nc })
-            tasks = list
-            _save()
-            return true
-        }
-        return false
+        const t = task(id)
+        if (!t || t.column + dir < 0 || t.column + dir > 2) return false
+        _store.update(d => { d.tasks.find(x => x.id === id).column += dir })
+        return true
     }
 
     function removeTask(id) {
-        tasks = tasks.filter(function(t) { return t.id !== id })
-        _save()
+        _store.update(d => { d.tasks = d.tasks.filter(t => t.id !== id) })
     }
 
     // Removes every task of one column, with a single save.
     function clearColumn(column) {
-        tasks = tasks.filter(function(t) { return t.column !== column })
-        _save()
+        _store.update(d => { d.tasks = d.tasks.filter(t => t.column !== column) })
     }
 
     function patchTask(id, key, val) {
-        var list = tasks.slice()
-        for (var i = 0; i < list.length; i++) {
-            if (list[i].id !== id) continue
-            var t = Object.assign({}, list[i]); t[key] = val; list[i] = t; break
-        }
-        tasks = list
-        _save()
+        _store.update(d => {
+            const t = d.tasks.find(x => x.id === id)
+            if (t) t[key] = val
+        })
     }
 
     function task(id) {
@@ -84,9 +71,8 @@ Singleton {
     // Empties the file first and the list only once that worked, so a failed
     // write can't leave an empty board that later saves over the tasks.
     function clear() {
-        clearProc.command = ["bash", "-c",
-            "printf '%s' '{\"tasks\":[],\"nextId\":0}' > " + Paths.shellQuote(filePath)]
-        clearProc.running = false; clearProc.running = true
+        _clearing = true
+        _store.clear()
     }
 
     // ── Urgency helpers ─────────────────────────────────────────────────────
@@ -132,48 +118,21 @@ Singleton {
     }
 
     // ── Persistence ─────────────────────────────────────────────────────────
-    function _save() {
-        if (!loaded) return
-        var s = JSON.stringify({ tasks: tasks, nextId: nextId })
-        wrProc.command = ["bash", "-c",
-            "printf '%s' " + Paths.shellQuote(s) + " > " + Paths.shellQuote(filePath)]
-        wrProc.running = false; wrProc.running = true
-    }
+    property bool _clearing: false
 
-    // Creates the file if missing, then prints it.
-    Process {
-        id: rdProc
-        command: ["bash", "-c",
-            "[ -f " + Paths.shellQuote(root.filePath) + " ] || " +
-            "(mkdir -p " + Paths.shellQuote(Paths.userDataDir) + " && " +
-            "printf '%s' '{\"tasks\":[],\"nextId\":0}' > " + Paths.shellQuote(root.filePath) + "); " +
-            "cat " + Paths.shellQuote(root.filePath)]
-        running: false
-        stdout: StdioCollector {
-            onStreamFinished: {
-                try {
-                    var o = JSON.parse(text)
-                    root.tasks  = o.tasks  || []
-                    root.nextId = o.nextId || 0
-                } catch(e) { root.tasks = []; root.nextId = 0 }
-                root.loaded = true
-            }
+    property JsonStore _store: JsonStore {
+        path:     root.filePath
+        defaults: ({ tasks: [], nextId: 0 })
+
+        onCleared: {
+            root._clearing = false
+            root.cleared()
+            root.clearFinished(true)
+        }
+        onFailed: function(message) {
+            if (!root._clearing) return
+            root._clearing = false
+            root.clearFinished(false)
         }
     }
-
-    Process { id: wrProc; command: []; running: false }
-
-    Process {
-        id: clearProc; command: []; running: false
-        onExited: function(exitCode) {
-            if (exitCode === 0) {
-                root.tasks  = []
-                root.nextId = 0
-                root.cleared()
-            }
-            root.clearFinished(exitCode === 0)
-        }
-    }
-
-    Component.onCompleted: rdProc.running = true
 }
