@@ -2,7 +2,6 @@ pragma Singleton
 import QtQuick
 import Quickshell
 import qs.src.core
-
 // EnvyControlService — the GPU mode ("integrated" | "hybrid" | "nvidia")
 // from `envycontrol --query`, read at startup and with refresh().
 //

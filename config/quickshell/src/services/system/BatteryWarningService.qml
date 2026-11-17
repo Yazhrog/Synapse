@@ -2,7 +2,6 @@ pragma Singleton
 import QtQuick
 import Quickshell
 import qs.src.core
-
 // BatteryWarningService — low-battery warnings, once per level per discharge
 // (one instance, so they fire once whatever the number of monitors).
 //   30 / 20 / 10 %  → a desktop notification (notify-send, through the

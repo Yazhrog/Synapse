@@ -1,9 +1,9 @@
 pragma Singleton
 import QtQuick
 import qs.src.services.desktop
+import qs.src.services.media
 import Quickshell
 import Quickshell.Io
-import qs.src.services.media
 // ─────────────────────────────────────────────────────────────
 // IpcManager — centralized entry point for all external IPC signals.
 //
@@ -143,7 +143,7 @@ Singleton {
                  ScreenRecService.cancelSetup()
              } else {
                  Popups.closeAll()
-                 ShellState.screenRecord = true
+                 ScreenRecService.openSetup()
              }
         }
     }

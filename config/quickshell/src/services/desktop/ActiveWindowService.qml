@@ -3,7 +3,6 @@ import QtQuick
 import Quickshell
 import Quickshell.Hyprland
 import qs.src.core
-
 // ============================================================
 // ActiveWindowService — the focused window's name for the centre notch:
 // its initialTitle (the app), capitalised, or "Desktop" when nothing is

@@ -4,6 +4,7 @@ import qs.src.components.inputs
 import qs.src.services.desktop
 import qs.src.services.media
 import qs.src.services.network
+import qs.src.services.notifications
 import qs.src.state
 import qs.src.theme
 // QuickSettings — the dashboard's right column: brightness slider and the
@@ -121,7 +122,7 @@ StatCard {
                         width: tileGrid.btnW; height: tileGrid.btnH
                         on: ShellState.dnd; icon: ShellState.dnd ? "󰂛" : "󰂚"
                         label: "Do Not Disturb"
-                        onToggled: ShellState.dnd = !ShellState.dnd
+                        onToggled: NotificationService.dnd = !NotificationService.dnd
                     }
                     QuickToggleTile {
                         width: tileGrid.btnW; height: tileGrid.btnH
@@ -135,7 +136,7 @@ StatCard {
                                 ScreenRecService.cancelSetup()
                             } else {
                                 Popups.closeAll()
-                                ShellState.screenRecord = true
+                                ScreenRecService.openSetup()
                             }
                         }
                     }
