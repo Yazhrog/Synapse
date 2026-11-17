@@ -30,6 +30,12 @@ Scope {
     property var _bluetooth:  BluetoothService
     property var _vpn:        VpnService
 
+    // Services raise events; opening UI for them is wired here.
+    Connections {
+        target: BatteryWarningService
+        function onCritical(level) { Popups.showBatteryCritical(level) }
+    }
+
     // One Dynamic Surface per screen (#37): frame, bar and every popup.
     ShellHost {}
 }

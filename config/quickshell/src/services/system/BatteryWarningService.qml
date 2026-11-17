@@ -1,27 +1,23 @@
 pragma Singleton
 import QtQuick
 import Quickshell
-import Quickshell.Io
-import Quickshell.Services.UPower
-import qs.src.state
-// Single source of truth for low-battery detection — force-instantiated once
-// in shell.qml so thresholds fire exactly once, regardless of monitor count.
-// 30/20/10% -> a real desktop notification (via notify-send, through the
-// shell's own NotificationServer) that auto-dismisses like any other toast.
-// <=5% -> a blocking BatteryCriticalDialog the user must acknowledge.
+import qs.src.core
 
+// BatteryWarningService — low-battery warnings, once per level per discharge
+// (one instance, so they fire once whatever the number of monitors).
+//   30 / 20 / 10 %  → a desktop notification (notify-send, through the
+//                     shell's own NotificationServer, so it shows as a toast)
+//   ≤ 5 %           → critical(level): app/App.qml opens the blocking
+//                     BatteryCriticalDialog (a service never opens UI itself)
 Singleton {
     id: root
 
-    readonly property var  bat:      UPower.displayDevice
-    readonly property real pct:      bat.ready ? Math.round(bat.percentage * 100) : 0
-    readonly property bool charging: bat.ready
-                                     ? (bat.state === UPowerDeviceState.Charging ||
-                                        bat.state === UPowerDeviceState.PendingCharge ||
-                                        bat.state === UPowerDeviceState.FullyCharged)
-                                     : false
+    signal critical(int level)
 
-    property var  warnedLevels:  []
+    readonly property real pct:      BatteryService.percent
+    readonly property bool charging: BatteryService.charging
+
+    property var  warnedLevels:   []
     property bool criticalWarned: false
 
     readonly property var notifyLevels: [30, 20, 10]
@@ -45,7 +41,7 @@ Singleton {
 
         if (pct <= 5 && !criticalWarned) {
             criticalWarned = true
-            Popups.showBatteryCritical(pct)
+            critical(pct)
             return
         }
 
@@ -53,13 +49,8 @@ Singleton {
             var lvl = notifyLevels[i]
             if (pct <= lvl && warnedLevels.indexOf(lvl) < 0) {
                 warnedLevels = warnedLevels.concat([lvl])
-                notifyProc.command = [
-                    "notify-send", "-a", "Synapse Battery",
-                    "-u", urgencyFor(lvl),
-                    titleFor(lvl),
-                    "Battery at " + pct + "% — consider charging."
-                ]
-                notifyProc.running = true
+                notify.run(["notify-send", "-a", "Synapse Battery", "-u", urgencyFor(lvl),
+                            titleFor(lvl), "Battery at " + pct + "% — consider charging."])
                 break
             }
         }
@@ -68,5 +59,5 @@ Singleton {
     onPctChanged:      checkWarning()
     onChargingChanged: checkWarning()
 
-    property Process notifyProc: Process {}
+    property Exec notify: Exec {}
 }
