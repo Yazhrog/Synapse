@@ -4,23 +4,33 @@
 // be created offscreen, so their contents are loaded on their own here.
 import Quickshell
 import QtQuick
-import qs.src.components
-import qs.src.modules.Center
-import qs.src.modules.Right
-import qs.src.popups
-import qs.src.services
-import qs.src.services.config_tab
+import qs.src.components.feedback
+import qs.src.core
+import qs.src.features.audio
+import qs.src.features.bar.center
+import qs.src.features.bar.right
+import qs.src.features.dashboard
+import qs.src.features.dashboard.config.pages
+import qs.src.features.network
+import qs.src.features.osd
+import qs.src.features.power
+import qs.src.features.screenrec
+import qs.src.features.wallpaper
+import qs.src.services.data
+import qs.src.services.desktop
+import qs.src.services.media
 import qs.src.services.network
-import qs.src.shapes
+import qs.src.services.system
+import qs.src.services.time
 import qs.src.state
+import qs.src.surface.shape
 import qs.src.theme
-import qs.src.utils
 ShellRoot {
     property var _singletons: [Theme, Paths, PrefsService, SurfaceState, Popups, ToastState,
                                ShellState, KeybindService, UpdateService, IpcManager,
-                               FocusModeService, CavaService, AppearanceService, DataService, ClockState,
+                               FocusModeService, CavaService, AppearanceService, DataService, ClockService,
                                BrightnessService, QuickToggleService, HotspotService, ScreenFilterService,
-                               KanbanService, WifiService, BluetoothService, VpnService,
+                               TaskService, WifiService, BluetoothService, VpnService,
                                ActiveWindowService]
 
     FloatingWindow {
@@ -44,7 +54,7 @@ ShellRoot {
             GeneralPage         { width: 600; height: 460 }
             AppearancePage      { width: 600; height: 300 }
             DataPage            { width: 600; height: 460 }
-            Row { Clock {} Battery {} Audio {} }
+            Row { Clock {} BatteryIndicator {} AudioIndicator {} }
             CenterContent       {}
         }
     }
