@@ -1,26 +1,25 @@
 pragma Singleton
 import QtQuick
 import Quickshell
-import Quickshell.Io
 import qs.src.core
 import qs.src.services.data
-import qs.src.state
 // FocusModeService — Focus Mode: hides the bar and tightens Hyprland's gaps.
 //
 // Turning it on saves the current gaps_in/gaps_out and sets 0/10; turning it
-// off restores them. ShellState.focusMode follows once hyprctl is done. Toggled
-// from Quick Settings and the focus-toggle IPC; with the "Boot into Focus Mode"
-// pref (Config → General) it turns on once at startup.
+// off restores them. `active` follows once hyprctl is done (ShellState.focusMode
+// mirrors it for the surface). Toggled from Quick Settings and the
+// focus-toggle IPC; with the "Boot into Focus Mode" pref (Config → General) it
+// turns on once at startup.
 //
 // The saved gaps are also written to $XDG_RUNTIME_DIR/synapse-focus-gaps.json,
 // so a shell restarted while Focus Mode is on (crash, factory reset, hot
 // reload) resumes it with the user's real gaps instead of saving 0/10 as the
-// values to restore. Hyprland reports the gaps as CSS ("2 2 2 2"). The Lua
-// config has no `hyprctl keyword` ("unknown request"), so they are set with
-// `hyprctl eval "hl.config(...)"` and a { top, right, bottom, left } table
-// there, and with `hyprctl keyword` on the legacy .conf provider.
+// values to restore. Hyprland reports the gaps as CSS ("2 2 2 2"); they're set
+// through Hypr (the right syntax for the Lua or conf provider).
 Singleton {
     id: root
+
+    property bool active: false
 
     readonly property string focusIn:  "0"
     readonly property string focusOut: "10"
@@ -31,7 +30,7 @@ Singleton {
     property var _saved: ({ in: "2", out: "12" })
 
     function toggle() {
-        if (ShellState.focusMode) root._restore()
+        if (active) root._restore()
         else root._probe("on")
     }
 
@@ -50,43 +49,31 @@ Singleton {
         return n.slice(0, 4)
     }
 
-    // Shell command setting both gaps.
-    function _setGapsCmd(inCss, outCss) {
-        if (ShellState.configProvider === "lua") {
-            const t = css => {
-                const s = root._sides(css)
-                return "{ top = " + s[0] + ", right = " + s[1] + ", bottom = " + s[2] + ", left = " + s[3] + " }"
-            }
-            return "hyprctl eval " + Paths.shellQuote(
-                "hl.config({ general = { gaps_in = " + t(inCss) + ", gaps_out = " + t(outCss) + " } })")
-        }
-        return "hyprctl keyword general:gaps_in " + Paths.shellQuote(root._sides(inCss).join(" ")) +
-               " && hyprctl keyword general:gaps_out " + Paths.shellQuote(root._sides(outCss).join(" "))
+    // Sets both gaps (CSS strings) through Hypr; `done` once hyprctl is done.
+    function _setGaps(inCss, outCss, done) {
+        const side = css => { const s = _sides(css); return { top: s[0], right: s[1], bottom: s[2], left: s[3] } }
+        Hypr.setOptions("general", { gaps_in: side(inCss), gaps_out: side(outCss) }, done)
     }
 
     function _restore() {
-        _restoreProc.command = ["bash", "-c",
-            root._setGapsCmd(root._saved.in, root._saved.out) +
-            "; rm -f " + Paths.shellQuote(root._stateFile)]
-        _restoreProc.running = false
-        _restoreProc.running = true
+        _setGaps(_saved.in, _saved.out, () => {
+            _rmState.run()
+            root.active = false
+        })
     }
 
     function _enter(saved) {
-        root._saved = saved
-        _applyProc.command = ["bash", "-c",
-            "printf '%s' " + Paths.shellQuote(JSON.stringify(saved)) + " > " + Paths.shellQuote(root._stateFile) +
-            "; " + root._setGapsCmd(root.focusIn, root.focusOut)]
-        _applyProc.running = false
-        _applyProc.running = true
+        _saved = saved
+        _writeState.run(["sh", "-c", 'printf "%s" "$2" > "$1"', "--", _stateFile, JSON.stringify(saved)])
+        _setGaps(focusIn, focusOut, () => root.active = true)
     }
 
     // Reads the current gaps and the saved ones, then continues in _onProbe.
     property string _probeMode: ""
     function _probe(mode) {
-        if (_probeProc.running) return
+        if (_probeProc.busy) return
         root._probeMode = mode
-        _probeProc.running = true
+        _probeProc.run()
     }
 
     function _onProbe(text) {
@@ -102,19 +89,14 @@ Singleton {
             if (inFocus && saved) {
                 // Restarted while Focus Mode was on: resume it.
                 root._saved = saved
-                ShellState.focusMode = true
-            } else if (PrefsService.bootFocusMode && !ShellState.focusMode) {
+                root.active = true
+            } else if (PrefsService.bootFocusMode && !root.active) {
                 root._enter({ in: r.in, out: r.out })
             }
             return
         }
         // Turning it on: never save the focus gaps as the ones to restore.
         root._enter(inFocus && saved ? saved : { in: r.in, out: r.out })
-    }
-
-    property Connections _ipc: Connections {
-        target: IpcManager
-        function onFocusToggleRequested() { root.toggle() }
     }
 
     property Connections _prefs: Connections {
@@ -124,7 +106,7 @@ Singleton {
 
     Component.onCompleted: if (PrefsService.ready) root._probe("boot")
 
-    property Process _probeProc: Process {
+    property Exec _probeProc: Exec {
         command: ["python3", "-c",
             "import json, os, subprocess\n" +
             "def gap(k):\n" +
@@ -139,16 +121,9 @@ Singleton {
             "    saved = None\n" +
             "print(json.dumps({'in': gap('general:gaps_in'), 'out': gap('general:gaps_out'), 'saved': saved}))\n",
             root._stateFile]
-        stdout: StdioCollector {
-            onStreamFinished: root._onProbe(text)
-        }
+        onFinished: root._onProbe(lastOutput)
     }
 
-    property Process _applyProc: Process {
-        onExited: ShellState.focusMode = true
-    }
-
-    property Process _restoreProc: Process {
-        onExited: ShellState.focusMode = false
-    }
+    property Exec _writeState: Exec {}
+    property Exec _rmState: Exec { command: ["rm", "-f", root._stateFile] }
 }

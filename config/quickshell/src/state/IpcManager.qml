@@ -1,5 +1,6 @@
 pragma Singleton
 import QtQuick
+import qs.src.services.desktop
 import Quickshell
 import Quickshell.Io
 import qs.src.services.media
@@ -150,11 +151,10 @@ Singleton {
     property var focusMode: IpcHandler {
         target: "focus-toggle"
         function toggle() {
-            root.focusToggleRequested()
+            FocusModeService.toggle()
         }
     }
 
-    signal focusToggleRequested()
 
     // ── Quick Controls OSD (volume/brightness keys) ──────────
     // Reveals the Quick Controls OSD briefly, then auto-hides — see
