@@ -1,29 +1,9 @@
 //@ pragma UseQApplication
 
 import Quickshell
-import QtQuick
-import qs.src.services
-import qs.src.services.config_tab
-import qs.src.services.network
-import qs.src.state
-import qs.src.windows
-ShellRoot {
-    // Force-instantiate lazy singletons that need startup behavior
-    property var _keybinds:   KeybindService
-    property var _updater:    UpdateService
-    property var _ipc:        IpcManager
-    property var _battery:    BatteryWarningService
-    property var _focusMode:  FocusModeService
-    property var _appearance: AppearanceService
-    property var _clock:      ClockState
-    property var _toggles:    QuickToggleService
-    property var _hotspot:    HotspotService
-    property var _filter:     ScreenFilterService
-    property var _kanban:     KanbanService
-    property var _wifi:       WifiService
-    property var _bluetooth:  BluetoothService
-    property var _vpn:        VpnService
+import qs.src.app
 
-    // One Dynamic Surface per screen (#37): frame, bar and every popup.
-    ShellHost {}
+// Entry point. The composition root is src/app/App.qml.
+ShellRoot {
+    App {}
 }

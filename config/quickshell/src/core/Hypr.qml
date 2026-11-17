@@ -1,7 +1,6 @@
 pragma Singleton
 import QtQuick
 import Quickshell
-import qs.src.utils
 import "hypr.js" as HyprCmd
 
 // Hypr — the one place that runs hyprctl to change Hyprland.

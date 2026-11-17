@@ -1,8 +1,8 @@
-// Unit tests for src/shapes/surfacePath.js. Run: config/quickshell/tests/unit.sh (or node on this file)
+// Unit tests for src/surface/shape/surfacePath.js. Run: config/quickshell/tests/unit.sh (or node on this file)
 import { createRequire } from "node:module"
 import assert from "node:assert/strict"
 const require = createRequire(import.meta.url)
-const { build } = require("../../src/shapes/surfacePath.js")
+const { build } = require("../../src/surface/shape/surfacePath.js")
 
 const base = {
     width: 1920, height: 1080, t: 6, r: 15, R: 17, notchBottom: 40,
