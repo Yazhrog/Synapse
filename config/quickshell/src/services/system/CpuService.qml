@@ -1,68 +1,37 @@
+pragma Singleton
 import QtQuick
-import Quickshell.Io
+import Quickshell
+import qs.src.core
+import "sysinfo.js" as SysInfo
 
-// Reads /proc/stat every second via cat and computes CPU usage %.
-// Exposes:
-//   real usagePercent   — 0.0 to 100.0
-
-QtObject {
+// CpuService — CPU usage % from /proc/stat, sampled every second while
+// watched (System page). usagePercent: 0–100.
+Singleton {
     id: root
 
-    property bool active:       true
-    property real usagePercent: 0.0
+    property real usagePercent: 0
 
-    property real _prevIdle:  0
-    property real _prevTotal: 0
-    property bool _firstRead: true
+    // ── Lease: polls only while a view shows the data ──────────────────────
+    readonly property bool watched: _leases.watched
+    function acquire() { _leases.acquire() }
+    function release() { _leases.release() }
+    property LeaseCount _leases: LeaseCount {}
 
-    property var _proc: Process {
+    property var _prev: null
+
+    Exec {
+        id: read
         command: ["cat", "/proc/stat"]
-        running: false
-        stdout: StdioCollector {
-            onStreamFinished: root._parse(text)
+        parse: SysInfo.parseCpuStat
+        onSucceeded: sample => {
+            if (!sample) return
+            if (root._prev) {
+                const p = SysInfo.cpuPercent(root._prev, sample)
+                if (p !== null) root.usagePercent = p
+            }
+            root._prev = sample
         }
     }
 
-    property var _timer: Timer {
-        interval: 1000
-        running:  root.active
-        repeat:   true
-        onTriggered: {
-            _proc.running = false
-            _proc.running = true
-        }
-    }
-
-    function _parse(text) {
-        var line  = text.split("\n")[0]
-        var parts = line.trim().split(/\s+/)
-        if (parts.length < 8 || parts[0] !== "cpu") return
-
-        var user    = parseFloat(parts[1])
-        var nice    = parseFloat(parts[2])
-        var system  = parseFloat(parts[3])
-        var idle    = parseFloat(parts[4])
-        var iowait  = parseFloat(parts[5])
-        var irq     = parseFloat(parts[6])
-        var softirq = parseFloat(parts[7])
-        var steal   = parts.length > 8 ? parseFloat(parts[8]) : 0
-
-        var totalIdle = idle + iowait
-        var total     = user + nice + system + totalIdle + irq + softirq + steal
-
-        if (!root._firstRead) {
-            var dTotal = total - root._prevTotal
-            var dIdle  = totalIdle - root._prevIdle
-            if (dTotal > 0)
-                root.usagePercent = Math.round((1 - dIdle / dTotal) * 100)
-        }
-
-        root._firstRead = false
-        root._prevTotal = total
-        root._prevIdle  = totalIdle
-    }
-
-    Component.onCompleted: {
-        _proc.running = true
-    }
+    Poller { interval: 1000; running: root.watched; onTick: read.run() }
 }

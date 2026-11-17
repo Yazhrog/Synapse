@@ -50,6 +50,8 @@ ShellRoot {
         // ── Exec ────────────────────────────────────────────────────────────
         () => exec({ parse: out => out.split("\n") }, ["sh", "-c", "printf 'a\\nb'"], ev =>
             check("exec parses stdout", JSON.stringify(ev) === '[["ok",["a","b"]]]', JSON.stringify(ev))),
+        () => exec({}, ["sh", "-c", "echo partial; exit 1"], (ev, e) =>
+            check("exec keeps stdout of a failed run in lastOutput", ev[0][0] === "fail" && e.lastOutput === "partial\n", e.lastOutput)),
         () => exec({}, ["sh", "-c", "echo err >&2; exit 3"], ev =>
             check("exec reports exit code and stderr", JSON.stringify(ev) === '[["fail",3,"err\\n"]]', JSON.stringify(ev))),
         () => exec({}, ["sh", "-c", 'printf %s "$1"', "--", '$(echo hacked); "x'], ev =>
