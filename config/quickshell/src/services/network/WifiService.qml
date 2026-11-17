@@ -2,8 +2,7 @@ pragma Singleton
 import QtQuick
 import Quickshell
 import Quickshell.Io
-import "../../"
-
+import qs.src.services
 // ============================================================
 // WifiService — Wi-Fi and wired status through nmcli, shared by the bar
 // icon, the Quick Settings tile and the network popup's Wi-Fi tab.

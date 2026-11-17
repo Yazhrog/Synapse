@@ -1,6 +1,6 @@
 import QtQuick
-import "../../../"
-
+import qs.src.state
+import qs.src.theme
 // StopwatchView — elapsed time with Start/Stop and Reset.
 
 Item {

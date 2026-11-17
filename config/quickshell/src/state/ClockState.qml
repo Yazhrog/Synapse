@@ -1,5 +1,6 @@
 pragma Singleton
 import QtQuick
+import Quickshell
 import Quickshell.Io
 
 // ============================================================
@@ -12,7 +13,7 @@ import Quickshell.Io
 // the stopwatch and alarms keep going while the dashboard is closed.
 // ============================================================
 
-QtObject {
+Singleton {
     id: root
 
     // ── Wall clock (updated every second) ──────────────────────────────────

@@ -1,9 +1,9 @@
 import QtQuick
 import QtQuick.Controls
-import "../"
-import "../../"
-import "../../components"
-
+import qs.src.components
+import qs.src.services
+import qs.src.state
+import qs.src.utils
 // DataPage — Config → Data & Storage: reset, export and cleanup actions.
 //
 // The actions live in DataService; each button shows ✓ when its action has

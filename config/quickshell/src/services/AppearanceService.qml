@@ -2,8 +2,7 @@ pragma Singleton
 import QtQuick
 import Quickshell
 import Quickshell.Io
-import "../"
-
+import qs.src.state
 // AppearanceService — applies the Appearance prefs that live outside QML.
 //
 // Background blur is a Hyprland layer rule on the `synapse-frame` namespace,

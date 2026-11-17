@@ -1,6 +1,5 @@
 import QtQuick
-import "../../"
-
+import qs.src.theme
 // RadioOffOverlay — "<radio> is off" and a "Turn On" button, shown in place
 // of a tab's list while its radio is off (the Wi-Fi and Bluetooth tabs hide
 // the list). No background of its own: the popup's frame shows through.

@@ -1,9 +1,10 @@
 import QtQuick
-import "../../"
-import "../../components"
-import "../../components/sliders"
-import "../"
-
+import qs.src.components
+import qs.src.components.sliders
+import qs.src.services
+import qs.src.services.network
+import qs.src.state
+import qs.src.theme
 // QuickSettings — the dashboard's right column: brightness slider and the
 // scrollable grid of toggle tiles, plus the shader picker of the Filter tile.
 // Layout only: the state and actions live in BrightnessService,

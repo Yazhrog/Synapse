@@ -2,14 +2,13 @@ pragma Singleton
 import QtQuick
 import Quickshell
 import Quickshell.Io
-import "../"
-
+import qs.src.utils
 // AppPinService — launcher pins, shared by every per-screen AppLauncher.
 // Stored as an ordered array of .desktop ids (list_apps.py's "id" field) in
 // Paths.userData("app_pins.json"). Pins of uninstalled apps
 // are kept, just not rendered, so reinstalling an app brings its pin back.
 
-QtObject {
+Singleton {
     id: root
 
     property var pinned: []

@@ -1,10 +1,9 @@
 import QtQuick
-import "../../"
-import "../../theme/"
-import "../../modules/Center/"
-import "../../modules/Right/"
-import "../../modules/Left/"
-
+import qs.src.modules.Center
+import qs.src.modules.Left
+import qs.src.modules.Right
+import qs.src.state
+import qs.src.theme
 // SurfaceBar — the three notch contents of the bar (left, centre, right),
 // placed in the notches DynamicSurface draws. Fades out in focus mode; in
 // pills the contents are centred in the floating capsules.

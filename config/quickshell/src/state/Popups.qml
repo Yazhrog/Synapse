@@ -1,8 +1,9 @@
 pragma Singleton
 import QtQuick
-import "../"
-
-QtObject {
+import Quickshell
+import qs.src.services
+import qs.src.theme
+Singleton {
     id: root
 
     // ── Per-popup open state ───────────────────────────────────────────────────

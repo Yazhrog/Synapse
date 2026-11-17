@@ -1,6 +1,5 @@
 import QtQuick
-import "../"
-import "../../"
+import qs.src.theme
 import "keynames.js" as KeyNames
 
 // KeybindRow — one shell action on Config → Keybinds: its label, the bind

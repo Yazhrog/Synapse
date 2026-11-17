@@ -2,8 +2,7 @@ pragma Singleton
 import QtQuick
 import Quickshell
 import Quickshell.Io
-import "../../"
-
+import qs.src.state
 // ============================================================
 // VpnService — WireGuard connections through nmcli, shared by the bar's VPN
 // icon and the network popup's VPN tab.

@@ -1,6 +1,5 @@
 import QtQuick
-import "../../"
-
+import qs.src.theme
 // NotchCountItem — the timer or the stopwatch in the notch: icon on the
 // left, the time in the middle, play / pause and reset on the right.
 // While `urgent` (the timer's last 30 s) the icon and time turn red and

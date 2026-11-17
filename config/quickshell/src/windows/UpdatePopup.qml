@@ -1,9 +1,10 @@
 import QtQuick
 import Quickshell
 import Quickshell.Wayland
-import "../"
-import "../components"
-
+import qs.src.components
+import qs.src.services
+import qs.src.state
+import qs.src.theme
 // UpdatePopup — centered overlay popup for shell update notifications.
 // Same structural pattern as ConfirmDialog: PanelWindow Overlay, dim background,
 // centered fixed-size card. Instantiated per-screen in shell.qml.

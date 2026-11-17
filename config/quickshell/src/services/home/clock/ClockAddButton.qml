@@ -1,6 +1,5 @@
 import QtQuick
-import "../../../"
-
+import qs.src.theme
 // ClockAddButton — the 24×24 "+" toggle that opens a view's add panel.
 // Shows `closeGlyph` while `open`.
 

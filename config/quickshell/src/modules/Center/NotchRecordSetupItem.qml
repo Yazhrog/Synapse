@@ -1,6 +1,5 @@
 import QtQuick
-import "../../"
-
+import qs.src.services
 // NotchRecordSetupItem — before recording: the capture and audio pills
 // (each opens its option strip) and the Record button on the right.
 

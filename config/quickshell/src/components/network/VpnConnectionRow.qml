@@ -1,6 +1,6 @@
 import QtQuick
-import "../../"
-
+import qs.src.services.network
+import qs.src.theme
 // VpnConnectionRow — one WireGuard connection; a click connects or
 // disconnects it. Pulses when it becomes active.
 

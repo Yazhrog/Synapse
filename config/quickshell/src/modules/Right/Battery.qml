@@ -1,7 +1,5 @@
 import QtQuick
-import "../../services"
-import "../../"
-
+import qs.src.services
 Item {
     // Always show the percentage beside the icon; otherwise only on hover.
     property bool showPercentage: PrefsService.alwaysShowBatteryPercentage

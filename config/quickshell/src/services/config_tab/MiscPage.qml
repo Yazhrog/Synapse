@@ -1,7 +1,6 @@
 import QtQuick
-import "../../"
-import "../../components"
-
+import qs.src.components
+import qs.src.services
 // MiscPage — Config → Misc.
 //
 // Currently just the update settings. The toggle goes through

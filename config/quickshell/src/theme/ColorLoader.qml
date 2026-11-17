@@ -1,7 +1,6 @@
 import QtQuick
 import Quickshell.Io
-import "../"
-
+import qs.src.utils
 // ============================================================
 // ColorsLoader — watches Paths.userData("colors.json")
 // and exposes parsed color properties.

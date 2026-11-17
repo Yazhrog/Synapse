@@ -1,8 +1,7 @@
 import QtQuick
 import Quickshell
-import "../../components"
-import "../../"
-
+import qs.src.components
+import qs.src.state
 IconBtn {
 		text: "" 
 		textColor: "#1793d1"

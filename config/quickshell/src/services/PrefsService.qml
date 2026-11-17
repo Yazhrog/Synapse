@@ -2,8 +2,7 @@ pragma Singleton
 import QtQuick
 import Quickshell
 import Quickshell.Io
-import "../"
-
+import qs.src.utils
 // ============================================================
 // PrefsService — central store for shell preferences.
 //

@@ -11,8 +11,7 @@
 import Quickshell
 import Quickshell.Io
 import QtQuick
-import "./src"
-
+import qs.src.state
 ShellRoot {
     id: root
 

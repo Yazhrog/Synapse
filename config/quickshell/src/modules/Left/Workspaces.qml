@@ -1,8 +1,8 @@
 import QtQuick
 import Quickshell
 import Quickshell.Hyprland
-import "../../"
-
+import qs.src.state
+import qs.src.theme
 Rectangle {
     id: root
     

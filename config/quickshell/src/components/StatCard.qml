@@ -1,6 +1,5 @@
 import QtQuick
-import "../"
-
+import qs.src.theme
 // Reusable card background. Wrap any stats panel in this for
 // a consistent surface across the stats tab and future dashboard panels.
 //

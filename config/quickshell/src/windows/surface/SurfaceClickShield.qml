@@ -1,6 +1,5 @@
 import QtQuick
-import "../../"
-
+import qs.src.state
 // SurfaceClickShield — closes the open popup on a click outside it (#42).
 //
 // On the screen owning the open popup (switching monitor closes it via

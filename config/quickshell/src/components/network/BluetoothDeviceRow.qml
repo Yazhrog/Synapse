@@ -1,6 +1,6 @@
 import QtQuick
-import "../../"
-
+import qs.src.services.network
+import qs.src.theme
 // BluetoothDeviceRow — one device: icon, name and status; Connect /
 // Disconnect and Remove (with a confirmation) when paired, Pair and an
 // optional legacy PIN field when not.

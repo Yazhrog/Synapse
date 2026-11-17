@@ -1,6 +1,4 @@
 import QtQuick
-import "../../"
-
 // SettingsLaunchButton — the 󰒓 header button that opens an external settings
 // tool (nmtui, blueman-manager).
 

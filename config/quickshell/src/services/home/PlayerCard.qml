@@ -2,9 +2,8 @@ import QtQuick
 import QtQuick.Effects
 import Quickshell.Io
 import Quickshell.Services.Mpris
-import "../../"
-import "../../components"
-
+import qs.src.services
+import qs.src.theme
 Item {
     id: root
 

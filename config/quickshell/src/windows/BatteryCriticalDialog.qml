@@ -1,9 +1,9 @@
 import QtQuick
 import Quickshell
 import Quickshell.Wayland
-import "../"
-import "../components"
-
+import qs.src.components
+import qs.src.state
+import qs.src.theme
 // Blocking critical-battery modal — driven by Popups.batteryCritical*.
 // Unlike ConfirmDialog, this has NO click-outside or Escape dismiss: the
 // battery is critically low, so it forces an explicit acknowledgement

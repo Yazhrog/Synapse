@@ -8,16 +8,9 @@
 // so this run doesn't. Run by tests/smoke.sh.
 import Quickshell
 import QtQuick
-import "./src/modules/Center/"
-import "./src/modules/Right/"
-import "./src/modules/Left/"
-import "./src/shapes/"
-import "./src/components/"
-import "./src/services/"
-import "./src/popups/"
-import "./src/theme/"
-import "./src/"
-
+import qs.src.modules.Center
+import qs.src.popups
+import qs.src.state
 ShellRoot {
     FloatingWindow {
         implicitWidth: 1920; implicitHeight: 1080

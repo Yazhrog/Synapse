@@ -1,7 +1,6 @@
 import QtQuick
-import "../components"
-import "../"
-
+import qs.src.components
+import qs.src.state
 // NetworkContent — the network popup's UI: the Wi-Fi / Bluetooth / VPN /
 // Hotspot tab pages and the tab bar. Hosted by the right region of DynamicSurface.
 Item {

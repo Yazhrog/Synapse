@@ -1,6 +1,5 @@
 import QtQuick
-import "../../"
-
+import qs.src.theme
 // NotchGlyphButton — a bare 16 px icon button (play / pause, reset) that
 // turns accent on hover.
 

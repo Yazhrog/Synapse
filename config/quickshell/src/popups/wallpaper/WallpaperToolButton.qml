@@ -1,6 +1,5 @@
 import QtQuick
-import "../../"
-
+import qs.src.theme
 // WallpaperToolButton — a 32 px button of the picker's bottom bar: an icon,
 // an optional label and ▾ arrow; accent while hovered or `active`.
 
