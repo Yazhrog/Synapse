@@ -117,7 +117,8 @@ echo "── HYPRLAND ECOSYSTEM ────────────────
 check_cmd "hyprlock"
 check_cmd "hypridle"
 check_cmd "sunsetr"
-check_opt "wayland-idle-inhibitor"
+if python3 -c "import pywayland.protocol.idle_inhibit_unstable_v1" &>/dev/null; then log_installed "python-pywayland (caffeine)"
+else log_missing "python-pywayland (caffeine)"; fi
 
 echo ""
 echo "── HYPRLAND PLUGINS ─────────────────────────────────────────────"
@@ -274,7 +275,7 @@ if [[ -n "$REPO_DIR" && -f "$REPO_DIR/install/steps/02-packages.sh" ]]; then
     SKIP_PKG_CHECK=(quickshell ghostty hyprland hyprlock hypridle hyprpolkitagent
         wf-recorder cava wtype brightnessctl upower playerctl rfkill sunsetr
         awww matugen cliphist envycontrol auto-cpufreq nbfc-linux
-        wayland-idle-inhibitor-git bibata-cursor-theme whitesur-icon-theme)
+        python-pywayland bibata-cursor-theme whitesur-icon-theme)
 
     _pkg_skipped() {
         local p="$1"

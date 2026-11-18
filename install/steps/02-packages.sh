@@ -114,7 +114,7 @@ PACMAN_DEPS=(
 
     # System services
     brightnessctl upower libnotify polkit
-    python wl-clipboard slurp xdg-user-dirs curl
+    python python-pywayland wl-clipboard slurp xdg-user-dirs curl  # python-pywayland: caffeine (vendored idle inhibitor)
 
     # Screen recording
     wf-recorder cava
@@ -164,7 +164,6 @@ AUR_DEPS=(
     bibata-cursor-theme  # animated cursor themes
     whitesur-icon-theme  # icon theme
     mactahoe-icon-theme  # icon theme
-    wayland-idle-inhibitor-git  # Wayland idle inhibitor for caffeine mode (inhibits hypridle)
     sunsetr                     # schedule-aware color temperature daemon (night light)
 )
 
