@@ -22,6 +22,8 @@ Scope {
 
     // app/PopupManifest.qml, handed to every surface
     required property var manifest
+    // features/bar/BarWidgets.qml's widgets, handed to every surface's bar
+    property var barWidgets: []
 
     // Switching workspace or monitor, or a new window opening, closes the
     // open popup.
@@ -65,7 +67,7 @@ Scope {
                     StrutWindow { screen: modelData; edge: "bottom"; reserve: _extraBorder }
                 }
 
-                DynamicSurface { screen: modelData; manifest: host.manifest }
+                DynamicSurface { screen: modelData; manifest: host.manifest; barWidgets: host.barWidgets }
 
                 // Confirmations (Dialogs.confirm)
                 ConfirmDialog { screen: modelData }

@@ -35,7 +35,7 @@ Singleton {
     // Single source of truth: config/quickshell/src/config/keybind-defaults.json.
     // install/steps/06-shell-config.sh reads the same file for its live conflict
     // check, so the two never drift out of sync with each other or with the
-    // IpcHandler targets in IpcManager.qml.
+    // action keys of the Actions registry (tests/contracts.qml checks it).
     readonly property var _defaults: _defaultsStore.data
 
     property JsonStore _defaultsStore: JsonStore {

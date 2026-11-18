@@ -5,6 +5,7 @@ import qs.src.theme
 PopupSpec {
     key:    "notifications"
     region: "right"
+    action: "notifications-toggle"; actionLabel: "Notifications"
     size:   (s, item) => [s.px(Theme.notificationsWidth + Theme.notchRadius) + s.borderWidth,
                           s.notchBottom + (item?.listHeight || 0) + s.px(2 * Theme.popupPadding + 4)]
     place:  (s, w, h) => Qt.rect(s.px(Theme.notchRadius + 4), s.px(4),
