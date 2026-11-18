@@ -34,7 +34,7 @@ ShellRoot {
                                TaskService, WifiService, BluetoothService, VpnService,
                                ActiveWindowService, PowerService, GpuModeService, AppsService,
                                KeyboardLayoutService, ProfileService, SystemInfoService, AudioService,
-                               MediaService]
+                               MediaService, Dialogs]
 
     FloatingWindow {
         implicitWidth: 1920; implicitHeight: 1080

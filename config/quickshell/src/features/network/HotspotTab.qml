@@ -26,12 +26,9 @@ Item {
         function onConfigSaved() { root._dirty = false }
     }
 
-    Connections {
-        target: Popups
-        function onNetworkOpenChanged() {
-            if (Popups.networkOpen && root.visible)
-                HotspotService.loadConfig()
-        }
+    PopupLifecycle {
+        popup: "network"
+        onOpening: if (root.visible) HotspotService.loadConfig()
     }
 
     Component.onCompleted: HotspotService.loadConfig()

@@ -3,15 +3,6 @@ import Quickshell.Wayland
 import Quickshell.Hyprland
 import QtQuick
 import qs.src.components.feedback
-import qs.src.features.audio
-import qs.src.features.clipboard
-import qs.src.features.dashboard
-import qs.src.features.network
-import qs.src.features.notifications
-import qs.src.features.osd
-import qs.src.features.power
-import qs.src.features.screenrec
-import qs.src.features.wallpaper
 import qs.src.services.media
 import qs.src.state
 import qs.src.surface.shape
@@ -22,10 +13,10 @@ import qs.src.theme
 // region of the frame), the passive content (notification toast, Quick
 // Controls OSD), the click shield and the border triggers (#37).
 //
-// Adding a popup: one entry in `contents` (region, size, placement, focus,
-// component) and its key in SurfaceState.regionOf. Regions: top (center
-// notch), right (right notch), leftCenter / rightCenter (bumps on the side
-// borders), bottomCenter / bottomRight (panels on the bottom border).
+// The popups and the passive parts come from app/PopupManifest.qml
+// (`manifest`): a popup's PopupSpec gives its region, size, placement, focus
+// and content, so adding one never edits this file. The frame geometry is in
+// Regions.qml, the popup loaders in SurfacePopupHost.qml.
 //
 // Space for tiled windows is reserved by StrutWindow, not here: this window
 // ignores exclusive zones. Clicks outside the visible frame pass through to
@@ -39,7 +30,9 @@ import qs.src.theme
 PanelWindow {
     id: root
 
-    component Anim: NumberAnimation { duration: Theme.animDuration; easing.type: Easing.InOutCubic }
+    // app/PopupManifest.qml: popups (PopupSpec list), osd, recordingOptions
+    required property var manifest
+
     component Fade: NumberAnimation { duration: Metrics.regionFadeDuration }
 
     anchors {
@@ -68,7 +61,8 @@ PanelWindow {
         SurfaceState.activeScreen === screenName ? SurfaceState.activeRegion : "none"
     readonly property string openContent:
         openRegion !== "none" ? SurfaceState.activeContent : "none"
-    readonly property var    openSpec: contents[openContent] ?? null
+    readonly property var    openSpec: specs[openContent] ?? null
+    readonly property var    openItem: popupScope.items[openContent] ?? null
 
     // The screen-recording setup (bar carousel) also wants Escape to cancel it.
     readonly property bool recSetup:      ShellModes.screenRecord && !ScreenRecService.recording
@@ -128,235 +122,53 @@ PanelWindow {
     readonly property int cornerRadius: px(Theme.cornerRadius)
     readonly property int notchPadding: px(Theme.notchPadding)
 
-    // ── Interactive popups ───────────────────────────────────────────────────
-    // size():  the region's target size, in px —
-    //            top:          [notch width, notch bottom y]
-    //            right:        [notch width, notch bottom y]
-    //            leftCenter / rightCenter: [depth, height]
-    //            bottomCenter / bottomRight: [width, height]
-    // place(w, h): where the content goes inside its region's clip item.
-    // focus(item): gives the keyboard to the content once it's open.
-    // afterClose(item): runs once the close animation is over.
-    readonly property var contents: ({
-        powerMenu: {
-            region: "leftCenter",
-            component: powerComp,
-            size:  () => [px(Metrics.powerMenuWidth + 2 * Metrics.powerMenuPadding),
-                          px(Metrics.powerMenuHeight + 2 * Metrics.powerMenuPadding)],
-            place: (w, h) => Qt.rect(px(4), px(Metrics.powerMenuPadding),
-                                     px(Metrics.powerMenuWidth), px(Metrics.powerMenuHeight)),
-            focus: item => item.reset()
-        },
-        audio: {
-            region: "rightCenter",
-            component: audioComp,
-            size:  () => [px(Metrics.audioPageWidths[root._audioPage] ?? 300), px(Metrics.sideRegionHeight)],
-            place: (w, h) => Qt.rect(px(10), px(6), px(Metrics.audioPageWidths[root._audioPage] ?? 300) - px(16), h - px(12)),
-            focus: item => popupScope.forceActiveFocus(),
-            afterClose: item => item.reset()
-        },
-        notifications: {
-            region: "right",
-            component: notifComp,
-            size:  () => [px(Theme.notificationsWidth + Theme.notchRadius) + borderWidth,
-                          notchBottom + root._notifListHeight + px(2 * Theme.popupPadding + 4)],
-            place: (w, h) => Qt.rect(px(Theme.notchRadius + 4), px(4),
-                                     px(Theme.notificationsWidth - 8), h),
-            focus: item => popupScope.forceActiveFocus()
-        },
-        network: {
-            region: "right",
-            component: networkComp,
-            size:  () => [px(Metrics.networkPopupBodyWidth) + borderWidth,
-                          px(Metrics.networkPopupHeight - Theme.notchRadius)],
-            place: (w, h) => Qt.rect(px(Theme.notchRadius), 0,
-                                     px(Metrics.networkPopupBodyWidth - Theme.notchRadius - 7),
-                                     px(Metrics.networkPopupHeight - Theme.notchRadius - Theme.cornerRadius) - notchHeight),
-            focus: item => popupScope.forceActiveFocus()
-        },
-        dashboard: {
-            region: "top",
-            component: dashboardComp,
-            size:  () => [px(Popups.dashboardPageWidth), px(Theme.dashboardHeight)],
-            place: (w, h) => Qt.rect(px(8), px(Theme.notchRadius + 8),
-                                     px(Popups.dashboardPageWidth - 16),
-                                     px(Theme.dashboardHeight - Theme.notchRadius - 16)),
-            focus: item => item.focusPage(),
-            afterClose: item => item.reset()
-        },
-        wallpaper: {
-            region: "bottomCenter",
-            component: wallpaperComp,
-            size:  () => [px(Metrics.wallpaperPanelWidth), px(Metrics.wallpaperPanelHeight)],
-            place: (w, h) => Qt.rect((w - px(Metrics.wallpaperPanelWidth) - 2 * notchRadius) / 2, 0,
-                                     px(Metrics.wallpaperPanelWidth) + 2 * notchRadius,
-                                     px(Metrics.wallpaperPanelHeight)),
-            focus: item => item.focusSearch()
-        },
-        clipboard: {
-            region: "bottomRight",
-            component: clipboardComp,
-            size:  () => [px(Metrics.clipboardPanelWidth), px(Metrics.clipboardPanelHeight)],
-            place: (w, h) => Qt.rect(px(10), px(8), px(Metrics.clipboardPanelWidth - 10),
-                                     px(Metrics.clipboardPanelHeight - 16)),
-            focus: item => item.forceActiveFocus()
-        }
-    })
-    readonly property var contentKeys: Object.keys(contents)
-
-    // Fed by the contents themselves (their size depends on them).
-    property real   _notifListHeight: 0
-    property string _audioPage:       Popups.audioPage
-
-    Component { id: powerComp;     PowerMenu {} }
-    Component { id: audioComp;     AudioControl {
-        onPageChanged: root._audioPage = page
-        Component.onCompleted: root._audioPage = page
-    } }
-    // Wrapped, so the Loader resizes the wrapper and the list keeps the
-    // height it computes for itself (the region's size follows it).
-    Component {
-        id: notifComp
-        Item {
-            NotificationList {
-                width: parent.width
-                onHeightChanged:       root._notifListHeight = height
-                Component.onCompleted: root._notifListHeight = height
-            }
-        }
-    }
-    Component { id: networkComp;   NetworkContent { page: Popups.networkPage || "wifi" } }
-    Component { id: dashboardComp; DashboardContent {} }
-    Component {
-        id: wallpaperComp
-        WallpaperContent {
-            fw:   root.notchRadius
-            fh:   root.notchRadius
-            edgeInset: root.framed ? root.borderWidth : 0
-            open: root.openContent === "wallpaper"
-        }
-    }
-    Component {
-        id: clipboardComp
-        FocusScope {
-            Keys.onEscapePressed: Popups.close("clipboard")
-            HistoryTab { anchors.fill: parent }
-        }
+    // ── Interactive popups (app/PopupManifest.qml) ──────────────────────────
+    readonly property var popups: manifest ? manifest.popups : []
+    readonly property var specs: {
+        const m = {}
+        for (let i = 0; i < popups.length; i++) m[popups[i].key] = popups[i]
+        return m
     }
 
     // ── Passive content (#40) ────────────────────────────────────────────────
     // Notification toast: grows the right notch on the screen it was shown on.
     readonly property bool toastShown: ToastState.isOn(screenName) && ToastState.showing
-                                       && openRegion !== "right" && _toastFits
+                                       && openRegion !== "right" && regions.toastFits
     readonly property int  toastWidth: px(Theme.notificationToastWidth + Theme.notchRadius + Metrics.toastNotchExtra)
 
     // Quick Controls OSD: right-center region, on the focused monitor or while
     // its border trigger is hovered, unless a popup owns that region.
     readonly property bool quickShown: ((Popups.quickOpen && _focusedHere) || triggers.quickHoverOpen)
-                                       && openRegion !== "rightCenter" && _quickFits
+                                       && openRegion !== "rightCenter" && regions.quickFits
     readonly property int  quickWidth:  px(Metrics.osdWidth)
     readonly property int  sideHeight:  px(Metrics.sideRegionHeight)
+    readonly property real toastHeight: toastCard.implicitHeight
 
-    // ── Region targets ───────────────────────────────────────────────────────
-    // The open popup's size, or the passive content's, or closed ([0, 0]).
-    // Targets are kept separate from the animated sizes so the collision checks
-    // compare final sizes, not mid-animation ones.
-    function _target(region) {
-        if (openSpec && openSpec.region === region) return openSpec.size()
-        if (region === "right" && toastShown)
-            return [toastWidth, notchBottom + toastCard.implicitHeight + px(26)]
-        if (region === "rightCenter" && quickShown) return [quickWidth, sideHeight]
-        return [0, 0]
-    }
-    readonly property var _topT:          _target("top")
-    readonly property var _rightT:        _target("right")
-    readonly property var _leftCenterT:   _target("leftCenter")
-    readonly property var _rightCenterT:  _target("rightCenter")
-    readonly property var _bottomCenterT: _target("bottomCenter")
-    readonly property var _bottomRightT:  _target("bottomRight")
+    // ── Frame geometry (Regions.qml) ─────────────────────────────────────────
+    readonly property real barLeftWidth:   bar.leftContentWidth
+    readonly property real barCenterWidth: bar.centerContentWidth
+    readonly property real barRightWidth:  bar.rightContentWidth
 
-    // ── Region collisions ────────────────────────────────────────────────────
-    // Interactive popups never overlap (one at a time); passive content yields
-    // when it would hit the open popup's region.
-    // Toast: the grown right notch must stay clear of the center notch.
-    readonly property bool _toastFits:
-        width - toastWidth - notchRadius > (width + cWidth) / 2 + notchRadius
-    // OSD: the right notch (plus both flares) must stay above the right-center
-    // region, and the clipboard panel must stay below it.
-    readonly property bool _quickFits: {
-        const top = (height - sideHeight) / 2, bottom = (height + sideHeight) / 2
-        const rightBottom = openSpec && openSpec.region === "right" ? openSpec.size()[1] : notchBottom
-        const clipTop = openSpec && openSpec.region === "bottomRight"
-                      ? height - borderWidth - openSpec.size()[1] : height
-        return rightBottom + 2 * cornerRadius < top && bottom + 2 * cornerRadius < clipTop
-    }
+    Regions { id: regions; surface: root }
 
-    // ── Frame geometry (animated) ────────────────────────────────────────────
-    property real notchBottom: ShellModes.focusMode ? borderWidth : notchHeight
-    Behavior on notchBottom { Anim {} }
-
-    readonly property int lWidth: Math.max(
-        px(Theme.lNotchMinWidth),
-        Math.min(px(Theme.lNotchMaxWidth), bar.leftContentWidth + notchPadding * 2))
-
-    property real cWidth: _topT[0] > 0 ? _topT[0]
-        : Math.max(px(Theme.cNotchMinWidth),
-                   Math.min(px(Theme.cNotchMaxWidth), bar.centerContentWidth + notchPadding * 2))
-    Behavior on cWidth { Anim {} }
-    property real _cDrop: Math.max(0, _topT[1] - notchBottom)
-    Behavior on _cDrop { Anim {} }
-    readonly property real centerBottom: notchBottom + _cDrop
-
-    // The right notch follows its content instantly; only a popup or the
-    // toast morph it.
-    readonly property int _rBase: Math.max(
-        px(Theme.rNotchMinWidth),
-        Math.min(px(Theme.rNotchMaxWidth), bar.rightContentWidth + notchPadding * 2))
-    property real _rGrow: _rightT[0]
-    Behavior on _rGrow { Anim {} }
-    property real _rDrop: Math.max(0, _rightT[1] - notchBottom)
-    Behavior on _rDrop { Anim {} }
-    readonly property real rWidth:      Math.max(_rBase, _rGrow)
-    readonly property real rightBottom: notchBottom + _rDrop
-
-    property real leftCenterDepth:    _leftCenterT[0]
-    property real leftCenterHeight:   _leftCenterT[1] > 0 ? _leftCenterT[1] : sideHeight
-    property real rightCenterDepth:   _rightCenterT[0]
-    property real rightCenterHeight:  _rightCenterT[1] > 0 ? _rightCenterT[1] : sideHeight
-    property real bottomCenterWidth:  _bottomCenterT[0]
-    property real bottomCenterHeight: _bottomCenterT[1]
-    property real bottomRightWidth:   _bottomRightT[0]
-    property real bottomRightHeight:  _bottomRightT[1]
-    Behavior on leftCenterDepth    { Anim {} }
-    Behavior on rightCenterDepth   { Anim {} }
-    Behavior on bottomCenterWidth  { Anim {} }
-    Behavior on bottomCenterHeight { Anim {} }
-    Behavior on bottomRightWidth   { Anim {} }
-    Behavior on bottomRightHeight  { Anim {} }
+    readonly property alias notchBottom:        regions.notchBottom
+    readonly property alias lWidth:             regions.lWidth
+    readonly property alias cWidth:             regions.cWidth
+    readonly property alias centerBottom:       regions.centerBottom
+    readonly property alias rWidth:             regions.rWidth
+    readonly property alias rightBottom:        regions.rightBottom
+    readonly property alias leftCenterDepth:    regions.leftCenterDepth
+    readonly property alias leftCenterHeight:   regions.leftCenterHeight
+    readonly property alias rightCenterDepth:   regions.rightCenterDepth
+    readonly property alias rightCenterHeight:  regions.rightCenterHeight
+    readonly property alias bottomCenterWidth:  regions.bottomCenterWidth
+    readonly property alias bottomCenterHeight: regions.bottomCenterHeight
+    readonly property alias bottomRightWidth:   regions.bottomRightWidth
+    readonly property alias bottomRightHeight:  regions.bottomRightHeight
 
     // Current (animated) rectangle of a region, in surface coordinates.
-    function regionRect(region) {
-        switch (region) {
-        case "top":
-            return Qt.rect((width - cWidth) / 2, 0, cWidth, centerBottom)
-        case "right":
-            return Qt.rect(width - rWidth, notchHeight, rWidth - borderWidth,
-                           Math.max(0, rightBottom - notchHeight))
-        case "leftCenter":
-            return Qt.rect(borderWidth, (height - leftCenterHeight) / 2, leftCenterDepth, leftCenterHeight)
-        case "rightCenter":
-            return Qt.rect(width - borderWidth - rightCenterDepth, (height - rightCenterHeight) / 2,
-                           rightCenterDepth, rightCenterHeight)
-        case "bottomCenter":
-            return Qt.rect((width - bottomCenterWidth) / 2 - notchRadius,
-                           height - borderWidth - bottomCenterHeight,
-                           bottomCenterWidth + 2 * notchRadius, bottomCenterHeight)
-        case "bottomRight":
-            return Qt.rect(width - borderWidth - bottomRightWidth, height - borderWidth - bottomRightHeight,
-                           bottomRightWidth, bottomRightHeight)
-        }
-        return Qt.rect(0, 0, 0, 0)
-    }
+    function regionRect(region) { return regions.rect(region) }
+
 
     // ── Click shield (#42) ───────────────────────────────────────────────────
     // On the screen owning the open popup (switching monitor closes it via
@@ -426,12 +238,14 @@ PanelWindow {
         // Hovering keeps the OSD open (see IpcManager's hide timer).
         HoverHandler { id: quickHover; onHoveredChanged: Popups.quickHeld = hovered }
 
-        QuickControlContent {
-            x:        root.px(8)
-            y:        root.px(Metrics.osdTopPadding)
-            width:    root.quickWidth - root.px(16)
-            height:   parent.height - root.px(Metrics.osdTopPadding)
-            fastPoll: root.quickShown
+        Loader {
+            id:     osdLoader
+            x:      root.px(8)
+            y:      root.px(Metrics.osdTopPadding)
+            width:  root.quickWidth - root.px(16)
+            height: parent.height - root.px(Metrics.osdTopPadding)
+            sourceComponent: root.manifest ? root.manifest.osd : null
+            Binding { target: osdLoader.item; property: "fastPoll"; value: root.quickShown; when: osdLoader.item !== null }
         }
     }
 
@@ -452,13 +266,14 @@ PanelWindow {
     }
 
     // ── Screen-recording options (capture / audio), under the center notch ──
-    ScreenRecOptions {
+    Loader {
         id: recOptions
         x:       ScreenRecService.popupTargetX + ScreenRecService.popupTargetWidth / 2
         y:       root.notchHeight + 25
-        width:   implicitWidth
-        height:  implicitHeight
+        width:   item ? item.implicitWidth : 0
+        height:  item ? item.implicitHeight : 0
         visible: ScreenRecService.openStrip !== "" && ScreenRecService.popupTargetScreen === root.screenName
+        sourceComponent: root.manifest ? root.manifest.recordingOptions : null
 
         HoverHandler {
             onHoveredChanged: {

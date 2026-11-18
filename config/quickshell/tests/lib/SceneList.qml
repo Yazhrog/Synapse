@@ -15,7 +15,7 @@ import qs.src.features.wallpaper
 import qs.src.state
 import qs.src.surface.shape
 // SceneList — every view the shell can show, one scene each, at the size the
-// Dynamic Surface gives it (DynamicSurface.contents' place() at scale 1).
+// Dynamic Surface gives it (the PopupSpec's place() at scale 1).
 // Used by tests/smoke-registries.qml (each scene loads without a QML error)
 // and tests/golden.qml (each scene is captured for the before/after
 // comparison of tests/golden.sh).
@@ -27,8 +27,8 @@ import qs.src.surface.shape
 //   clock    shows the time or date: only comparable with a fake clock
 //
 // Layer-shell windows (ConfirmDialog, BatteryCriticalDialog, UpdatePopup)
-// can't be created offscreen; they join once #144 makes their content a
-// plain component.
+// can't be created offscreen; their cards join as plain components when
+// they are split (#116).
 QtObject {
     id: root
 

@@ -10,8 +10,8 @@ import qs.src.state
 import qs.src.surface
 // App — the composition root: starts the services that must run from boot
 // and creates the per-screen shell. Everything that wires features into the
-// framework lives in this folder (popup and action manifests join in #144 and
-// #145).
+// framework lives in this folder: the popup manifest here, the action
+// manifest with #145.
 Scope {
     // Singletons are created on first use: these need to run from startup.
     property var _keybinds:   KeybindService
@@ -32,9 +32,20 @@ Scope {
     // Services raise events; opening UI for them is wired here.
     Connections {
         target: BatteryWarningService
-        function onCritical(level) { Popups.showBatteryCritical(level) }
+        function onCritical(level) {
+            Dialogs.alert({
+                title:   "Critical Battery",
+                message: "Battery at " + level + "% — plug in now to avoid losing your work.",
+                label:   "Acknowledge"
+            })
+        }
     }
 
+    // Every popup and the surface's passive parts (the surface never imports
+    // a feature): SurfaceState takes the keys and regions, the surface the rest.
+    PopupManifest { id: manifest }
+    Binding { target: SurfaceState; property: "popups"; value: manifest.popups }
+
     // One Dynamic Surface per screen (#37): frame, bar and every popup.
-    ShellHost {}
+    ShellHost { manifest: manifest }
 }

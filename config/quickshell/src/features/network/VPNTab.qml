@@ -8,11 +8,9 @@ import qs.src.theme
 Item {
     id: root
 
-    Connections {
-        target: Popups
-        function onNetworkOpenChanged() {
-            if (Popups.networkOpen && root.visible) VpnService.refresh()
-        }
+    PopupLifecycle {
+        popup: "network"
+        onOpening: if (root.visible) VpnService.refresh()
     }
 
     Component.onCompleted: VpnService.refresh()
