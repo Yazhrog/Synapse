@@ -162,7 +162,7 @@ Toggle that in **Dashboard → Config → Misc**.
 - **hyprlock** – Lock screen
 - **hypridle** – Idle management daemon
 - **sunsetr** – Blue light filter / night light
-- **wayland-idle-inhibitor** – Caffeine mode (inhibits idle while active)
+- **python-pywayland** – Caffeine mode (runs the vendored `src/scripts/wayland-idle-inhibitor.py`)
 - **hyprshutdown** – Graceful shutdown
 - **xdg-desktop-portal-hyprland** – Portal backend
 
