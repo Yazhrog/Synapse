@@ -1,11 +1,12 @@
 import QtQuick
+import qs.src.services.media
 import qs.src.state
 // SurfaceClickShield — closes the open popup on a click outside it (#42).
 //
 // On the screen owning the open popup (switching monitor closes it via
 // ShellHost), the whole surface takes clicks while `active`, and a click
 // outside the popup, the bar, the borders and the screen-recording options
-// closes it. It sits below everything else, so the popups and the bar still
+// closes it (and leaves the screen-recording setup). It sits below everything else, so the popups and the bar still
 // get their own clicks first.
 
 MouseArea {
@@ -21,6 +22,8 @@ MouseArea {
     onClicked: function(mouse) {
         if (shield._insideFrameOrPopup(mouse.x, mouse.y)) return
         Popups.closeAll()
+        // A click outside also leaves the screen-recording setup (like Escape).
+        if (shield.surface.recSetup) ScreenRecService.cancelSetup()
     }
 
     function _inRect(r, x, y) {

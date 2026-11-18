@@ -271,7 +271,8 @@ PanelWindow {
     // ── Screen-recording options (capture / audio), under the center notch ──
     Loader {
         id: recOptions
-        x:       ScreenRecService.popupTargetX + ScreenRecService.popupTargetWidth / 2
+        // Centred under the button that opened it.
+        x:       ScreenRecService.popupTargetX + (ScreenRecService.popupTargetWidth - width) / 2
         y:       root.notchHeight + 25
         width:   item ? item.implicitWidth : 0
         height:  item ? item.implicitHeight : 0
