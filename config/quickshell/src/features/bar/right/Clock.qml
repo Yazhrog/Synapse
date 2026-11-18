@@ -11,7 +11,7 @@ Text {
     font.pixelSize: 16
 
     property int formatMode: 0
-    readonly property bool use24h: PrefsService.use24HourClock
+    readonly property bool use24h: Prefs.data.use24HourClock
     onUse24hChanged: updateText()
 
     state: "time"

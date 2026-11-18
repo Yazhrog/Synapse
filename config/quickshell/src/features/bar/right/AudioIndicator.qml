@@ -8,7 +8,7 @@ Item {
     id: root
 
     // Always show the percentage beside the icon; otherwise only on hover.
-    property bool showPercentage: PrefsService.alwaysShowVolumePercentage
+    property bool showPercentage: Prefs.data.alwaysShowVolumePercentage
 
     implicitWidth:  row.implicitWidth + 6
     implicitHeight: row.implicitHeight

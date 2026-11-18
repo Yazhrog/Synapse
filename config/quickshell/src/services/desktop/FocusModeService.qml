@@ -90,7 +90,7 @@ Singleton {
                 // Restarted while Focus Mode was on: resume it.
                 root._saved = saved
                 root.active = true
-            } else if (PrefsService.bootFocusMode && !root.active) {
+            } else if (Prefs.data.bootFocusMode && !root.active) {
                 root._enter({ in: r.in, out: r.out })
             }
             return
@@ -100,11 +100,11 @@ Singleton {
     }
 
     property Connections _prefs: Connections {
-        target: PrefsService
+        target: Prefs
         function onLoaded() { root._probe("boot") }
     }
 
-    Component.onCompleted: if (PrefsService.ready) root._probe("boot")
+    Component.onCompleted: if (Prefs.ready) root._probe("boot")
 
     property Exec _probeProc: Exec {
         command: ["python3", "-c",

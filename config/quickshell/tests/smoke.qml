@@ -28,7 +28,7 @@ import qs.src.state
 import qs.src.surface.shape
 import qs.src.theme
 ShellRoot {
-    property var _singletons: [Theme, Paths, PrefsService, SurfaceState, Popups, ToastState,
+    property var _singletons: [Theme, Paths, Prefs, SurfaceState, Popups, ToastState,
                                ShellModes, KeybindService, UpdateService, IpcBridge, Actions,
                                FocusModeService, CavaService, AppearanceService, DataService, ClockService,
                                BrightnessService, QuickToggleService, HotspotService, ScreenFilterService,

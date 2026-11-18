@@ -1,27 +1,20 @@
 import QtQuick
-import qs.src.services.data
 import qs.src.theme
 // SettingsToggle — a row with a pill switch.
 //
-// With `prefKey`, the switch reads and writes that PrefsService key. Set
-// `autoWrite: false` to only emit toggled() and write the value yourself
-// (e.g. through a service that has side effects). Space/Enter toggle it
-// when the row has focus.
+// Shows `value` (a bool); a click or Space/Enter emits edited(!value) and
+// toggled(!value), and the container writes it.
 SettingsRow {
     id: root
 
-    property bool checked:   prefKey !== "" ? !!PrefsService[prefKey] : false
-    property bool autoWrite: true
+    readonly property bool checked: !!value
     signal toggled(bool checked)
 
     activeFocusOnTab: true
 
     function toggle() {
         const next = !root.checked
-        if (root.prefKey !== "" && root.autoWrite)
-            PrefsService[root.prefKey] = next
-        else if (root.prefKey === "")
-            root.checked = next
+        root.edited(next)
         root.toggled(next)
     }
 
