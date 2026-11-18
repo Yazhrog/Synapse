@@ -163,11 +163,13 @@ Item {
                     description: "Deletes all Synapse data (tasks, pins, keybinds, settings, wallpaper) and restarts the shell."
                     buttonText:  "Factory Reset"
                     destructive: true
-                    onActivated: Popups.showConfirm(
-                        "Factory reset",
-                        "Deletes everything in " + Paths.userDataDir + " and the shell cache, then restarts the shell. " +
-                        "Your repo path, monitors.lua and local.zsh are kept. This can't be undone.",
-                        "Reset", "factory-reset")
+                    onActivated: Dialogs.confirm({
+                        title:    "Factory reset",
+                        message:  "Deletes everything in " + Paths.userDataDir + " and the shell cache, then restarts the shell. " +
+                                  "Your repo path, monitors.lua and local.zsh are kept. This can't be undone.",
+                        label:    "Reset",
+                        onAccept: () => DataService.factoryReset()
+                    })
                 }
             }
         }

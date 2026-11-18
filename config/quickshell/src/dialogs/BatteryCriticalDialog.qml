@@ -3,7 +3,8 @@ import Quickshell
 import Quickshell.Wayland
 import qs.src.state
 import qs.src.theme
-// Blocking critical-battery modal — driven by Popups.batteryCritical*.
+// Blocking alert modal (the critical battery) — renders Dialogs.alertRequest
+// ({ title, message, label }); Acknowledge calls Dialogs.acknowledge().
 // Unlike ConfirmDialog, this has NO click-outside or Escape dismiss: the
 // battery is critically low, so it forces an explicit acknowledgement
 // rather than letting the user accidentally click past it.
@@ -16,14 +17,16 @@ PanelWindow {
     anchors { top: true; left: true; right: true; bottom: true }
     exclusionMode: ExclusionMode.Ignore
 
-    visible: Popups.batteryCriticalOpen
+    readonly property var request: Dialogs.alertRequest
+
+    visible: Dialogs.alertOpen
 
     WlrLayershell.layer:         WlrLayer.Overlay
     WlrLayershell.keyboardFocus: WlrKeyboardFocus.OnDemand
 
     PopupFocusGrab {
         window:         root
-        active:         Popups.batteryCriticalOpen
+        active:         Dialogs.alertOpen
         dismissOnClear: false
         onFocused:      keySink.forceActiveFocus()
     }
@@ -67,7 +70,7 @@ PanelWindow {
 
             Text {
                 anchors.horizontalCenter: parent.horizontalCenter
-                text:           "Critical Battery"
+                text:           root.request?.title ?? ""
                 color:          "#ff4444"
                 font.pixelSize: 15
                 font.bold:      true
@@ -75,7 +78,7 @@ PanelWindow {
 
             Text {
                 width:          parent.width
-                text:           "Battery at " + Popups.batteryCriticalLevel + "% — plug in now to avoid losing your work."
+                text:           root.request?.message ?? ""
                 color:          Qt.rgba(1, 1, 1, 0.65)
                 font.pixelSize: 12
                 wrapMode:       Text.WordWrap
@@ -93,14 +96,14 @@ PanelWindow {
 
                 Text {
                     anchors.centerIn: parent
-                    text:           "Acknowledge"
+                    text:           root.request?.label ?? "Acknowledge"
                     color:          "white"
                     font.pixelSize: 13
                     font.bold:      true
                 }
 
                 HoverHandler { id: ackHov; cursorShape: Qt.PointingHandCursor }
-                MouseArea { anchors.fill: parent; onClicked: Popups.acknowledgeBatteryCritical() }
+                MouseArea { anchors.fill: parent; onClicked: Dialogs.acknowledge() }
             }
         }
     }

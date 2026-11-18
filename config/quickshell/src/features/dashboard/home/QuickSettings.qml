@@ -26,11 +26,9 @@ StatCard {
         filterPickerOpen = true
     }
 
-    Connections {
-        target: Popups
-        function onDashboardOpenChanged() {
-            if (!Popups.dashboardOpen) root.filterPickerOpen = false
-        }
+    PopupLifecycle {
+        popup: "dashboard"
+        onClosing: if (!Popups.dashboardOpen) root.filterPickerOpen = false   // not when it moves screen
     }
 
     Column {

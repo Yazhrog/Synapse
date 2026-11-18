@@ -52,3 +52,5 @@ run smoke-registries.qml
 run contracts.qml "CONTRACTS OK"
 # core.qml: behaviour of the core toolkit (Exec, ExecQueue, JsonStore, Lease).
 run core.qml "CORE OK"
+# lifecycle.qml: popup lifecycle (SurfaceState, PopupLifecycle) and Dialogs.
+run lifecycle.qml "LIFECYCLE OK"
