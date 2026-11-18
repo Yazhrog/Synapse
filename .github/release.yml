@@ -1,0 +1,7 @@
+# Generated release notes (gh release create --generate-notes): a flat
+# "What's Changed" list, "New Contributors" and the "Full Changelog" link.
+# Release PRs (dev → main) and version bumps carry `skip-changelog`.
+changelog:
+  exclude:
+    labels:
+      - skip-changelog
