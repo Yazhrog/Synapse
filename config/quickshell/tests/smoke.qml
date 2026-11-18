@@ -11,6 +11,7 @@ import qs.src.features.bar.center
 import qs.src.features.bar.right
 import qs.src.features.dashboard
 import qs.src.features.dashboard.config.pages
+import qs.src.features.dashboard.system
 import qs.src.features.network
 import qs.src.features.osd
 import qs.src.features.power
@@ -27,11 +28,13 @@ import qs.src.surface.shape
 import qs.src.theme
 ShellRoot {
     property var _singletons: [Theme, Paths, PrefsService, SurfaceState, Popups, ToastState,
-                               ShellState, KeybindService, UpdateService, IpcManager,
+                               ShellModes, KeybindService, UpdateService, IpcManager,
                                FocusModeService, CavaService, AppearanceService, DataService, ClockService,
                                BrightnessService, QuickToggleService, HotspotService, ScreenFilterService,
                                TaskService, WifiService, BluetoothService, VpnService,
-                               ActiveWindowService]
+                               ActiveWindowService, PowerService, GpuModeService, AppsService,
+                               KeyboardLayoutService, ProfileService, SystemInfoService, AudioService,
+                               MediaService]
 
     FloatingWindow {
         implicitWidth: 1920; implicitHeight: 1080
@@ -56,6 +59,7 @@ ShellRoot {
             DataPage            { width: 600; height: 460 }
             Row { Clock {} BatteryIndicator {} AudioIndicator {} }
             CenterContent       {}
+            SystemStats         { width: 400; height: 300 }
         }
     }
 

@@ -1,24 +1,19 @@
 import QtQuick
 import Quickshell
 import Quickshell.Wayland
-import Quickshell.Io
 import qs.src.services.data
+import qs.src.services.system
 import qs.src.state
 import qs.src.theme
-// Unified confirmation modal — replaces GfxWarning.qml.
-// Driven entirely by Popups.confirm* props.
+// Unified confirmation modal — renders Popups.confirm* and reports the choice.
 // Call Popups.showConfirm() to open, Popups.cancelConfirm() to close.
 //
-// Supported confirmAction values — all routed through scripts/PowerControl.sh:
-//   "shutdown"        → hyprshutdown --post-cmd "systemctl poweroff"
-//   "reboot"          → hyprshutdown --post-cmd "systemctl reboot"
-//   "logout"          → hyprshutdown
-//   "lock"            → loginctl lock-session
-//   "suspend"         → systemctl suspend
+// The confirmed action runs in its service:
+//   "shutdown" / "reboot" / "logout" / "lock" / "suspend" → PowerService
 //   "factory-reset"   → DataService.factoryReset() (deletes user data, restarts the shell)
-//   "gpu-switch-envy" → pkexec scripts/GfxSwitch.sh <mode>, then systemctl reboot
-//                       GfxSwitch.sh prints "authenticated" after pkexec auth succeeds,
-//                       which triggers the processing card before envycontrol runs.
+//   "gpu-switch-envy" → GpuModeService.switchTo(<mode>), which reboots when done;
+//                       while it switches (GpuModeService.switching, after pkexec
+//                       authenticated) the dialog shows the processing card.
 
 PanelWindow {
     id: root
@@ -28,7 +23,7 @@ PanelWindow {
     anchors { top: true; left: true; right: true; bottom: true }
     exclusionMode: ExclusionMode.Ignore
 
-    visible: Popups.confirmOpen || Popups.confirmRunning
+    visible: Popups.confirmOpen || root.running
 
     property int selIndex: 0   // 0 = Cancel, 1 = Confirm
 
@@ -43,6 +38,8 @@ PanelWindow {
         onFocused:      keyHandler.forceActiveFocus()
     }
 
+    readonly property bool running: GpuModeService.switching
+
     Connections {
         target: Popups
         function onConfirmOpenChanged() {
@@ -51,93 +48,28 @@ PanelWindow {
                 keyHandler.forceActiveFocus()
             }
         }
-        function onConfirmRunningChanged() {
-            if (Popups.confirmRunning) {
-                keyHandler.forceActiveFocus()
-            }
-        }
     }
 
-    // ── Processes ─────────────────────────────────────────────────────────────
-    Process {
-        id: proc
-        property var pendingCmd: []
-        command: pendingCmd
-
-        // Watch stdout for "authenticated" — printed by GfxSwitch.sh immediately
-        // after pkexec grants root, before envycontrol starts doing its work.
-        stdout: SplitParser {
-            onRead: data => {
-                if (data.trim() === "authenticated") Popups.confirmRunning = true
-            }
+    Connections {
+        target: GpuModeService
+        function onSwitchingChanged() {
+            if (GpuModeService.switching) keyHandler.forceActiveFocus()
         }
-
-        onExited: (exitCode, exitStatus) => {
-            if (reboot.command.length > 0) {
-                if (exitCode === 0) {
-                    reboot.running = true
-                } else {
-                    // Auth cancelled or envycontrol failed — hide card, abort.
-                    Popups.confirmRunning = false
-                    reboot.command = []
-                }
-            }
-        }
-    }
-
-    Process {
-        id: reboot
-        command: []   // only populated for gpu-switch-envy
     }
 
     // ── Action dispatch ───────────────────────────────────────────────────────
     function confirm() {
-        const powerScript = Quickshell.shellDir + "/src/scripts/PowerControl.sh"
-        const gfxScript   = Quickshell.shellDir + "/src/scripts/GfxSwitch.sh"
-
-        switch (Popups.confirmAction) {
-            case "shutdown":
-                Popups.cancelConfirm()
-                proc.pendingCmd = ["bash", powerScript, "shutdown"]
-                proc.running = true
-                break
-            case "reboot":
-                Popups.cancelConfirm()
-                proc.pendingCmd = ["bash", powerScript, "reboot"]
-                proc.running = true
-                break
-            case "logout":
-                Popups.cancelConfirm()
-                proc.pendingCmd = ["bash", powerScript, "logout"]
-                proc.running = true
-                break
-            case "lock":
-                Popups.cancelConfirm()
-                proc.pendingCmd = ["loginctl", "lock-session"]
-                proc.running = true
-                break
-            case "suspend":
-                Popups.cancelConfirm()
-                proc.pendingCmd = ["systemctl", "suspend"]
-                proc.running = true
-                break
-            case "factory-reset":
-                Popups.cancelConfirm()
-                DataService.factoryReset()
-                break
-            case "gpu-switch-envy":
-                // Capture mode BEFORE cancelConfirm() clears Popups state.
-                const gfxMode   = Popups.confirmGfxMode
-                reboot.command  = ["bash", powerScript, "reboot"]
-                proc.pendingCmd = ["pkexec", "bash", gfxScript, gfxMode]
-                Popups.cancelConfirm()
-                proc.running    = true
-                break
-        }
+        // Read the request before cancelConfirm() clears it.
+        const action  = Popups.confirmAction
+        const gfxMode = Popups.confirmGfxMode
+        Popups.cancelConfirm()
+        if (action === "factory-reset")        DataService.factoryReset()
+        else if (action === "gpu-switch-envy") GpuModeService.switchTo(gfxMode)
+        else                                   PowerService.run(action)
     }
 
     function cancel() {
-        if (!Popups.confirmRunning) Popups.cancelConfirm()
+        if (!root.running) Popups.cancelConfirm()
     }
 
     // ── Dim overlay ───────────────────────────────────────────────────────────
@@ -147,7 +79,7 @@ PanelWindow {
 
         MouseArea {
             anchors.fill: parent
-            onClicked: if (!Popups.confirmRunning) root.cancel()
+            onClicked: if (!root.running) root.cancel()
         }
     }
 
@@ -158,7 +90,7 @@ PanelWindow {
         height: col.implicitHeight + 48
         radius: Theme.notchRadius
         color:  Theme.background
-        visible: Popups.confirmOpen && !Popups.confirmRunning
+        visible: Popups.confirmOpen && !root.running
 
         MouseArea { anchors.fill: parent }
 
@@ -278,7 +210,7 @@ PanelWindow {
         height: processingCol.implicitHeight + 56
         radius: Theme.notchRadius
         color:  Theme.background
-        visible: Popups.confirmRunning
+        visible: root.running
 
         MouseArea { anchors.fill: parent }
 
@@ -307,7 +239,7 @@ PanelWindow {
                     to:          360
                     duration:    900
                     loops:       Animation.Infinite
-                    running:     Popups.confirmRunning
+                    running:     root.running
                     easing.type: Easing.Linear
                 }
 
@@ -342,7 +274,7 @@ PanelWindow {
             Text {
                 anchors.horizontalCenter: parent.horizontalCenter
                 width:          parent.width
-                text:           "Switching to <b>" + Popups.confirmGfxMode + "</b> graphics mode.<br>"
+                text:           "Switching to <b>" + GpuModeService.targetMode + "</b> graphics mode.<br>"
                                 + "Your system will reboot when finished."
                 color:          Qt.rgba(1, 1, 1, 0.55)
                 font.pixelSize: 12

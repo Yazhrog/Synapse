@@ -5,7 +5,7 @@ import qs.src.components.base
 import qs.src.services.notifications
 import qs.src.state
 IconBtn {
-    text: ShellState.dnd
+    text: ShellModes.dnd
           ? "󰂛"
           : NotificationService.count > 0 ? "󰂚" : "󰂜"
 

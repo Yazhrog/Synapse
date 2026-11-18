@@ -18,7 +18,7 @@ import qs.src.services.data
 // Every path, geometry and device name goes to its command as an argument.
 //
 // `setupOpen` is the recording setup in the bar (capture / audio choice
-// before starting); ShellState.screenRecord mirrors it for the surface.
+// before starting); ShellModes.screenRecord mirrors it for the surface.
 
 Singleton {
     id: root

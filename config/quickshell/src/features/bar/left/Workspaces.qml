@@ -1,13 +1,13 @@
 import QtQuick
 import Quickshell
 import Quickshell.Hyprland
-import qs.src.state
+import qs.src.core
 import qs.src.theme
 Rectangle {
     id: root
     
     // ── Config Provider ────────────────────────────────────────────────
-    property string configProvider: ShellState.configProvider
+    readonly property string configProvider: Hypr.provider
     
     // ── Workspace Dispatch Function ────────────────────────────────────
     function dispatchWorkspace(wsTarget, isSpecialToggle = false) {

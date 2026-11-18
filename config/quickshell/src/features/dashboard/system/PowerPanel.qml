@@ -7,7 +7,7 @@ Item {
     required property var cpuFreqService
     required property var envyService
 
-    // A GPU mode switch needs a reboot: ConfirmDialog asks, then runs it.
+    // A GPU mode switch needs a reboot: ConfirmDialog asks, GpuModeService runs it.
     function switchGpu(mode) {
         if (mode === envyService.currentMode || envyService.busy) return
         Popups.closeAll()

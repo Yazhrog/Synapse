@@ -19,7 +19,7 @@ Item {
     readonly property real centerContentWidth: centerContent.implicitWidth
     readonly property real rightContentWidth:  rightContent.implicitWidth
 
-    opacity: ShellState.focusMode ? 0 : 1
+    opacity: ShellModes.focusMode ? 0 : 1
     Behavior on opacity { NumberAnimation { duration: Theme.animDuration; easing.type: Easing.InOutCubic } }
 
     // In pills the capsules start one gap from the edges: center the

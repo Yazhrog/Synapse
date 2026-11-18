@@ -9,7 +9,7 @@ import qs.src.core
 //
 // Checked at startup, airplane polled every 5 s, so the state is right before
 // the dashboard is ever opened and anything (e.g. the bar) can read it
-// (ShellState.airplane mirrors airplaneOn). Wi-Fi and Bluetooth live in
+// (ShellModes.airplane mirrors airplaneOn). Wi-Fi and Bluetooth live in
 // WifiService and BluetoothService, the hotspot in HotspotService, the screen
 // shader in ScreenFilterService.
 // ============================================================

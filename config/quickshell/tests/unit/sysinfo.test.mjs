@@ -62,3 +62,9 @@ test("governor and frequency", () => {
     assert.equal(S.averageFreqGhz("2400000\n1600000\n"), "2.00 GHz")
     assert.equal(S.averageFreqGhz(""), "")
 })
+
+test("fastfetch key/value rows", () => {
+    assert.deepEqual(S.parseFastfetch("\x1B[1mOS\x1B[0m: Arch Linux x86_64\nno separator\n\nKernel: Linux 7.3: rc\n"),
+                     [{ key: "OS", value: "Arch Linux x86_64" }, { key: "Kernel", value: "Linux 7.3: rc" }])
+    assert.deepEqual(S.parseFastfetch(""), [])
+})
