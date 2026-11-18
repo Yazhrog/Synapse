@@ -17,10 +17,16 @@ Singleton {
 
     property Instantiator _handlers: Instantiator {
         model: Actions.actions
-        delegate: IpcHandler {
+        // The handler is wrapped so it has no `modelData` of its own: every
+        // property of an IpcHandler is exposed over IPC, and a var can't be.
+        delegate: QtObject {
+            id: entry
             required property var modelData
-            target: modelData.key
-            function toggle() { Actions.run(modelData.key) }
+            readonly property string key: modelData.key
+            property IpcHandler handler: IpcHandler {
+                target: entry.key
+                function toggle() { Actions.run(entry.key) }
+            }
         }
     }
 
