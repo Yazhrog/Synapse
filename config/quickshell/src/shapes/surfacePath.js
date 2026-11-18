@@ -1,7 +1,7 @@
 // surfacePath.js — builds the Dynamic Surface frame (#37) as one SVG path.
 //
 // Pure JS, no QML: SurfaceShape feeds the result to PathSvg, and
-// tests/surface-path.test.mjs runs it under node.
+// tests/unit/surface-path.test.mjs runs it under node.
 //
 // The path is exactly two loops, filled with the non-zero winding rule:
 //   1. the screen rectangle, clockwise (winding +1 → frame);

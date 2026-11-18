@@ -10,13 +10,52 @@ jobs:
     runs-on: ubuntu-latest
     container: archlinux:latest
     steps:
-      - name: Install quickshell and node
-        run: pacman -Syu --noconfirm --needed quickshell qt6-declarative qt6-svg nodejs git
+      - name: Install quickshell, node and python
+        run: pacman -Syu --noconfirm --needed quickshell qt6-declarative qt6-svg nodejs python git
 
       - uses: actions/checkout@v4
 
-      - name: Surface path unit tests
-        run: node config/quickshell/tests/surface-path.test.mjs
+      - name: Unit tests (pure JS)
+        run: config/quickshell/tests/unit.sh
 
-      - name: Offscreen smoke test
+      - name: Offscreen smoke, scene and contract tests
         run: config/quickshell/tests/smoke.sh
+
+      - name: Layer rules (report only until #117)
+        run: config/quickshell/tests/layers.py
+
+  # Captures every scene of tests/lib/SceneList.qml on the base commit and on
+  # this one, and fails when a pixel changed. A PR that changes the look on
+  # purpose gets the `visual-change` label, which makes this job advisory.
+  golden:
+    runs-on: ubuntu-latest
+    container: archlinux:latest
+    continue-on-error: ${{ contains(github.event.pull_request.labels.*.name, 'visual-change') }}
+    steps:
+      # No libfaketime yet: under it the capture hangs at startup on the
+      # runner (no output at all), so the scenes showing the time are skipped.
+      - name: Install quickshell and imagemagick
+        run: pacman -Syu --noconfirm --needed quickshell qt6-declarative qt6-svg git imagemagick
+
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Compare with the base commit
+        env:
+          BASE: ${{ github.event.pull_request.base.sha || github.event.before }}
+          GOLDEN_WORK: ${{ runner.temp }}/golden
+        run: |
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
+          if [ -z "$BASE" ] || [ "$BASE" = "0000000000000000000000000000000000000000" ]; then
+            echo "No base commit to compare with"; exit 0
+          fi
+          config/quickshell/tests/golden.sh diff "$BASE"
+
+      - name: Upload the images
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: golden-images
+          path: ${{ runner.temp }}/golden/*-img
+          include-hidden-files: true

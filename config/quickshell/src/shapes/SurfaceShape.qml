@@ -7,7 +7,7 @@ import "surfacePath.js" as SurfacePath
 // bottom borders, and every region grown out of it) drawn as ONE path.
 //
 // The path itself is built by surfacePath.js (pure JS, unit-tested in
-// tests/surface-path.test.mjs) and filled with the non-zero rule, so regions
+// tests/unit/surface-path.test.mjs) and filled with the non-zero rule, so regions
 // that overlap the frame are filled once — no double alpha once the frame
 // becomes translucent (#34). Every size is a plain property: animating one
 // morphs the shape (#37).
