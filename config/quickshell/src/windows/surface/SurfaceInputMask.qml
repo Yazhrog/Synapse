@@ -1,7 +1,5 @@
 import QtQuick
 import Quickshell
-import "../../"
-
 // SurfaceInputMask — the input mask of a DynamicSurface: only the visible
 // frame takes clicks. The screen edges only take clicks where there is a
 // border (frame) or the bar (bar); in pills the gaps let clicks through.

@@ -1,9 +1,8 @@
 import QtQuick
 import QtQuick.Effects
 import Quickshell.Io
-import "../../"
-import "../../components"
-
+import qs.src.components
+import qs.src.theme
 // Profile card — circular avatar, username, window manager, uptime.
 
 StatCard {

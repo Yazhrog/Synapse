@@ -2,8 +2,7 @@ pragma Singleton
 import QtQuick
 import Quickshell
 import Quickshell.Io
-import "../"
-
+import qs.src.utils
 // ============================================================
 // KanbanService — the task board's data: user_data/tasks.json, the task
 // list and its mutations, plus the urgency and due-date helpers the cards use.

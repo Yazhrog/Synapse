@@ -1,6 +1,5 @@
 import QtQuick
-import "../"
-
+import qs.src.theme
 Rectangle {
     id: root
     width: 24

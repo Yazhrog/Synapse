@@ -1,7 +1,7 @@
 import QtQuick
-import "../../../"
-import "../../../components"
-
+import qs.src.components
+import qs.src.state
+import qs.src.theme
 // AlarmView — alarm list with an add panel, per-alarm toggle and delete.
 
 Item {

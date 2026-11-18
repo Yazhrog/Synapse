@@ -1,7 +1,6 @@
 import QtQuick
 import Quickshell.Services.UPower
-import "../"
-
+import qs.src.theme
 // Config:
 //showPercentage: bool — always show % beside icon (default: false = hover only)
 

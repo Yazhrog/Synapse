@@ -1,8 +1,7 @@
 import QtQuick
 import QtQuick.Layouts
-import "../../"
-import "../../services"
-
+import qs.src.services
+import qs.src.theme
 // SchemeDropdown — the matugen colour-scheme menu that opens above the
 // picker's scheme button; picking one sets WallpaperService.scheme.
 

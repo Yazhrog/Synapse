@@ -1,6 +1,6 @@
 import QtQuick
-import "../../"
-
+import qs.src.services
+import qs.src.theme
 // KanbanTaskCard — one task: inline-editable title, urgency and due badges,
 // the expandable urgency / due-date fields, ← → move and delete buttons,
 // swipe to move (with tilt and tint), and a ring while selected by the keyboard.

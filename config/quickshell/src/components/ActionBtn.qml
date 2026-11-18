@@ -1,6 +1,5 @@
 import QtQuick
-import "../"
-
+import qs.src.theme
 // ActionBtn — small square icon button used for row actions (clipboard rows,
 // launcher pin). active = accent-tinted toggle state, danger = red.
 Rectangle {

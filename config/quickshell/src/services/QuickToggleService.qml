@@ -2,8 +2,8 @@ pragma Singleton
 import QtQuick
 import Quickshell
 import Quickshell.Io
-import "../"
-
+import qs.src.state
+import qs.src.utils
 // ============================================================
 // QuickToggleService — state and actions of the Quick Settings toggles that
 // have no service of their own: Night Light (sunsetr), Caffeine

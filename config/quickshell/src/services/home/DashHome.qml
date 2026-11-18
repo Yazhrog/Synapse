@@ -1,9 +1,7 @@
 import QtQuick
 import Quickshell.Io
-import "../"
-import "../../"
-import "../../components"
-
+import qs.src.services
+import qs.src.utils
 // Dashboard Home tab — layout only.
 //
 //  ┌──────────────┬───────────────────────────┬──────────────┐

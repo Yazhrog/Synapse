@@ -1,6 +1,6 @@
 import QtQuick
 import QtQuick.Shapes
-import "../"
+import qs.src.theme
 import "surfacePath.js" as SurfacePath
 
 // SurfaceShape — the whole frame (top strip with its 3 notches, side and

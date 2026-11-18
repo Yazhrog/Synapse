@@ -1,8 +1,8 @@
 import QtQuick
 import Quickshell.Services.Pipewire
-import "../components"
-import "../"
-
+import qs.src.components
+import qs.src.state
+import qs.src.theme
 Item {
     id: root
 

@@ -1,7 +1,8 @@
 import QtQuick
 import Quickshell.Services.Notifications
-import "../"
-
+import qs.src.modules.Right
+import qs.src.state
+import qs.src.theme
 // ToastCard — the content of a notification toast: app icon and name, close
 // button, summary, body, action buttons and the urgency-coloured countdown
 // bar. Reads ToastState; the host window or notch draws the background.

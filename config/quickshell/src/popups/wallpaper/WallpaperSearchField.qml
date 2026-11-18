@@ -1,6 +1,5 @@
 import QtQuick
-import "../../"
-
+import qs.src.theme
 // WallpaperSearchField — the picker's text box: "Search wallpapers…", or in
 // folder mode "Path: <folder>". Keys are passed up as signals; the picker
 // decides what they do.

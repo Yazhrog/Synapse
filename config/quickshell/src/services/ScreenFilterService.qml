@@ -2,8 +2,7 @@ pragma Singleton
 import QtQuick
 import Quickshell
 import Quickshell.Io
-import "../"
-
+import qs.src.state
 // ============================================================
 // ScreenFilterService — the Hyprland screen shader (Quick Settings → Filter).
 //

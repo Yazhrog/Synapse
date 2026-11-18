@@ -2,8 +2,7 @@ import QtQuick
 import Quickshell
 import Quickshell.Io
 import Quickshell.Hyprland
-import "../../"
-
+import qs.src.state
 // ─── LayoutDisplayer ────────────────────────────────────────────────────────
 // Small icon button beside the Workspaces module.
 // Shows the active tiling layout for the focused workspace.

@@ -1,7 +1,5 @@
 import QtQuick
 import QtQuick.Controls
-import "../"
-
 // Reusable scrollable page container for popup content.
 // Clips content, shows a faint scrollbar when needed.
 // Consistent vertical padding relative to popup height.

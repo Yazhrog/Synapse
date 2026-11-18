@@ -1,8 +1,8 @@
 import QtQuick
-import "../"
-import "../components"
-import "../components/network"
-
+import qs.src.components.network
+import qs.src.services.network
+import qs.src.state
+import qs.src.theme
 // BluetoothTab — the network popup's Bluetooth page: paired devices, the
 // ones a scan finds, pairing (with an optional legacy PIN) and removal.
 // State and bluetoothctl calls live in BluetoothService.

@@ -1,8 +1,8 @@
 import QtQuick
 import Quickshell
-import "../"
-import "../components"
-
+import qs.src.services
+import qs.src.state
+import qs.src.theme
 // HotspotTab — config editor for the hotspot SSID/password.
 // The start/stop toggle is the Quick Settings tile; both use HotspotService,
 // which stores the credentials in src/user_data/hotspot.json.

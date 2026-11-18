@@ -3,10 +3,8 @@ import QtQuick.Layouts
 import QtQuick.Controls
 import Quickshell
 import Quickshell.Services.SystemTray
-import "../../components"
-import "../../windows"
-import "../../"
-
+import qs.src.components
+import qs.src.theme
 RowLayout {
     id: root
 

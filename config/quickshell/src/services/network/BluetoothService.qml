@@ -2,8 +2,6 @@ pragma Singleton
 import QtQuick
 import Quickshell
 import Quickshell.Io
-import "../../"
-
 // ============================================================
 // BluetoothService — the adapter and devices through bluetoothctl, shared by
 // the bar icon, the Quick Settings tile and the network popup's Bluetooth tab.

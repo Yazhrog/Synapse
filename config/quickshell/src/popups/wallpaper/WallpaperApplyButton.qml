@@ -1,7 +1,6 @@
 import QtQuick
-import "../../"
-import "../../services"
-
+import qs.src.services
+import qs.src.theme
 // WallpaperApplyButton — "Apply", grows in while there is something to
 // apply (`active`); shows … while WallpaperService is applying.
 

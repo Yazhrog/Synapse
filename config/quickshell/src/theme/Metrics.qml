@@ -1,8 +1,8 @@
 pragma Singleton
 import QtQuick
-import "../"
-
-QtObject {
+import Quickshell
+import qs.src.services
+Singleton {
     // --Bar Toggle--
     property bool barEnabled: false
 

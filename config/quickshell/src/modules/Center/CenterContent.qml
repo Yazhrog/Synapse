@@ -1,8 +1,9 @@
 import QtQuick
 import Quickshell
 import Quickshell.Services.Mpris
-import "../../"
-
+import qs.src.services
+import qs.src.state
+import qs.src.theme
 // CenterContent — the centre notch's scrollable carousel ("dynamic island").
 //
 // Items, in order (each only while it applies):

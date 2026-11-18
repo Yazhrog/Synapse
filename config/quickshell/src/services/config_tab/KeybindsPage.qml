@@ -1,8 +1,6 @@
 import QtQuick
 import QtQuick.Controls
-import "../"
-import "../../"
-
+import qs.src.theme
 // KeybindsPage — Config → Keybinds: every shell action by group, one
 // KeybindRow each. Changes are staged as pending (amber) until Save; the
 // banner shows how many. While a row captures, KeybindService.isCapturing

@@ -1,8 +1,6 @@
 import QtQuick
-import "../../"
-import "../../components"
-import "clock"
-
+import qs.src.components
+import qs.src.services.home.clock
 // ClockCard — Clock / Timer / Alarm / Stopwatch.
 // The engine lives in ClockState; this card only switches between the views.
 

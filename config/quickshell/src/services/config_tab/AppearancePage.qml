@@ -1,7 +1,7 @@
 import QtQuick
-import "../../"
-import "../../components"
-
+import qs.src.components
+import qs.src.services
+import qs.src.theme
 // AppearancePage — Config → Appearance: how the frame looks.
 //
 // Every control edits a PrefsService key that Metrics/Theme read, so the

@@ -4,15 +4,17 @@
 // be created offscreen, so their contents are loaded on their own here.
 import Quickshell
 import QtQuick
-import "./src"
-import "./src/shapes"
-import "./src/components"
-import "./src/popups"
-import "./src/services"
-import "./src/services/config_tab"
-import "./src/modules/Right"
-import "./src/modules/Center"
-
+import qs.src.components
+import qs.src.modules.Center
+import qs.src.modules.Right
+import qs.src.popups
+import qs.src.services
+import qs.src.services.config_tab
+import qs.src.services.network
+import qs.src.shapes
+import qs.src.state
+import qs.src.theme
+import qs.src.utils
 ShellRoot {
     property var _singletons: [Theme, Paths, PrefsService, SurfaceState, Popups, ToastState,
                                ShellState, KeybindService, UpdateService, IpcManager,

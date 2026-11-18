@@ -1,6 +1,6 @@
 import QtQuick
-import "../../"
-
+import qs.src.services
+import qs.src.theme
 // QuickFilterPicker — the shader list that floats over the Quick Settings
 // tiles: "Off" first, then every shader of ScreenFilterService.
 // The parent opens it through `open` and closes it on closeRequested().

@@ -1,8 +1,9 @@
 import Quickshell
 import Quickshell.Hyprland
 import QtQuick
-import "../"
-
+import qs.src.services
+import qs.src.state
+import qs.src.theme
 // ShellHost — the shell root: one Dynamic Surface per screen (#37).
 //
 // Per screen: a top StrutWindow reserving the bar's space, the DynamicSurface

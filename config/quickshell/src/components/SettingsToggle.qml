@@ -1,6 +1,6 @@
 import QtQuick
-import "../"
-
+import qs.src.services
+import qs.src.theme
 // SettingsToggle — a row with a pill switch.
 //
 // With `prefKey`, the switch reads and writes that PrefsService key. Set
