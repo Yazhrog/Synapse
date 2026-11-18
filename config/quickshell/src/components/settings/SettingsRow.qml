@@ -1,34 +1,36 @@
 import QtQuick
 import qs.src.components.base
-import qs.src.services.data
 import qs.src.theme
 // SettingsRow — base of the settings widgets: label and optional description
 // on the left, a control on the right (the row's children), and a reset button
-// when the PrefsService key in `prefKey` differs from its default.
+// while `modified` (it emits resetRequested()).
 //
 // Used on its own for read-only rows, or through SettingsToggle,
 // SettingsSlider, SettingsDropdown and SettingsButton. Place rows in a
-// SettingsGroup, separated by SettingsDivider.
+// SettingsGroup, separated by SettingsDivider. Presentational: the controls
+// show `value` and report edits with edited(v); a container
+// (features/dashboard/config/controls/Pref*.qml) binds them to a pref.
 Item {
     id: row
 
     property string label:           ""
     property string description:     ""
     property bool   monoDescription: false
-    // PrefsService key this row edits; enables the reset button.
-    property string prefKey:         ""
-
+    // The control's value and the value the reset button restores; the
+    // button shows while they differ (no defaultValue: never).
+    property var value:        undefined
+    property var defaultValue: undefined
     readonly property bool modified:
-        prefKey !== "" && PrefsService[prefKey] !== PrefsService.defaults[prefKey]
+        defaultValue !== undefined && JSON.stringify(value) !== JSON.stringify(defaultValue)
+
+    // The user changed the value (the container writes it).
+    signal edited(var value)
 
     // The control on the right side of the row.
     default property alias control: slot.data
     // Optional content under the row's line (e.g. a dropdown's options).
     property alias below: belowSlot.data
 
-    // Default reset: restore the pref's default. Override by handling
-    // resetRequested and setting handleReset to false.
-    property bool handleReset: true
     signal resetRequested()
 
     width:          parent ? parent.width : 0
@@ -87,10 +89,7 @@ Item {
                 anchors.verticalCenter: parent.verticalCenter
                 visible: row.modified
                 icon:    "󰑓"
-                onClicked: {
-                    row.resetRequested()
-                    if (row.handleReset) PrefsService.reset(row.prefKey)
-                }
+                onClicked: row.resetRequested()
             }
 
             Item {

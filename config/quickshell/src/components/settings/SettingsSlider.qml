@@ -1,12 +1,9 @@
 import QtQuick
-import qs.src.services.data
 import qs.src.theme
 // SettingsSlider — a row with a slider and its current value.
 //
-// With `prefKey`, the slider reads and writes that PrefsService key
-// (PrefsService debounces the save). Without it, set `value` and handle
-// moved(). Left/Right (or Down/Up) move it by `stepSize` when the row has
-// focus.
+// Shows `value` (a number in from..to); dragging, or Left/Right (Down/Up)
+// by `stepSize` when the row has focus, emits edited(v) and moved(v).
 SettingsRow {
     id: root
 
@@ -15,8 +12,8 @@ SettingsRow {
     property real   stepSize: 1
     property int    decimals: 0
     property string unit:     ""
-    property real   value:    prefKey !== "" ? Number(PrefsService[prefKey]) : from
     signal moved(real value)
+    readonly property real _value: Number(value ?? from)
 
     activeFocusOnTab: true
 
@@ -25,20 +22,19 @@ SettingsRow {
         if (root.stepSize > 0)
             next = root.from + Math.round((next - root.from) / root.stepSize) * root.stepSize
         next = Number(next.toFixed(root.decimals))
-        if (next === root.value) return
-        if (root.prefKey !== "") PrefsService[root.prefKey] = next
-        else root.value = next
+        if (next === root._value) return
+        root.edited(next)
         root.moved(next)
     }
 
     readonly property real _ratio: root.to > root.from
-        ? (root.value - root.from) / (root.to - root.from) : 0
+        ? (root._value - root.from) / (root.to - root.from) : 0
 
     Keys.onPressed: function(event) {
         if (event.key === Qt.Key_Right || event.key === Qt.Key_Up) {
-            root.setValue(root.value + root.stepSize); event.accepted = true
+            root.setValue(root._value + root.stepSize); event.accepted = true
         } else if (event.key === Qt.Key_Left || event.key === Qt.Key_Down) {
-            root.setValue(root.value - root.stepSize); event.accepted = true
+            root.setValue(root._value - root.stepSize); event.accepted = true
         }
     }
 
@@ -94,7 +90,7 @@ SettingsRow {
             anchors.verticalCenter: parent.verticalCenter
             width:          44
             horizontalAlignment: Text.AlignRight
-            text:           root.value.toFixed(root.decimals) + root.unit
+            text:           root._value.toFixed(root.decimals) + root.unit
             font.pixelSize: 11
             font.family:    "monospace"
             color:          Qt.rgba(Theme.text.r, Theme.text.g, Theme.text.b, 0.70)

@@ -6,14 +6,14 @@ import qs.src.core
 import qs.src.services.data
 // Single cava process shared by CenterContent and PlayerCard.
 // 32 bars at 30fps. isPlaying mirrors the active MPRIS player state.
-// `enabled` follows PrefsService.enableVisualiser: when off, cava is stopped
+// `enabled` follows Prefs.data.enableVisualiser: when off, cava is stopped
 // and the bars are hidden.
 
 Singleton {
     id: root
 
     readonly property int barCount: 32
-    readonly property bool enabled: PrefsService.ready && PrefsService.enableVisualiser
+    readonly property bool enabled: Prefs.ready && Prefs.data.enableVisualiser
 
     function _zeros() {
         var a = []; for (var i = 0; i < root.barCount; i++) a.push(0); return a

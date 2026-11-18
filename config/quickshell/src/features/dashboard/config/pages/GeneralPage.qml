@@ -1,10 +1,11 @@
 import QtQuick
 import QtQuick.Controls
 import qs.src.components.settings
+import qs.src.features.dashboard.config.controls
 import qs.src.state
 // GeneralPage — Config → General: everyday shell preferences.
 //
-// Every row edits a PrefsService key and applies live. Defaults match the
+// Every row edits a Prefs key and applies live. Defaults match the
 // shell's behaviour before these settings existed.
 Item {
     id: root
@@ -54,63 +55,49 @@ Item {
             SettingsGroup {
                 title: "Clock & startup"
 
-                SettingsToggle {
-                    label:       "Use 24-hour time"
-                    description: "Off shows the bar and dashboard clocks as 3:45 PM."
-                    prefKey:     "use24HourClock"
+                PrefToggle {
+                    key: "use24HourClock"
                 }
 
                 SettingsDivider {}
 
-                SettingsToggle {
-                    label:       "Boot into Focus Mode"
-                    description: "Hides the bar and tightens the gaps when the shell starts."
-                    prefKey:     "bootFocusMode"
+                PrefToggle {
+                    key: "bootFocusMode"
                 }
             }
 
             SettingsGroup {
                 title: "Bar"
 
-                SettingsToggle {
-                    label:       "Always show battery percentage"
-                    description: "Otherwise it shows when you hover the icon."
-                    prefKey:     "alwaysShowBatteryPercentage"
+                PrefToggle {
+                    key: "alwaysShowBatteryPercentage"
                 }
 
                 SettingsDivider {}
 
-                SettingsToggle {
-                    label:       "Always show volume percentage"
-                    description: "Otherwise it shows when you hover the icon."
-                    prefKey:     "alwaysShowVolumePercentage"
+                PrefToggle {
+                    key: "alwaysShowVolumePercentage"
                 }
 
                 SettingsDivider {}
 
-                SettingsToggle {
-                    label:       "Audio visualizer"
-                    description: "Bars in the notch and the player card. Off stops cava."
-                    prefKey:     "enableVisualiser"
+                PrefToggle {
+                    key: "enableVisualiser"
                 }
             }
 
             SettingsGroup {
                 title: "Popups"
 
-                SettingsDropdown {
-                    label:       "Default dashboard tab"
-                    description: "Shown when the dashboard opens from the bar."
-                    prefKey:     "defaultDashboardPage"
+                PrefDropdown {
+                    key: "defaultDashboardPage"
                     options: root._pageOptions("dashboard")
                 }
 
                 SettingsDivider {}
 
-                SettingsDropdown {
-                    label:       "Default audio tab"
-                    description: "Shown when the audio popup opens from the bar."
-                    prefKey:     "defaultAudioPage"
+                PrefDropdown {
+                    key: "defaultAudioPage"
                     options: root._pageOptions("audio")
                 }
             }
@@ -118,19 +105,15 @@ Item {
             SettingsGroup {
                 title: "Files"
 
-                SettingsTextField {
-                    label:           "Custom avatar"
-                    description:     "Image for the dashboard's profile card. Empty uses the wallpaper."
-                    prefKey:         "avatarPath"
+                PrefTextField {
+                    key: "avatarPath"
                     placeholderText: "~/Pictures/avatar.png"
                 }
 
                 SettingsDivider {}
 
-                SettingsTextField {
-                    label:           "Screen recording folder"
-                    description:     "Where new recordings are saved."
-                    prefKey:         "screenRecordingDir"
+                PrefTextField {
+                    key: "screenRecordingDir"
                     placeholderText: "~/Videos/screen_recordings"
                 }
             }

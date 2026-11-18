@@ -54,3 +54,5 @@ run contracts.qml "CONTRACTS OK"
 run core.qml "CORE OK"
 # lifecycle.qml: popup lifecycle (SurfaceState, PopupLifecycle) and Dialogs.
 run lifecycle.qml "LIFECYCLE OK"
+# prefs.qml: Prefs and PrefSchema on an old shell_prefs.json.
+run prefs.qml "PREFS OK"

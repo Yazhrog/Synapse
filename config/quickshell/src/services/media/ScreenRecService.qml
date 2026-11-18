@@ -237,7 +237,7 @@ Singleton {
 
     // Recordings folder from Config → General, "~" expanded.
     readonly property string outputDir: {
-        const dir = Paths.expand(PrefsService.screenRecordingDir).replace(/\/+$/, "")
+        const dir = Paths.expand(Prefs.data.screenRecordingDir).replace(/\/+$/, "")
         return dir !== "" ? dir : Paths.home + "/Videos/screen_recordings"
     }
 
