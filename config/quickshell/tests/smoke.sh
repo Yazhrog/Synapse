@@ -50,3 +50,5 @@ run smoke-imports.qml
 run smoke-registries.qml
 # contracts.qml: keybind-defaults.json and the IPC targets agree.
 run contracts.qml "CONTRACTS OK"
+# core.qml: behaviour of the core toolkit (Exec, ExecQueue, JsonStore, Lease).
+run core.qml "CORE OK"
