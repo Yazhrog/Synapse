@@ -4,8 +4,11 @@ import qs.src.state
 import qs.src.theme
 // The network popup: grows the right notch.
 PopupSpec {
+    readonly property NetworkTabs _registry: NetworkTabs {}
     key:    "network"
     region: "right"
+    actionGroup: "Network Tabs"
+    pages:    _registry.pages
     pageProp: "networkPage"
     size:   s => [s.px(Metrics.networkPopupBodyWidth) + s.borderWidth,
                   s.px(Metrics.networkPopupHeight - Theme.notchRadius)]

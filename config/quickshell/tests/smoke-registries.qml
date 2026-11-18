@@ -49,6 +49,7 @@ ShellRoot {
                 const s = shell._scene
                 if (s.w > 0) item.width  = s.w
                 if (s.h > 0) item.height = s.h
+                for (const k in (s.props ?? {})) item[k] = s.props[k]
             }
         }
     }

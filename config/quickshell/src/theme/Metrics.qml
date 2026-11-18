@@ -77,7 +77,6 @@ Singleton {
     property int powerMenuHeight:       258
     property int powerMenuPadding:      6     // around it, inside the left-center bump
     property int sideRegionHeight:      306   // audio popup and OSD (right-center)
-    property var audioPageWidths:       ({ output: 200, input: 200, mixer: 300 })
     property int osdWidth:              180
     property int osdTopPadding:         30
     property int networkPopupBodyWidth: 489   // networkPopupWidth + its inner margin

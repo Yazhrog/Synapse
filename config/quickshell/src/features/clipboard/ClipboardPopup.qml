@@ -6,6 +6,7 @@ import qs.src.theme
 PopupSpec {
     key:    "clipboard"
     region: "bottomRight"
+    action: "clipboard-toggle"; actionLabel: "Clipboard"
     size:   s => [s.px(Metrics.clipboardPanelWidth), s.px(Metrics.clipboardPanelHeight)]
     place:  (s, w, h) => Qt.rect(s.px(10), s.px(8), s.px(Metrics.clipboardPanelWidth - 10),
                                  s.px(Metrics.clipboardPanelHeight - 16))

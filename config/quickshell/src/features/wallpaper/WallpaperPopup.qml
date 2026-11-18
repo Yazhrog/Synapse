@@ -6,6 +6,7 @@ import qs.src.theme
 PopupSpec {
     key:    "wallpaper"
     region: "bottomCenter"
+    action: "wallpaper-toggle"; actionLabel: "Wallpaper"
     size:   s => [s.px(Metrics.wallpaperPanelWidth), s.px(Metrics.wallpaperPanelHeight)]
     place:  (s, w, h) => Qt.rect((w - s.px(Metrics.wallpaperPanelWidth) - 2 * s.notchRadius) / 2, 0,
                                  s.px(Metrics.wallpaperPanelWidth) + 2 * s.notchRadius,

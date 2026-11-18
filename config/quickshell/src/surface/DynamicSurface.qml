@@ -32,6 +32,8 @@ PanelWindow {
 
     // app/PopupManifest.qml: popups (PopupSpec list), osd, recordingOptions
     required property var manifest
+    // features/bar/BarWidgets.qml's widgets (BarWidgetSpec list)
+    property var barWidgets: []
 
     component Fade: NumberAnimation { duration: Metrics.regionFadeDuration }
 
@@ -211,6 +213,7 @@ PanelWindow {
         id: bar
         anchors.fill: parent
         surface:      root
+        widgets:      root.barWidgets
     }
 
     // ── Toast, inside the grown right notch ──────────────────────────────────
@@ -235,7 +238,7 @@ PanelWindow {
         opacity: root.quickShown ? 1 : 0
         Behavior on opacity { Fade {} }
 
-        // Hovering keeps the OSD open (see IpcManager's hide timer).
+        // Hovering keeps the OSD open (see IpcBridge's hide timer).
         HoverHandler { id: quickHover; onHoveredChanged: Popups.quickHeld = hovered }
 
         Loader {
