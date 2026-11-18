@@ -271,9 +271,10 @@ PanelWindow {
     // ── Screen-recording options (capture / audio), under the center notch ──
     Loader {
         id: recOptions
-        // Centred under the button that opened it.
-        x:       ScreenRecService.popupTargetX + (ScreenRecService.popupTargetWidth - width) / 2
-        y:       root.notchHeight + 25
+        // Hangs just under the bar, aligned with the button that opened it
+        // (like the other dropdowns), one pill gap below the notch.
+        x:       Math.min(ScreenRecService.popupTargetX, root.width - width - root.px(Metrics.pillGap))
+        y:       root.notchBottom + root.px(Metrics.pillGap)
         width:   item ? item.implicitWidth : 0
         height:  item ? item.implicitHeight : 0
         visible: ScreenRecService.openStrip !== "" && ScreenRecService.popupTargetScreen === root.screenName
