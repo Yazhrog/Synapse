@@ -1,19 +1,13 @@
 import QtQuick
 import Quickshell
 import Quickshell.Wayland
-import qs.src.services.data
 import qs.src.services.system
 import qs.src.state
 import qs.src.theme
-// Unified confirmation modal — renders Popups.confirm* and reports the choice.
-// Call Popups.showConfirm() to open, Popups.cancelConfirm() to close.
-//
-// The confirmed action runs in its service:
-//   "shutdown" / "reboot" / "logout" / "lock" / "suspend" → PowerService
-//   "factory-reset"   → DataService.factoryReset() (deletes user data, restarts the shell)
-//   "gpu-switch-envy" → GpuModeService.switchTo(<mode>), which reboots when done;
-//                       while it switches (GpuModeService.switching, after pkexec
-//                       authenticated) the dialog shows the processing card.
+// Confirmation modal — renders Dialogs.confirmRequest ({ title, message,
+// label, icon, onAccept }) and reports the choice to Dialogs, which runs the
+// request's callback. While GpuModeService switches the GPU mode (after
+// pkexec authenticated, until the reboot) it shows the processing card.
 
 PanelWindow {
     id: root
@@ -23,7 +17,9 @@ PanelWindow {
     anchors { top: true; left: true; right: true; bottom: true }
     exclusionMode: ExclusionMode.Ignore
 
-    visible: Popups.confirmOpen || root.running
+    readonly property var request: Dialogs.confirmRequest
+
+    visible: Dialogs.confirmOpen || root.running
 
     property int selIndex: 0   // 0 = Cancel, 1 = Confirm
 
@@ -41,9 +37,9 @@ PanelWindow {
     readonly property bool running: GpuModeService.switching
 
     Connections {
-        target: Popups
-        function onConfirmOpenChanged() {
-            if (Popups.confirmOpen) {
+        target: Dialogs
+        function onConfirmRequestChanged() {
+            if (Dialogs.confirmOpen) {
                 root.selIndex = 0
                 keyHandler.forceActiveFocus()
             }
@@ -57,19 +53,11 @@ PanelWindow {
         }
     }
 
-    // ── Action dispatch ───────────────────────────────────────────────────────
-    function confirm() {
-        // Read the request before cancelConfirm() clears it.
-        const action  = Popups.confirmAction
-        const gfxMode = Popups.confirmGfxMode
-        Popups.cancelConfirm()
-        if (action === "factory-reset")        DataService.factoryReset()
-        else if (action === "gpu-switch-envy") GpuModeService.switchTo(gfxMode)
-        else                                   PowerService.run(action)
-    }
+    // ── Choice ────────────────────────────────────────────────────────────────
+    function confirm() { Dialogs.accept() }
 
     function cancel() {
-        if (!root.running) Popups.cancelConfirm()
+        if (!root.running) Dialogs.cancel()
     }
 
     // ── Dim overlay ───────────────────────────────────────────────────────────
@@ -90,7 +78,7 @@ PanelWindow {
         height: col.implicitHeight + 48
         radius: Theme.notchRadius
         color:  Theme.background
-        visible: Popups.confirmOpen && !root.running
+        visible: Dialogs.confirmOpen && !root.running
 
         MouseArea { anchors.fill: parent }
 
@@ -108,22 +96,14 @@ PanelWindow {
 
             Text {
                 anchors.horizontalCenter: parent.horizontalCenter
-                text: {
-                    switch (Popups.confirmAction) {
-                        case "shutdown":        return "⏻"
-                        case "reboot":          return "↺"
-                        case "logout":          return "⎋"
-                        case "gpu-switch-envy": return "⚠️"
-                        default:                return "⚠️"
-                    }
-                }
+                text: root.request?.icon ?? "⚠️"
                 color:          Theme.text
                 font.pixelSize: 32
             }
 
             Text {
                 anchors.horizontalCenter: parent.horizontalCenter
-                text:           Popups.confirmTitle
+                text:           root.request?.title ?? ""
                 color:          Theme.text
                 font.pixelSize: 15
                 font.bold:      true
@@ -131,7 +111,7 @@ PanelWindow {
 
             Text {
                 width:          parent.width
-                text:           Popups.confirmMessage
+                text:           root.request?.message ?? ""
                 color:          Qt.rgba(1, 1, 1, 0.65)
                 font.pixelSize: 12
                 wrapMode:       Text.WordWrap
@@ -185,7 +165,7 @@ PanelWindow {
 
                     Text {
                         anchors.centerIn: parent
-                        text:           Popups.confirmLabel
+                        text:           root.request?.label ?? "Confirm"
                         color:          "white"
                         font.pixelSize: 13
                         font.bold:      true

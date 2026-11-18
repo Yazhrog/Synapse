@@ -11,13 +11,12 @@ Item {
     function switchGpu(mode) {
         if (mode === envyService.currentMode || envyService.busy) return
         Popups.closeAll()
-        Popups.showConfirm(
-            "Switch GPU Mode",
-            "Switch to " + mode + " mode?\nA reboot is required for the change to take effect.",
-            "Switch + Reboot",
-            "gpu-switch-envy",
-            mode
-        )
+        Dialogs.confirm({
+            title:    "Switch GPU Mode",
+            message:  "Switch to " + mode + " mode?\nA reboot is required for the change to take effect.",
+            label:    "Switch + Reboot",
+            onAccept: () => root.envyService.switchTo(mode)
+        })
     }
 
     Column {

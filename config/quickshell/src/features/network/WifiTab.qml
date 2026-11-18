@@ -13,15 +13,13 @@ Item {
     // Which row has its "Forget?" confirmation open
     property string forgetSsid: ""
 
-    Connections {
-        target: Popups
-        function onNetworkOpenChanged() {
-            if (Popups.networkOpen) {
-                root.forgetSsid = ""
-                WifiService.resetPrompts()
-                WifiService.poll()
-                WifiService.scan(false)
-            }
+    PopupLifecycle {
+        popup: "network"
+        onOpening: {
+            root.forgetSsid = ""
+            WifiService.resetPrompts()
+            WifiService.poll()
+            WifiService.scan(false)
         }
     }
 

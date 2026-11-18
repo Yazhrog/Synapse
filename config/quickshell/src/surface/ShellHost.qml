@@ -20,6 +20,9 @@ import qs.src.theme
 Scope {
     id: host
 
+    // app/PopupManifest.qml, handed to every surface
+    required property var manifest
+
     // Switching workspace or monitor, or a new window opening, closes the
     // open popup.
     Connections {
@@ -62,12 +65,12 @@ Scope {
                     StrutWindow { screen: modelData; edge: "bottom"; reserve: _extraBorder }
                 }
 
-                DynamicSurface { screen: modelData }
+                DynamicSurface { screen: modelData; manifest: host.manifest }
 
-                // GPU mode change confirmation modal
+                // Confirmations (Dialogs.confirm)
                 ConfirmDialog { screen: modelData }
 
-                // Critical battery — blocking, must be acknowledged
+                // Blocking alerts (Dialogs.alert: the critical battery)
                 BatteryCriticalDialog { screen: modelData }
 
                 // Shell update notification
