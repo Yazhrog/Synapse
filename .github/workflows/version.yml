@@ -1,0 +1,41 @@
+name: Version
+
+# VERSION is the single source of the version (.github/scripts/version.sh).
+# A PR into main must bump it; once it lands on main, vX.Y.Z is tagged and a
+# draft release with generated notes waits to be filled in and published.
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+    paths: [VERSION]
+
+jobs:
+  check:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: VERSION is bumped above the latest release
+        run: .github/scripts/version.sh check
+
+  release:
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    concurrency:
+      group: version-release
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Tag vX.Y.Z and draft the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: .github/scripts/version.sh release

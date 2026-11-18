@@ -6,7 +6,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-0.6.3-8D748C?style=for-the-badge&logoColor=D9E0EE&labelColor=252733" alt="Version 0.6.3" />
+  <a href="https://github.com/Yazhrog/Synapse/releases/latest"><img src="https://img.shields.io/github/v/release/Yazhrog/Synapse?sort=semver&label=version&color=8D748C&style=for-the-badge&logoColor=D9E0EE&labelColor=252733" alt="Latest release" /></a>
   <br>
   <img src="https://img.shields.io/badge/hyprland-v0.55+-5E81AC?style=for-the-badge&logoColor=D9E0EE&labelColor=252733" alt="Hyprland v0.55+" />
   <img src="https://img.shields.io/badge/quickshell-framework-A1C999?style=for-the-badge&logoColor=D9E0EE&labelColor=252733" alt="Quickshell Framework" />
@@ -32,7 +32,7 @@
 - **Clipboard Manager** — Cliphist integration for history management
 - **Highly Customizable** — QML-based UI, easily extended
 
-> **Note:** Synapse is currently in its `v0.6.3` release. While the core architecture and theming pipeline are feature-complete, you may encounter bugs. Please report them on Discord or via GitHub Issues!
+> **Note:** Synapse is pre-1.0. While the core architecture and theming pipeline are feature-complete, you may encounter bugs. Please report them on Discord or via GitHub Issues!
 
 ---
 

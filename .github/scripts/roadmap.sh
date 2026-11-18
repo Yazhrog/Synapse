@@ -86,7 +86,7 @@ cmd_done() {
 
 cmd_close() {
     local after="${1:-}" version="" pr="" note
-    version=$(grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+' boot.sh 2>/dev/null | head -1 || true)
+    [[ -f VERSION ]] && version="v$(<VERSION)"
     [[ -n "$after" ]] && pr=$(gh api "repos/$REPO/commits/$after/pulls" --jq '[.[] | select(.merged_at != null)][0].number // empty' || true)
     note="Released${version:+ in $version}${pr:+ (#$pr)}: this is now on \`main\`."
 

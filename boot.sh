@@ -62,7 +62,14 @@ echo "         ███ ███   ███ ███   ███   ███
 echo "   ▄█    ███ ███   ███ ███   ███   ███    ███   ███           ▄█    ███   ███    ███" 
 echo " ▄████████▀   ▀█████▀   ▀█   █▀    ███    █▀   ▄████▀       ▄████████▀    ██████████" 
 echo -e "${NC}"
-echo -e "  ${DIM}v0.6.3  ·  Synapse Shell + Hyprland LUA config${NC}"
+# VERSION is the single source of the version. Under `curl | bash` there is no
+# checkout yet, so read the released one from main.
+if [[ -f "$SCRIPT_DIR/VERSION" ]]; then
+    SYNAPSE_VERSION=$(<"$SCRIPT_DIR/VERSION")
+else
+    SYNAPSE_VERSION=$(curl -fsSL https://raw.githubusercontent.com/Yazhrog/Synapse/refs/heads/main/VERSION 2>/dev/null || true)
+fi
+echo -e "  ${DIM}${SYNAPSE_VERSION:+v${SYNAPSE_VERSION}  ·  }Synapse Shell + Hyprland LUA config${NC}"
 echo ""
 
 # ╭───────────────────────────────────────────────────────────────────────╮
