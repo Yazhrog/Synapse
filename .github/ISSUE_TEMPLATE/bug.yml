@@ -20,8 +20,8 @@ body:
     id: version
     attributes:
       label: Synapse version
-      description: Shown in the README badge and the boot.sh banner, or run `git describe --tags` in your checkout.
-      placeholder: v0.2.1
+      description: Run `cat "$(cat ~/.config/Synapse/repo-path)/VERSION"`; also shown in the boot.sh banner.
+      placeholder: 0.7.0
   - type: textarea
     id: logs
     attributes:
