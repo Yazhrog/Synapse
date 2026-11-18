@@ -1,13 +1,16 @@
 import QtQuick
-import qs.src.services.system
 import qs.src.theme
 // BrightnessSlider — the dashboard's labelled brightness slider
 // (BRIGHTNESS + %, sun icons, track with thumb, click/drag/scroll).
-// Reads and writes BrightnessService.
+// Presentational: shows `value` (0–1) and reports moved(v); Quick Settings
+// binds it to the brightness service.
 
 Item {
     id: root
     height: 52
+
+    property real value: 0
+    signal moved(real value)
 
     Text {
         id: brightLbl
@@ -17,7 +20,7 @@ Item {
     }
     Text {
         anchors { right: parent.right; top: parent.top }
-        text: Math.round(BrightnessService.value * 100) + "%"
+        text: Math.round(root.value * 100) + "%"
         font.pixelSize: 9; font.family: "JetBrainsMono Nerd Font"; font.weight: Font.Bold
         color: Qt.rgba(Theme.active.r, Theme.active.g, Theme.active.b, 0.7)
     }
@@ -45,7 +48,7 @@ Item {
                 color: Qt.rgba(Theme.text.r, Theme.text.g, Theme.text.b, 0.12)
                 Rectangle {
                     anchors { left: parent.left; top: parent.top; bottom: parent.bottom }
-                    width: Math.max(parent.radius * 2, parent.width * BrightnessService.value)
+                    width: Math.max(parent.radius * 2, parent.width * root.value)
                     radius: parent.radius; color: Theme.active
                     Behavior on width { NumberAnimation { duration: 80; easing.type: Easing.OutCubic } }
                 }
@@ -55,21 +58,21 @@ Item {
                         return Math.max(0.0, Math.min(1.0,
                             (mx - btw.thumbD/2) / (btrack.width - btw.thumbD)))
                     }
-                    onPressed:         BrightnessService.set(_c(mouseX))
-                    onPositionChanged: if (pressed) BrightnessService.set(_c(mouseX))
+                    onPressed:         root.moved(_c(mouseX))
+                    onPositionChanged: if (pressed) root.moved(_c(mouseX))
                 }
             }
 
             WheelHandler {
                 acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchPad
                 onWheel: function(e) {
-                    BrightnessService.set(BrightnessService.value + (e.angleDelta.y > 0 ? 0.05 : -0.05))
+                    root.moved(root.value + (e.angleDelta.y > 0 ? 0.05 : -0.05))
                 }
             }
             Rectangle {
                 width: btw.thumbD; height: btw.thumbD; radius: btw.thumbD / 2
                 color: "#ffffff"; anchors.verticalCenter: parent.verticalCenter
-                x: Math.max(0, Math.min(btw.width - width, BrightnessService.value * (btw.width - width)))
+                x: Math.max(0, Math.min(btw.width - width, root.value * (btw.width - width)))
                 Behavior on x { NumberAnimation { duration: 80; easing.type: Easing.OutCubic } }
             }
         }

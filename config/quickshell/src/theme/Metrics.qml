@@ -11,14 +11,13 @@ Singleton {
     // (Config → Appearance); defaults 6 px, 17 px, 100 %. The notch radius
     // (top notches, the popups grown from them and their flares) follows the
     // corner radius in proportion: 15 px at the default 17 px.
-    property int  borderWidth:       PrefsService.borderWidth
-    property int  cornerRadius:      PrefsService.cornerRadius
-    property real backgroundOpacity: PrefsService.backgroundOpacity / 100
+    property int  borderWidth:       Prefs.data.borderWidth
+    property int  cornerRadius:      Prefs.data.cornerRadius
+    property real backgroundOpacity: Prefs.data.backgroundOpacity / 100
     property int notchRadius:   Math.round(cornerRadius * 15 / 17)
-    // Bar style pref, checked: anything unknown is "frame". Read this (or
-    // Theme.barStyle), never PrefsService.barStyle directly.
-    readonly property string barStyle: ["frame", "bar", "pills"].indexOf(PrefsService.barStyle) >= 0
-                                       ? PrefsService.barStyle : "frame"
+    // Bar style pref ("frame", "bar" or "pills"; PrefSchema rejects anything
+    // else). Read this (or Theme.barStyle).
+    readonly property string barStyle: Prefs.data.barStyle
     // Pills bar style: gap between the pills/cards and the screen edges.
     property int pillGap:       6
     property int notchHeight:   40

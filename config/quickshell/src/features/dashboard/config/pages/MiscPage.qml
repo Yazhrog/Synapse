@@ -1,10 +1,11 @@
 import QtQuick
 import qs.src.components.settings
+import qs.src.features.dashboard.config.controls
 import qs.src.services.system
 // MiscPage — Config → Misc.
 //
 // Currently just the update settings. The toggle goes through
-// UpdateService.setAutoUpdate (not straight to PrefsService) because turning
+// UpdateService.setAutoUpdate (not straight to Prefs) because turning
 // checks off also clears a pending update popup.
 Item {
     id: root
@@ -23,26 +24,16 @@ Item {
         SettingsGroup {
             title: "Display"
 
-            SettingsDropdown {
-                label:       "Surface scale"
-                description: "Scales the frame and popup sizes. Popup contents don't scale yet."
-                prefKey:     "surfaceScale"
-                options: [
-                    { value: "off",  label: "Off"  },
-                    { value: "auto", label: "Auto" },
-                    { value: "1.25", label: "125%" },
-                    { value: "1.5",  label: "150%" }
-                ]
+            PrefDropdown {
+                key: "surfaceScale"
             }
         }
 
         SettingsGroup {
             title: "Updates"
 
-            SettingsToggle {
-                label:       "Check for updates on startup"
-                description: "Looks for new commits on origin/main 30s after login."
-                prefKey:     "autoUpdate"
+            PrefToggle {
+                key: "autoUpdate"
                 autoWrite:   false
                 onToggled:   function(checked) { UpdateService.setAutoUpdate(checked) }
             }

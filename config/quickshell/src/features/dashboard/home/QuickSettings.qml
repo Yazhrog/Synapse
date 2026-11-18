@@ -2,6 +2,7 @@ import QtQuick
 import qs.src.components.base
 import qs.src.components.inputs
 import qs.src.services.media
+import qs.src.services.system
 import qs.src.state
 import qs.src.theme
 // QuickSettings — the dashboard's right column: brightness slider and the
@@ -32,7 +33,11 @@ StatCard {
         anchors { fill: parent; margins: 12 }
         spacing: 0
 
-        BrightnessSlider { width: parent.width }
+        BrightnessSlider {
+            width:   parent.width
+            value:   BrightnessService.value
+            onMoved: v => BrightnessService.set(v)
+        }
 
         Rectangle {
             width: parent.width; height: 1

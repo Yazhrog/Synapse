@@ -97,10 +97,10 @@ Item {
                 SettingsButton {
                     id: avatarBtn
                     label:       "Reset avatar"
-                    description: PrefsService.avatarPath === ""
+                    description: Prefs.data.avatarPath === ""
                         ? "Already using the wallpaper." : "Back to the wallpaper image."
                     buttonText:  "Reset"
-                    enabled:     PrefsService.avatarPath !== ""
+                    enabled:     Prefs.data.avatarPath !== ""
                     onActivated: DataService.resetAvatar()
                 }
             }

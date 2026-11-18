@@ -4,13 +4,13 @@ import Quickshell
 import qs.src.core
 import qs.src.services.data
 // UpdateService — startup update checker (30s delay).
-// The autoUpdate preference lives in PrefsService. Every git command gets the
+// The autoUpdate preference lives in Prefs. Every git command gets the
 // repo path as an argument ($1 in the scripts), never pasted into a string.
 Singleton {
     id: root
 
     // ── Persistent preference ──────────────────────────────────────────────
-    readonly property bool autoUpdate: PrefsService.autoUpdate
+    readonly property bool autoUpdate: Prefs.data.autoUpdate
 
     // ── Live state (drives UpdatePopup) ───────────────────────────────────
     property bool   checking:        false
@@ -102,7 +102,7 @@ Singleton {
     }
 
     property var _prefsConn: Connections {
-        target: PrefsService
+        target: Prefs
         function onLoaded() { root._init() }
     }
 
@@ -353,7 +353,7 @@ Singleton {
     // binds to this so a user can turn checks back on without editing JSON.
     function setAutoUpdate(enabled) {
         console.log("UpdateService: setAutoUpdate(" + enabled + ")")
-        PrefsService.autoUpdate = enabled
+        Prefs.set("autoUpdate", enabled)
         if (!enabled) {
             root.updateAvailable = false
             root.hasConflict     = false
@@ -367,5 +367,5 @@ Singleton {
         setAutoUpdate(false)
     }
 
-    Component.onCompleted: if (PrefsService.ready) _init()
+    Component.onCompleted: if (Prefs.ready) _init()
 }

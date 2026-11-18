@@ -1,15 +1,14 @@
 import QtQuick
-import qs.src.services.data
 import qs.src.theme
 // SettingsTextField — a row with a one-line text field (paths, names).
 //
 // The value is committed on Enter or when the field loses focus, not on every
-// keystroke; Escape reverts the edit. With `prefKey`, it reads and writes that
-// PrefsService key; without it, set `text` and handle committed().
+// keystroke; Escape reverts the edit. Shows `value` (a string); a commit emits
+// edited(text) and committed(text), and the container writes it.
 SettingsRow {
     id: root
 
-    property string text:            prefKey !== "" ? String(PrefsService[prefKey] ?? "") : ""
+    readonly property string text:   String(value ?? "")
     property string placeholderText: ""
     property int    fieldWidth:      220
     signal committed(string text)
@@ -21,8 +20,7 @@ SettingsRow {
     function commit() {
         const next = input.text.trim()
         if (next === root.text) return
-        if (root.prefKey !== "") PrefsService[root.prefKey] = next
-        else root.text = next
+        root.edited(next)
         root.committed(next)
     }
 

@@ -1,18 +1,17 @@
 import QtQuick
-import qs.src.services.data
 import qs.src.theme
 // SettingsDropdown — a row with a choice from a list of options.
 //
 // `options` is a list of { value, label } (or plain strings). Clicking the
 // button opens the list under the row, inline, so it never gets clipped by
-// the popup window. With `prefKey`, the choice reads and writes that
-// PrefsService key; without it, set `currentValue` and handle selected().
+// the popup window. Shows `value`; picking one emits edited(v) and
+// selected(v), and the container writes it.
 // Up/Down change the choice, Space/Enter open or close the list.
 SettingsRow {
     id: root
 
     property var options:      []
-    property var currentValue: prefKey !== "" ? PrefsService[prefKey] : undefined
+    readonly property var currentValue: value
     property bool open:        false
     signal selected(var value)
 
@@ -31,8 +30,7 @@ SettingsRow {
     function select(i) {
         if (i < 0 || i >= root.options.length) return
         const v = root._value(root.options[i])
-        if (root.prefKey !== "") PrefsService[root.prefKey] = v
-        else root.currentValue = v
+        root.edited(v)
         root.selected(v)
     }
 
