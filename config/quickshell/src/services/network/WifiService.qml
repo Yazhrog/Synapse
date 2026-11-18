@@ -2,7 +2,6 @@ pragma Singleton
 import QtQuick
 import Quickshell
 import qs.src.core
-import qs.src.services
 import "nmcli.js" as Nmcli
 // ============================================================
 // WifiService — Wi-Fi and wired status through nmcli, shared by the bar

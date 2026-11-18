@@ -1,15 +1,13 @@
-// Import smoke test: loads the popup contents through the same imports the
-// Dynamic Surface uses (windows/DynamicSurface.qml), and nothing else.
-//
-// Quickshell only finds files in folders it reaches by following
-// `import "…"` lines from shell.qml; a folder that is only listed in a qmldir
-// (services/home, services/config_tab, …) is not scanned unless some file
-// imports it. tests/smoke.qml imports many folders itself, which hides that,
-// so this run doesn't. Run by tests/smoke.sh.
+// Import smoke test: loads the popup contents with only the imports this file
+// needs to name them, the way the Dynamic Surface hosts them, so each content
+// must import everything it uses itself (with qs.* imports and no qmldir, a
+// missing import fails here as "X is not a type"). Run by tests/smoke.sh.
 import Quickshell
 import QtQuick
-import qs.src.modules.Center
-import qs.src.popups
+import qs.src.features.bar.center
+import qs.src.features.dashboard
+import qs.src.features.network
+import qs.src.features.wallpaper
 import qs.src.state
 ShellRoot {
     FloatingWindow {

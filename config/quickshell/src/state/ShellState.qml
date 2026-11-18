@@ -2,8 +2,8 @@ pragma Singleton
 import Quickshell
 import QtQuick
 import Quickshell.Io
-import qs.src.services.config_tab
-import qs.src.utils
+import qs.src.core
+import qs.src.services.desktop
 // Global shell state.
 //
 // Airplane Mode     — written by QuickToggleService (rfkill)

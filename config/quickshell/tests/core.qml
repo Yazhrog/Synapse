@@ -5,7 +5,6 @@ import Quickshell
 import Quickshell.Io
 import QtQuick
 import qs.src.core
-
 ShellRoot {
     id: t
 
