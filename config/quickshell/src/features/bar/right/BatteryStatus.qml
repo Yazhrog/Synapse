@@ -1,25 +1,18 @@
 import QtQuick
-import Quickshell.Services.UPower
+import qs.src.services.system
 import qs.src.theme
-// Config:
-//showPercentage: bool — always show % beside icon (default: false = hover only)
+// BatteryStatus — the battery icon (charging animation, low-level colours and
+// pulse) and its %, shown on hover or always (showPercentage). The state
+// comes from BatteryService.
 
 Item {
     id: root
 
     property bool showPercentage: false
 
-    // ── UPower data ──────────────────────────────────────────────────────────
-    readonly property var  bat:      UPower.displayDevice
-    readonly property real pct:      bat.ready ? Math.round(bat.percentage * 100) : 0
-    readonly property bool charging: bat.ready
-                                     ? (bat.state === UPowerDeviceState.Charging ||
-                                        bat.state === UPowerDeviceState.PendingCharge ||
-                                        bat.state === UPowerDeviceState.FullyCharged)
-                                     : false
-    readonly property bool full:     bat.ready
-                                     ? bat.state === UPowerDeviceState.FullyCharged
-                                     : false
+    readonly property real pct:      BatteryService.percent
+    readonly property bool charging: BatteryService.charging
+    readonly property bool full:     BatteryService.full
 
     implicitWidth:  statusRow.implicitWidth + 6
     implicitHeight: statusRow.implicitHeight

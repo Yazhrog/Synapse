@@ -37,6 +37,8 @@ QtObject {
 
     readonly property bool busy: _current !== null
     property string lastError:  ""       // stderr (or reason) of the last failed run
+    property string lastOutput: ""       // stdout of the last run, success or not
+                                         // (e.g. df exits 1 but still prints)
 
     signal succeeded(var result)
     signal failed(int code, string stderr)
@@ -73,6 +75,7 @@ QtObject {
     function _ended(run, code, out, err) {
         if (run !== _current) return          // cancelled or replaced
         _current = null
+        lastOutput = out
         let ok = code === 0, result = out
         if (ok && parse && !stream) {
             try { result = parse(out) }

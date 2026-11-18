@@ -4,11 +4,13 @@ import QtQuick
 import Quickshell.Io
 import qs.src.core
 import qs.src.services.desktop
+import qs.src.services.media
+import qs.src.services.notifications
 // Global shell state.
 //
-// Airplane Mode     — written by QuickToggleService (rfkill)
-// Focus Mode        — written by FocusModeService; the surface collapses the bar and its strut reserves nothing
-// DND               — read by NotificationService to suppress incoming notifications
+// Airplane Mode     — QuickToggleService.airplaneOn (rfkill)
+// Focus Mode        — FocusModeService.active; the surface collapses the bar and its strut reserves nothing
+// DND               — NotificationService.dnd (drops incoming notifications)
 //
 // Wi-Fi, Bluetooth, VPN, the hotspot, Night Light and Caffeine are read
 // straight from their services (WifiService, BluetoothService, VpnService,
@@ -19,10 +21,10 @@ Singleton {
 
     
     
-    property bool focusMode:    false
-    property bool dnd:          false
-    property bool screenRecord: false
-    property bool airplane:     false
+    readonly property bool focusMode: FocusModeService.active
+    readonly property bool dnd: NotificationService.dnd
+    readonly property bool screenRecord: ScreenRecService.setupOpen
+    readonly property bool airplane: QuickToggleService.airplaneOn
 
     // ── Keybind Interception / Hyprland Submap Controller ─────────────────────
     

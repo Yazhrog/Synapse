@@ -1,7 +1,6 @@
 pragma Singleton
 import QtQuick
 import Quickshell
-import Quickshell.Io
 import qs.src.core
 import qs.src.services.desktop
 // DataService — the reset, export and cleanup actions of Config → Data &
@@ -9,13 +8,14 @@ import qs.src.services.desktop
 //
 // Every action ends with finished(action, ok) so the page can show a ✓ (or
 // a failure) on its button. Shell commands run one at a time; `busy` is true
-// meanwhile. factoryReset() restarts the shell and never reports back.
+// meanwhile; paths go to the scripts as arguments ($1…). factoryReset()
+// restarts the shell and never reports back.
 Singleton {
     id: root
 
     signal finished(string action, bool ok)
 
-    readonly property bool busy: _proc.running
+    readonly property bool busy: _exec.busy
     // Human-readable size of Paths.cacheDir ("" = empty or missing).
     property string cacheSize: ""
 
@@ -59,13 +59,14 @@ Singleton {
             "[ -n \"$dir\" ] && [ \"$dir\" != \"$HOME\" ] || dir=\"$HOME/Documents\"; " +
             "mkdir -p \"$dir\" && " +
             "f=\"$dir/synapse_tasks_$(date +%Y-%m-%d_%H%M%S).json\" && " +
-            "cp " + Paths.shellQuote(TaskService.filePath) + " \"$f\" && " +
-            "{ notify-send --app-name Synapse --icon document-save 'Tasks exported' \"$f\" || true; }")
+            "cp \"$1\" \"$f\" && " +
+            "{ notify-send --app-name Synapse --icon document-save 'Tasks exported' \"$f\" || true; }",
+            [TaskService.filePath])
     }
 
     // TaskService empties the file, then the board (only if the write worked).
     function clearTasks() {
-        if (_proc.running) {
+        if (_exec.busy) {
             root.finished("tasks", false)
             return
         }
@@ -85,13 +86,11 @@ Singleton {
 
     // ── Cache & reset ────────────────────────────────────────────────────────
     function clearCache() {
-        const d = Paths.shellQuote(Paths.cacheDir)
-        root._run("cache", "[ ! -d " + d + " ] || find " + d + " -mindepth 1 -delete")
+        root._run("cache", '[ ! -d "$1" ] || find "$1" -mindepth 1 -delete', [Paths.cacheDir])
     }
 
     function refreshCacheSize() {
-        if (_sizeProc.running) return
-        _sizeProc.running = true
+        if (!_size.busy) _size.run()
     }
 
     // Deletes user_data/ (except the installer's config_Provider.json) and the
@@ -99,53 +98,51 @@ Singleton {
     // outside user_data/ and stay. The deletion runs in a detached shell after
     // this quickshell has exited, so nothing in memory writes its file back.
     function factoryReset() {
-        const ud    = Paths.shellQuote(Paths.userDataDir)
-        const cache = Paths.shellQuote(Paths.cacheDir)
-        const dir   = String(Quickshell.shellDir).replace(/\/+$/, "")
-        const start = dir === Paths.home + "/.config/quickshell"
-            ? "quickshell" : "quickshell -p " + Paths.shellQuote(dir)
+        const dir = String(Quickshell.shellDir).replace(/\/+$/, "")
+        // Empty when quickshell runs its default config (`quickshell`),
+        // otherwise the dev checkout it was started with (`quickshell -p dir`).
+        const custom = dir === Paths.home + "/.config/quickshell" ? "" : dir
+        // Runs detached: $1 quickshell's pid, $2 user_data, $3 the cache, $4 custom.
         const script =
             "kill \"$1\"; " +
             "for i in $(seq 50); do kill -0 \"$1\" 2>/dev/null || break; sleep 0.1; done; " +
-            "[ ! -d " + ud + " ] || find " + ud + " -mindepth 1 -maxdepth 1 ! -name config_Provider.json -exec rm -rf {} +; " +
-            "rm -rf " + cache + "; " +
-            "exec " + start + " >/dev/null 2>&1 </dev/null"
-        // $PPID of this bash is quickshell itself.
-        _resetProc.command = ["bash", "-c",
-            "setsid -f bash -c " + Paths.shellQuote(script) + " _ \"$PPID\""]
-        _resetProc.running = true
+            "[ ! -d \"$2\" ] || find \"$2\" -mindepth 1 -maxdepth 1 ! -name config_Provider.json -exec rm -rf {} +; " +
+            "rm -rf \"$3\"; " +
+            "if [ -n \"$4\" ]; then exec quickshell -p \"$4\" >/dev/null 2>&1 </dev/null; " +
+            "else exec quickshell >/dev/null 2>&1 </dev/null; fi"
+        // In this outer bash $PPID is quickshell itself, $0 the script above.
+        _reset.run(["bash", "-c", 'setsid -f bash -c "$0" _ "$PPID" "$1" "$2" "$3"',
+                    script, Paths.userDataDir, Paths.cacheDir, custom])
     }
 
     // ── Runner ───────────────────────────────────────────────────────────────
     property string _action: ""
 
-    function _run(action, cmd) {
-        if (_proc.running) {
+    // Runs `script` with `args` as $1, $2…; one action at a time.
+    function _run(action, script, args) {
+        if (_exec.busy) {
             root.finished(action, false)
             return
         }
         root._action = action
-        _proc.command = ["bash", "-c", cmd]
-        _proc.running = true
+        _exec.run(["bash", "-c", script, "--"].concat(args ?? []))
     }
 
-    property Process _proc: Process {
-        onExited: function(exitCode) {
+    property Exec _exec: Exec {
+        onFinished: ok => {
             const action = root._action
             root._action = ""
             if (action === "cache") root.refreshCacheSize()
-            root.finished(action, exitCode === 0)
+            root.finished(action, ok)
         }
     }
 
-    property Process _sizeProc: Process {
+    property Exec _size: Exec {
         command: ["bash", "-c",
-            "[ -d " + Paths.shellQuote(Paths.cacheDir) + " ] && [ -n \"$(ls -A " + Paths.shellQuote(Paths.cacheDir) + ")\" ] " +
-            "&& du -sh " + Paths.shellQuote(Paths.cacheDir) + " | cut -f1 || true"]
-        stdout: StdioCollector {
-            onStreamFinished: root.cacheSize = text.trim()
-        }
+            '[ -d "$1" ] && [ -n "$(ls -A "$1")" ] && du -sh "$1" | cut -f1 || true',
+            "--", Paths.cacheDir]
+        onSucceeded: out => root.cacheSize = out.trim()
     }
 
-    property Process _resetProc: Process {}
+    property Exec _reset: Exec {}
 }

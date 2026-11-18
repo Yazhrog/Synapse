@@ -8,7 +8,6 @@ import qs.src.services.system
 import qs.src.services.time
 import qs.src.state
 import qs.src.surface
-
 // App — the composition root: starts the services that must run from boot
 // and creates the per-screen shell. Everything that wires features into the
 // framework lives in this folder (popup and action manifests join in #144 and
@@ -29,6 +28,12 @@ Scope {
     property var _wifi:       WifiService
     property var _bluetooth:  BluetoothService
     property var _vpn:        VpnService
+
+    // Services raise events; opening UI for them is wired here.
+    Connections {
+        target: BatteryWarningService
+        function onCritical(level) { Popups.showBatteryCritical(level) }
+    }
 
     // One Dynamic Surface per screen (#37): frame, bar and every popup.
     ShellHost {}

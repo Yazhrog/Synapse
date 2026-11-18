@@ -1,23 +1,30 @@
 import QtQuick
 import qs.src.components.base
+import qs.src.core
 import qs.src.services.system
 import qs.src.theme
 Item {
     id: root
 
-    CpuService         { id: cpu;     active: root.visible }
-    MemService         { id: mem;     active: root.visible }
-    NetService         { id: net;     active: root.visible }
-    ThermalService     { id: thermal; active: root.visible }
-    FanControl         { id: fan }
-    DiskService        { id: disk;    active: root.visible }
-    EnvyControlService { id: envy }
-    CpuFreqService     { id: cpuFreq }
-    GpuService {
-        id:       gpu
-        active:   root.visible
-        envyMode: envy.currentMode
-    }
+    // The system services are singletons that poll only while leased: this
+    // page holds a lease on each while it is shown.
+    readonly property var cpu:     CpuService
+    readonly property var mem:     MemService
+    readonly property var net:     NetService
+    readonly property var thermal: ThermalService
+    readonly property var fan:     FanControl
+    readonly property var disk:    DiskService
+    readonly property var envy:    EnvyControlService
+    readonly property var cpuFreq: CpuFreqService
+    readonly property var gpu:     GpuService
+
+    Lease { service: CpuService;     active: root.visible }
+    Lease { service: MemService;     active: root.visible }
+    Lease { service: NetService;     active: root.visible }
+    Lease { service: ThermalService; active: root.visible }
+    Lease { service: DiskService;    active: root.visible }
+    Lease { service: CpuFreqService; active: root.visible }
+    Lease { service: GpuService;     active: root.visible }
 
     Column {
         anchors {

@@ -1,8 +1,9 @@
 pragma Singleton
 import QtQuick
+import qs.src.services.desktop
+import qs.src.services.media
 import Quickshell
 import Quickshell.Io
-import qs.src.services.media
 // ─────────────────────────────────────────────────────────────
 // IpcManager — centralized entry point for all external IPC signals.
 //
@@ -142,7 +143,7 @@ Singleton {
                  ScreenRecService.cancelSetup()
              } else {
                  Popups.closeAll()
-                 ShellState.screenRecord = true
+                 ScreenRecService.openSetup()
              }
         }
     }
@@ -150,11 +151,10 @@ Singleton {
     property var focusMode: IpcHandler {
         target: "focus-toggle"
         function toggle() {
-            root.focusToggleRequested()
+            FocusModeService.toggle()
         }
     }
 
-    signal focusToggleRequested()
 
     // ── Quick Controls OSD (volume/brightness keys) ──────────
     // Reveals the Quick Controls OSD briefly, then auto-hides — see

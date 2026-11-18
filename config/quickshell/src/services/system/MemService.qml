@@ -1,61 +1,39 @@
+pragma Singleton
 import QtQuick
-import Quickshell.Io
+import Quickshell
+import qs.src.core
+import "sysinfo.js" as SysInfo
 
-// Reads /proc/meminfo every 2s via cat (FileView can't read virtual fs).
-// Exposes:
-//   real usagePercent   — 0.0 to 100.0
-//   real usedGb
-//   real totalGb
-//   string usedStr      — e.g. "11.2 GB"
-//   string totalStr     — e.g. "16.0 GB"
-
-QtObject {
+// MemService — memory use from /proc/meminfo (FileView can't read /proc),
+// every 2 s while watched (System page).
+Singleton {
     id: root
 
-    property bool active:       true
-    property real usagePercent: 0.0
-    property real usedGb:       0.0
-    property real totalGb:      0.0
-    property string usedStr:    "—"
-    property string totalStr:   "—"
+    property real   usagePercent: 0
+    property real   usedGb:       0
+    property real   totalGb:      0
+    property string usedStr:      "—"
+    property string totalStr:     "—"
 
-    property var _proc: Process {
+    // ── Lease: polls only while a view shows the data ──────────────────────
+    readonly property bool watched: _leases.watched
+    function acquire() { _leases.acquire() }
+    function release() { _leases.release() }
+    property LeaseCount _leases: LeaseCount {}
+
+    Exec {
+        id: read
         command: ["cat", "/proc/meminfo"]
-        running: false
-        stdout: StdioCollector {
-            onStreamFinished: root._parse(text)
+        parse: SysInfo.parseMeminfo
+        onSucceeded: m => {
+            if (!m) return
+            root.totalGb      = m.totalGb
+            root.usedGb       = m.usedGb
+            root.usagePercent = m.percent
+            root.usedStr      = m.usedGb + " GB"
+            root.totalStr     = m.totalGb + " GB"
         }
     }
 
-    property var _timer: Timer {
-        interval: 2000
-        running:  root.active
-        repeat:   true
-        onTriggered: {
-            _proc.running = false
-            _proc.running = true
-        }
-    }
-
-    function _parse(text) {
-        var total = 0, avail = 0
-        var lines = text.split("\n")
-        for (var i = 0; i < lines.length; i++) {
-            var parts = lines[i].trim().split(/\s+/)
-            if (parts[0] === "MemTotal:")     total = parseFloat(parts[1])
-            if (parts[0] === "MemAvailable:") avail = parseFloat(parts[1])
-        }
-        if (total <= 0) return
-
-        var used = total - avail
-        root.totalGb      = Math.round(total / 1024 / 1024 * 10) / 10
-        root.usedGb       = Math.round(used  / 1024 / 1024 * 10) / 10
-        root.usagePercent = Math.round(used / total * 100)
-        root.usedStr      = root.usedGb  + " GB"
-        root.totalStr     = root.totalGb + " GB"
-    }
-
-    Component.onCompleted: {
-        _proc.running = true
-    }
+    Poller { interval: 2000; running: root.watched; onTick: read.run() }
 }
