@@ -1,6 +1,6 @@
 import QtQuick
 import Quickshell
-import Quickshell.Services.Pipewire
+import qs.src.services.media
 import qs.src.services.system
 import qs.src.theme
 // QuickControlContent — the volume and brightness sliders of the Quick
@@ -13,10 +13,7 @@ Item {
     property bool fastPoll: false
 
     // ── Audio State ───────────────────────────────────────────────────────────
-    readonly property var sink: Pipewire.defaultAudioSink
-    PwObjectTracker {
-        objects: root.sink ? [root.sink] : []
-    }
+    readonly property var sink: AudioService.sink
 
     Binding {
         target: BrightnessService; property: "fastPoll"
@@ -42,10 +39,10 @@ Item {
             active: root.sink?.ready ?? false
 
             onVolumeChanged: function(v) {
-                if (root.sink?.ready) root.sink.audio.volume = v
+                AudioService.setVolume(v)
             }
             onMuteToggled: {
-                if (root.sink?.ready) root.sink.audio.muted = !root.sink.audio.muted
+                AudioService.toggleMute()
             }
         }
 

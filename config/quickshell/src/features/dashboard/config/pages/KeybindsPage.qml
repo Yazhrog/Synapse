@@ -4,7 +4,7 @@ import qs.src.services.desktop
 import qs.src.theme
 // KeybindsPage — Config → Keybinds: every shell action by group, one
 // KeybindRow each. Changes are staged as pending (amber) until Save; the
-// banner shows how many. While a row captures, KeybindService.isCapturing
+// banner shows how many. While a row captures, KeybindService.setCapturing()
 // puts Hyprland in a pass-through submap so the keys reach the shell.
 
 Item {
@@ -18,11 +18,8 @@ Item {
     property string capturingAction: ""
     readonly property bool anyCapturing: capturingAction !== ""
 
-    // Keep KeybindService in sync so external handlers can observe it.
-    // In ShellState / Popups, watch KeybindService.isCapturing and dispatch:
-    //   true  →  hyprctl dispatch submap, clean
-    //   false →  hyprctl dispatch submap, reset
-    onAnyCapturingChanged: KeybindService.isCapturing = anyCapturing
+    // KeybindService puts Hyprland in the pass-through submap while capturing.
+    onAnyCapturingChanged: KeybindService.setCapturing(anyCapturing)
 
     // ── Pending changes ───────────────────────────────────────────────────────
     property var  _pending:   ({})

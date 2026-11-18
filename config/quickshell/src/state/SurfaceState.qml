@@ -40,7 +40,7 @@ Singleton {
     }
 
     // The screen-recording setup owns the screen: nothing opens over it.
-    readonly property bool _blocked: ShellState.screenRecord && !ScreenRecService.recording
+    readonly property bool _blocked: ShellModes.screenRecord && !ScreenRecService.recording
 
     // ── Resolution scaling ──────────────────────────────────────────────────
     // Surface sizes are designed for a 1080 px tall screen. The factor comes

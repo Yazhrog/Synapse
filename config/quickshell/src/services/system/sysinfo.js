@@ -132,6 +132,21 @@ function averageFreqGhz(text) {
     return (sum / lines.length / 1e6).toFixed(2) + " GHz"
 }
 
+// `fastfetch -c systemstats` output ("Key: Value" per line, maybe with ANSI
+// colours) → [{ key, value }]; lines without ": " are skipped.
+function parseFastfetch(raw) {
+    const out = []
+    for (const l of String(raw).replace(/\x1B\[[0-9;]*[mGKHF]/g, "").split("\n")) {
+        const line = l.trim()
+        if (line === "") continue
+        const sep = line.indexOf(": ")
+        if (sep === -1) continue
+        out.push({ key: line.substring(0, sep).trim(), value: line.substring(sep + 2).trim() })
+    }
+    return out
+}
+
 if (typeof module !== "undefined")
     module.exports = { parseCpuStat, cpuPercent, parseMeminfo, formatMib, parseDf, parseRouteIface,
-                       parseNetDev, formatRate, parseSensors, parseNvidiaUsage, dominantGovernor, averageFreqGhz }
+                       parseNetDev, formatRate, parseSensors, parseNvidiaUsage, dominantGovernor, averageFreqGhz,
+                       parseFastfetch }

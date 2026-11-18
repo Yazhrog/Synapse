@@ -1,8 +1,6 @@
 import QtQuick
 import Quickshell
-import Quickshell.Io
-import Quickshell.Hyprland
-import qs.src.state
+import qs.src.services.desktop
 // ─── LayoutIndicator ────────────────────────────────────────────────────────
 // Small icon button beside the Workspaces module.
 // Shows the active tiling layout for the focused workspace.
@@ -13,11 +11,8 @@ import qs.src.state
 //   monocle  → 󰊓     (nf-md-fullscreen)
 //   scroller → 󰔧     (nf-md-scroll_horizontal)
 //
-// Update triggers (event-driven, no forever-loop):
-//   • Component.onCompleted     — initial read
-//   • focusedWorkspaceChanged   — workspace switch
-//   • focusedToplevelChanged    — window focus change (covers most layout shifts)
-//   • 4 s safety timer          — catches layout change with no following event
+// KeyboardLayoutService reads the layout (on Hyprland events and every 4 s)
+// and switches it: left click next, right click previous.
 // ────────────────────────────────────────────────────────────────────────────
 
 Item {
@@ -26,12 +21,10 @@ Item {
     implicitWidth:  26
     implicitHeight: 26
 
-    // ── State ────────────────────────────────────────────────────────────────
+    // ── State (KeyboardLayoutService) ─────────────────────────────────────────
 
-    property string configProvider: ShellState.configProvider
-    property string currentLayout: ""
-    property string numWindows: ""
-    property var availableLayouts: ["dwindle", "master", "monocle", "scrolling"]
+    readonly property string currentLayout: KeyboardLayoutService.layout
+    readonly property string numWindows:    KeyboardLayoutService.numWindows
 
     // ── Symbol map ───────────────────────────────────────────────────────────
 
@@ -45,84 +38,7 @@ Item {
         }
     }
 
-    // ── hyprctl query ────────────────────────────────────────────────────────
-    // Runs `hyprctl -j activeworkspace` and parses `lastlayout` from the JSON.
-
-    Process {
-        id: queryProc
-
-        command: ["hyprctl", "-j", "activeworkspace"]
-        running: false
-
-        stdout: StdioCollector {
-            id: collector
-            onStreamFinished: {
-                try {
-                    const obj = JSON.parse(collector.text)
-                    if (obj && obj.tiledLayout) {
-                        root.currentLayout = obj.tiledLayout.toLowerCase()
-                        root.numWindows = obj.windows > 0 ? obj.windows.toString() : "  "
-                    } 
-                } catch (e) {
-                    // malformed JSON — keep current value
-                }
-            }
-        }
-    }
-
-    function refresh() {
-        if (!queryProc.running) queryProc.running = true
-    }
-
-    // ── Triggers ─────────────────────────────────────────────────────────────
-
-    Component.onCompleted: refresh()
-
-    Connections {
-        target: Hyprland
-
-        // Quickshell emits (name, data) for raw events
-        function onRawEvent(event) {
-			// console.log("RawEvent_name: "+ event.name)
-			// console.log("RawEvent_data: "+ event.data)
-            refresh()  // Refresh on every event; the proc will ignore if still running
-        }
-    }
-
-    // Safety net: catches the case where the user changes layout
-    // but no window event follows (e.g. switch layout on an empty workspace).
-    Timer {
-        interval: 4000
-        running:  true
-        repeat:   true
-        onTriggered: root.refresh()
-    }
-    // ── Layout Changer ───────────────────────────────────────────────────────
-    Process {
-        id: setLayoutProc
-        running: false
-    }
-
-    function cycleLayout(step) {
-        let idx = availableLayouts.indexOf(root.currentLayout)
-        if (idx === -1) idx = 0 // Fallback if unknown
-        
-        // Calculate next index (handles negative steps for right-click)
-        idx = (idx + step + availableLayouts.length) % availableLayouts.length
-        let newLayout = availableLayouts[idx]
-
-        // 1. Run the hyprctl command silently based on config style
-        if (root.configProvider === "lua") {
-            setLayoutProc.command = ["hyprctl", "eval", `hl.config({ general = { layout = "${newLayout}" } })`]
-        } else {
-            setLayoutProc.command = ["hyprctl", "keyword", "general:layout", newLayout]
-        }
-        
-        setLayoutProc.running = true
-
-        // 2. Optimistically update the UI instantly (no waiting for IPC/Timer)
-        root.currentLayout = newLayout
-    }
+    function cycleLayout(step) { KeyboardLayoutService.cycle(step) }
 
     // ── Visual ───────────────────────────────────────────────────────────────
 

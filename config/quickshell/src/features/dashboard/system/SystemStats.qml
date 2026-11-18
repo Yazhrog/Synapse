@@ -1,53 +1,16 @@
 import QtQuick
-import Quickshell.Io
+import qs.src.core
+import qs.src.services.system
 import qs.src.theme
-// Parses fastfetch output into key/value rows and renders them styled.
-// Each line from fastfetch is "Key: Value" — we split on ": " (first occurrence).
+// The fastfetch system summary (SystemInfoService) as styled key/value rows.
 
 Item {
     id: root
 
-    onVisibleChanged: if (visible) reload()
+    // Parsed rows: [{key, value}], read again each time the view is shown.
+    readonly property var rows: SystemInfoService.rows
 
-    // Parsed rows: [{key, value}]
-    property var rows: []
-
-    function reload() {
-        root.rows = []
-        ff.running = true
-    }
-
-    // Strip ANSI escape codes just in case
-    function stripAnsi(str) {
-        return str.replace(/\x1B\[[0-9;]*[mGKHF]/g, "")
-    }
-
-    function parse(raw) {
-        var lines = stripAnsi(raw).split("\n")
-        var result = []
-        for (var i = 0; i < lines.length; i++) {
-            var line = lines[i].trim()
-            if (line === "") continue
-            var sep = line.indexOf(": ")
-            if (sep === -1) continue
-            result.push({
-                key:   line.substring(0, sep).trim(),
-                value: line.substring(sep + 2).trim()
-            })
-        }
-        return result
-    }
-
-    Process {
-        id: ff
-        command: ["fastfetch", "-c", "systemstats"]
-        running: true
-
-        stdout: StdioCollector {
-            id: ffOut
-            onStreamFinished: root.rows = root.parse(ffOut.text)
-        }
-    }
+    Lease { service: SystemInfoService; active: root.visible }
 
     // --- Rows ---
     Column {

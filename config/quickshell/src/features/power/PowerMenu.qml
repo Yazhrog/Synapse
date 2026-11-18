@@ -1,5 +1,5 @@
 import QtQuick
-import Quickshell.Io
+import qs.src.services.system
 import qs.src.state
 import qs.src.theme
 // Power menu — vertical list of power action buttons.
@@ -94,20 +94,9 @@ Column {
         },
     ]
 
-    // Direct runner for non-confirm actions
-    Process {
-        id: runner
-        property var pendingCmd: []
-        command: pendingCmd
-        onRunningChanged: if (!running) pendingCmd = []
-    }
-
+    // Lock and suspend need no confirmation: PowerService runs them now.
     function runDirect(action) {
-        switch (action) {
-            case "lock":    runner.pendingCmd = ["loginctl", "lock-session"];    break
-            case "suspend": runner.pendingCmd = ["systemctl", "suspend"];        break
-        }
-        runner.running = true
+        PowerService.run(action)
         Popups.close("powerMenu")
     }
 

@@ -6,7 +6,7 @@ import qs.src.services.data
 // FocusModeService — Focus Mode: hides the bar and tightens Hyprland's gaps.
 //
 // Turning it on saves the current gaps_in/gaps_out and sets 0/10; turning it
-// off restores them. `active` follows once hyprctl is done (ShellState.focusMode
+// off restores them. `active` follows once hyprctl is done (ShellModes.focusMode
 // mirrors it for the surface). Toggled from Quick Settings and the
 // focus-toggle IPC; with the "Boot into Focus Mode" pref (Config → General) it
 // turns on once at startup.

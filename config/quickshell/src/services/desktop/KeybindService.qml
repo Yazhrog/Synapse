@@ -19,11 +19,17 @@ Singleton {
     readonly property string configProvider: Hypr.provider
 
     // ── Capture gate ──────────────────────────────────────────────────────────
-    // Set true by KeybindsPage while a combo is being recorded.
-    // In your state handler (ShellState / Popups), observe this and dispatch:
-    //   true  →  hyprctl dispatch submap, clean
-    //   false →  hyprctl dispatch submap, reset
-    property bool isCapturing: false
+    // KeybindsPage calls setCapturing(true) while a combo is being recorded:
+    // Hyprland goes to the pass-through submap "Synapse_clean" (no binds), so
+    // the keys reach the shell, and back to "reset" when capture ends.
+    readonly property bool isCapturing: _capturing
+    property bool _capturing: false
+
+    function setCapturing(on: bool) {
+        if (on === _capturing) return
+        _capturing = on
+        Hypr.submap(on ? "Synapse_clean" : "reset")
+    }
 
     // ── Defaults ──────────────────────────────────────────────────────────────
     // Single source of truth: config/quickshell/src/config/keybind-defaults.json.

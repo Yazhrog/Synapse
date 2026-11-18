@@ -1,65 +1,19 @@
 import QtQuick
 import QtQuick.Effects
-import Quickshell.Io
-import Quickshell.Services.Mpris
 import qs.src.services.media
 import qs.src.theme
 Item {
     id: root
 
-    // ── Source allowlist ──────────────────────────────────────────────────────
-    readonly property var _allowed: [
-        "spotify", "youtube",
-        "firefox", "chromium", "chrome",
-        "brave", "edge", "opera", "vivaldi", "safari", "arc"
-    ]
-
-    // Explicit count tracker — forces filteredPlayers to re-evaluate whenever
-    // a player joins or leaves the MPRIS list.
-    property int _mprisCount: Mpris.players.values.length
-
-    readonly property var filteredPlayers: {
-        var _dep = root._mprisCount  // explicit dependency on list size changes
-        var result = []
-        var vals = Mpris.players.values
-        for (var i = 0; i < vals.length; i++) {
-            var id = (vals[i].identity || "").toLowerCase()
-            for (var j = 0; j < root._allowed.length; j++) {
-                if (id.indexOf(root._allowed[j]) !== -1) {
-                    result.push(vals[i])
-                    break
-                }
-            }
-        }
-        return result
-    }
-
-    property int selectedPlayerIndex: 0
+    // ── MPRIS (MediaService picks the player) ─────────────────────────────────
+    readonly property var filteredPlayers:     MediaService.players
+    readonly property int selectedPlayerIndex: MediaService.selectedIndex
     property bool _dropdownOpen: false
 
     onVisibleChanged: if (!visible) root._dropdownOpen = false
 
-    onFilteredPlayersChanged: {
-        // Prefer keeping the same player object selected after list change.
-        var oldPlayer = root.player
-        if (oldPlayer) {
-            for (var i = 0; i < root.filteredPlayers.length; i++) {
-                if (root.filteredPlayers[i] === oldPlayer) {
-                    root.selectedPlayerIndex = i
-                    return
-                }
-            }
-        }
-        // Fallback: clamp to valid range
-        if (root.selectedPlayerIndex >= root.filteredPlayers.length)
-            root.selectedPlayerIndex = Math.max(0, root.filteredPlayers.length - 1)
-    }
-
-    // ── MPRIS ─────────────────────────────────────────────────────────────────
-    readonly property var player: root.filteredPlayers.length > 0
-                                  ? root.filteredPlayers[root.selectedPlayerIndex] : null
-
-    readonly property bool   isPlaying: root.player?.playbackState === MprisPlaybackState.Playing ?? false
+    readonly property var  player:    MediaService.player
+    readonly property bool isPlaying: MediaService.isPlaying
     readonly property string artUrl:    root.player?.trackArtUrl ?? ""
 
     readonly property string title: {
@@ -253,18 +207,10 @@ Item {
                     MouseArea {
                         anchors.fill: parent
                         onClicked: {
-                            if (!root.player) return
                             switch (modelData.key) {
-                                case "play":
-                                    if (root.player.canTogglePlaying)
-                                        root.player.isPlaying = !root.player.isPlaying
-                                    break
-                                case "prev":
-                                    if (root.player.canGoPrevious) root.player.previous()
-                                    break
-                                case "next":
-                                    if (root.player.canGoNext) root.player.next()
-                                    break
+                                case "play": MediaService.togglePlaying(); break
+                                case "prev": MediaService.previous();      break
+                                case "next": MediaService.next();          break
                             }
                         }
                     }
@@ -285,7 +231,7 @@ Item {
                         onClicked: function(mouse) {
                             if (root.player && root.length > 0) {
                                 var f = mouse.x / width
-                                root.player.position = f * root.length
+                                MediaService.seek(f * root.length)
                                 root._pos = f * root.length
                             }
                         }
@@ -411,7 +357,7 @@ Item {
                         MouseArea {
                             anchors.fill: parent
                             onClicked: {
-                                root.selectedPlayerIndex = index
+                                MediaService.select(index)
                                 root._dropdownOpen = false
                             }
                         }

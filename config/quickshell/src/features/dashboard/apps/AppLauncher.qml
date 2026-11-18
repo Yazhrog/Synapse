@@ -1,6 +1,5 @@
 import QtQuick
 import QtQuick.Controls
-import Quickshell.Io
 import Quickshell
 import qs.src.components.base
 import qs.src.services.desktop
@@ -17,8 +16,8 @@ Item {
     id: root
 
     // ── State ─────────────────────────────────────────────────────────────────
-    property var  apps:     []
-    property bool loading:  true
+    readonly property var  apps:    AppsService.apps
+    readonly property bool loading: AppsService.loading
     property int  selIndex: -1
     property string query:  ""
 
@@ -63,31 +62,18 @@ Item {
     readonly property var selApp:
         selIndex >= 0 && selIndex < filtered.length ? filtered[selIndex] : null
 
-    // ── Load apps ─────────────────────────────────────────────────────────────
-    Process {
-        id: listProc
-        command: ["python3", Quickshell.shellDir + "/src/scripts/list_apps.py"]
-        running: false
-        stdout: StdioCollector {
-            id: listBuf
-            onStreamFinished: {
-                try   { root.apps = JSON.parse(listBuf.text) }
-                catch (e) { root.apps = [] }
-                root.loading  = false
-                root.selIndex = root.apps.length > 0 ? 0 : -1
-            }
-        }
+    // ── Load apps (AppsService, read again each time the launcher is shown) ──
+    Connections {
+        target: AppsService
+        function onListed() { root.selIndex = AppsService.apps.length > 0 ? 0 : -1 }
     }
 
     onVisibleChanged: {
         if (!visible) return
-        root.loading   = true
-        root.apps      = []
         root.query     = ""
         root.selIndex  = -1
         searchInput.text = ""
-        listProc.running = false
-        listProc.running = true
+        AppsService.refresh()
         focusTimer.restart()
     }
 
@@ -106,16 +92,8 @@ Item {
     }
 
     // ── Launch ────────────────────────────────────────────────────────────────
-    Process {
-        id: launcher
-        command: []
-        running: false
-    }
-
     function launch(exec) {
-        launcher.command = ["bash", "-c", "setsid " + exec + " &>/dev/null &"]
-        launcher.running = false
-        launcher.running = true
+        AppsService.launch(exec)
         Popups.close("dashboard")
     }
 
