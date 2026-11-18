@@ -5,6 +5,7 @@ import qs.src.theme
 PopupSpec {
     key:    "powerMenu"
     region: "leftCenter"
+    action: "PowerMenu-toggle"; actionLabel: "Power Menu"
     size:   s => [s.px(Metrics.powerMenuWidth + 2 * Metrics.powerMenuPadding),
                   s.px(Metrics.powerMenuHeight + 2 * Metrics.powerMenuPadding)]
     place:  (s, w, h) => Qt.rect(s.px(4), s.px(Metrics.powerMenuPadding),

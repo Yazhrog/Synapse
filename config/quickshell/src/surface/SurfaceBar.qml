@@ -1,22 +1,25 @@
 import QtQuick
-import qs.src.features.bar.center
-import qs.src.features.bar.left
-import qs.src.features.bar.right
 import qs.src.state
 import qs.src.theme
-// SurfaceBar — the three notch contents of the bar (left, centre, right),
-// placed in the notches DynamicSurface draws. Fades out in focus mode; in
-// pills the contents are centred in the floating capsules.
+// SurfaceBar — the bar's three zones (left, centre, right), placed in the
+// notches DynamicSurface draws. The widgets come from
+// features/bar/BarWidgets.qml (handed down as `widgets`); each zone is a
+// BarZone. Fades out in focus mode; in pills the contents are centred in the
+// floating capsules.
 
 Item {
     id: bar
 
     // The DynamicSurface: notch sizes, style, open region, scale
     required property var surface
+    // BarWidgetSpec list (features/bar/BarWidgets.qml)
+    property var widgets: []
 
     // DynamicSurface sizes the notches from these
     readonly property real leftContentWidth:   leftContent.implicitWidth
-    readonly property real centerContentWidth: centerContent.implicitWidth
+    // The centre notch is as wide as its popup or its minimum width: its
+    // widgets size themselves to it.
+    readonly property real centerContentWidth: 0
     readonly property real rightContentWidth:  rightContent.implicitWidth
 
     opacity: ShellModes.focusMode ? 0 : 1
@@ -32,8 +35,11 @@ Item {
         width:  bar.surface.lWidth
         height: bar.surface.notchHeight
 
-        LeftContent {
+        BarZone {
             id: leftContent
+            zone:       "left"
+            widgets:    bar.widgets
+            spacing:    5
             localScale: bar.surface.localScale
             anchors.centerIn: parent
         }
@@ -45,8 +51,10 @@ Item {
         width:  bar.surface.cWidth
         height: bar.surface.notchHeight
 
-        CenterContent {
+        BarZone {
             id: centerContent
+            zone:       "center"
+            widgets:    bar.widgets
             localScale: bar.surface.localScale
             anchors.centerIn: parent
             // The dashboard covers the notch while open.
@@ -62,12 +70,21 @@ Item {
         height: bar.surface.notchHeight
         clip:   true
 
-        RightContent {
+        BarZone {
             id: rightContent
+            zone:       "right"
+            widgets:    bar.widgets
+            spacing:    6
             localScale: bar.surface.localScale
             anchors.right:          parent.right
             anchors.verticalCenter: parent.verticalCenter
             anchors.rightMargin:    bar.surface.notchPadding
+
+            // The right notch grows for notifications and network: its
+            // widgets fade out meanwhile.
+            opacity: (Popups.notificationsOpen || Popups.networkOpen) ? 0 : 1
+            visible: opacity > 0
+            Behavior on opacity { NumberAnimation { duration: 150 } }
         }
     }
 }

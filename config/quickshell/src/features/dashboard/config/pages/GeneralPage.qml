@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Controls
 import qs.src.components.settings
+import qs.src.state
 // GeneralPage — Config → General: everyday shell preferences.
 //
 // Every row edits a PrefsService key and applies live. Defaults match the
@@ -10,6 +11,14 @@ Item {
 
     // Back to the top (the dashboard closed).
     function reset() { flick.cancelFlick(); flick.contentY = 0 }
+
+    // The default-tab options come from the popups' page registries (through
+    // their PopupSpec: this page is itself a dashboard page).
+    function _pageOptions(popup) {
+        const pages = SurfaceState.specOf(popup)?.pages ?? []
+        return [{ value: "last", label: "Last used" }]
+            .concat(Array.from(pages, p => ({ value: p.key, label: p.label })))
+    }
 
     Flickable {
         id: flick
@@ -93,14 +102,7 @@ Item {
                     label:       "Default dashboard tab"
                     description: "Shown when the dashboard opens from the bar."
                     prefKey:     "defaultDashboardPage"
-                    options: [
-                        { value: "last",     label: "Last used" },
-                        { value: "home",     label: "Home"      },
-                        { value: "stats",    label: "System"    },
-                        { value: "kanban",   label: "Tasks"     },
-                        { value: "launcher", label: "Apps"      },
-                        { value: "config",   label: "Config"    }
-                    ]
+                    options: root._pageOptions("dashboard")
                 }
 
                 SettingsDivider {}
@@ -109,12 +111,7 @@ Item {
                     label:       "Default audio tab"
                     description: "Shown when the audio popup opens from the bar."
                     prefKey:     "defaultAudioPage"
-                    options: [
-                        { value: "last",   label: "Last used" },
-                        { value: "output", label: "Output"    },
-                        { value: "input",  label: "Input"     },
-                        { value: "mixer",  label: "Mixer"     }
-                    ]
+                    options: root._pageOptions("audio")
                 }
             }
 

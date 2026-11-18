@@ -3,12 +3,14 @@ import qs.src.components.base
 import qs.src.core
 import qs.src.services.network
 import qs.src.state
-// NetworkContent — the network popup's UI: the Wi-Fi / Bluetooth / VPN /
-// Hotspot tab pages and the tab bar. Hosted by the right region of DynamicSurface.
+// NetworkContent — the network popup's UI: the tab pages and the tab bar,
+// both from NetworkTabs. Hosted by the right region of DynamicSurface.
 Item {
     id: root
 
     property string page: "wifi"
+
+    NetworkTabs { id: registry }
 
     // VpnService follows NetworkManager while the popup is open.
     Lease { service: VpnService; active: Popups.networkOpen }
@@ -24,30 +26,11 @@ Item {
             bottomMargin: 8
         }
 
-        Loader {
+        PageStack {
             anchors.fill: parent
-            active:       root.page === "wifi"
-            source:       "WifiTab.qml"
-        }
-
-        Loader {
-            anchors.fill: parent
-            active:       root.page === "bluetooth"
-            source:       "BluetoothTab.qml"
-        }
-
-        // VPN — WireGuard connections
-        Loader {
-            anchors.fill: parent
-            active:       root.page === "vpn"
-            source:       "VPNTab.qml"
-        }
-
-        // Hotspot — virtual AP interface
-        Loader {
-            anchors.fill: parent
-            active:       root.page === "hotspot"
-            source:       "HotspotTab.qml"
+            pages:   registry.pages
+            current: root.page
+            lazy:    true
         }
     }
 
@@ -64,12 +47,7 @@ Item {
         divider:      false
         width:        parent.width
         currentPage:  root.page
-        model: [
-            { key: "wifi",      icon: "󰤨", label: "Wi-Fi"     },
-            { key: "bluetooth", icon: "󰂯", label: "Bluetooth" },
-            { key: "vpn",       icon: "󰦝", label: "VPN"       },
-            { key: "hotspot",   icon: "󰀃", label: "Hotspot"   },
-        ]
+        model:        Array.from(registry.pages, p => ({ key: p.key, icon: p.icon, label: p.label }))
         onPageChanged: function(key) { Popups.networkPage = key }
     }
 }

@@ -1,28 +1,34 @@
 import QtQuick
 import qs.src.components.base
-import qs.src.features.dashboard.apps
-import qs.src.features.dashboard.config
-import qs.src.features.dashboard.home
-import qs.src.features.dashboard.system
-import qs.src.features.dashboard.tasks
 import qs.src.state
-// DashboardContent — the dashboard UI: tab bar (Home / System / Tasks / Apps /
-// Config) and the page area. Hosted by the top region of DynamicSurface. The popup width per page comes from
-// Popups.dashboardPageWidth.
+// DashboardContent — the dashboard UI: the tab bar and the page area, both
+// from DashboardPages. Hosted by the top region of DynamicSurface; the popup
+// width per page comes from DashboardPages too (DashboardPopup).
 Item {
     id: root
 
     property string page: Popups.dashboardPage
 
-    // Runs after the close animation (DynamicSurface's afterClose): back to the
+    DashboardPages { id: registry }
+
+    // Runs after the close animation (the spec's afterClose): back to the
     // default tab, Config's first tab scrolled to the top and the clock view.
     function reset() {
         tabBar.reset()
-        shellConfig.reset()
-        dashHome.reset()
+        stack.resetAll()
     }
     // Gives focus back to whichever page item last had it (e.g. the launcher search).
     function focusPage() { pageArea.forceActiveFocus() }
+
+    // A page can dim the tab bar (Tasks, behind its delete dialog).
+    readonly property real _tabBarOpacity: {
+        let o = 1
+        for (const k in stack.items) {
+            const it = stack.items[k]
+            if (it && it.tabBarOpacity !== undefined) o = Math.min(o, it.tabBarOpacity)
+        }
+        return o
+    }
 
     Column {
         anchors.fill: parent
@@ -34,16 +40,9 @@ Item {
             orientation: "horizontal"
             width:       parent.width
             currentPage: root.page
-            model: [
-                { key: "home",     icon: "󰋜", label: "Home"   },
-                { key: "stats",    icon: "󰻠", label: "System" },
-                { key: "kanban",   icon: "󰄬", label: "Tasks"  },
-                { key: "launcher", icon: "󱓞", label: "Apps"   },
-                { key: "config",   icon: "󰒓", label: "Config" },
-            ]
+            model:       Array.from(registry.pages, p => ({ key: p.key, icon: p.icon, label: p.label }))
             onPageChanged: function(key) { Popups.dashboardPage = key }
-            // Fades with the board behind the task delete dialog
-            opacity: kanbanBoard.delConfirmId >= 0 ? kanbanBoard.dimOpacity : 1
+            opacity: root._tabBarOpacity
             Behavior on opacity { NumberAnimation { duration: 150 } }
         }
 
@@ -58,38 +57,12 @@ Item {
             width:  parent.width
             height: parent.height - tabBar.height
 
-            Item {
+            PageStack {
+                id: stack
                 anchors.fill: parent
-                visible:      root.page === "home"
-                HomePage { id: dashHome; anchors.fill: parent }
-            }
-
-            Item {
-                anchors.fill: parent
-                visible:      root.page === "stats"
-                SystemPage { anchors.fill: parent }
-            }
-
-            Item {
-                anchors.fill: parent
-                visible:      root.page === "kanban"
-                TaskBoard { id: kanbanBoard; anchors.fill: parent; overlayParent: root }
-            }
-
-            Item {
-                anchors.fill: parent
-                visible:      root.page === "launcher"
-                AppLauncher { anchors.fill: parent }
-            }
-
-            Item {
-                anchors.fill: parent
-                visible:      root.page === "config"
-                Item {
-                    anchors.fill: parent
-                    visible:      root.page === "config"
-                    ShellConfig { id: shellConfig; anchors.fill: parent }
-                }
+                pages:   registry.pages
+                current: root.page
+                host:    root
             }
 
             Keys.onEscapePressed: Popups.close("dashboard")

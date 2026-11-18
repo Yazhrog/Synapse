@@ -1,23 +1,15 @@
 import QtQuick
 import Quickshell
 import qs.src.services.media
-import qs.src.services.time
 import qs.src.state
 import qs.src.theme
 // CenterContent — the centre notch's scrollable carousel ("dynamic island").
 //
-// Items, in order (each only while it applies):
-//   "title"         — the focused app (always there)
-//   "music"         — an MPRIS player exists
-//   "timer"         — ClockService.timerStarted
-//   "stopwatch"     — ClockService.swStarted
-//   "record_setup"  — screen-recording setup is open
-//   "record_active" — recording
-//
-// New items scroll into view when the carousel is on the title; screen
-// recording always does. The timer forces itself into view at 30 s and 10 s
-// left, and blinks red under 30 s. Each item is its own component
-// (Notch*Item.qml, next to this file).
+// The items come from NotchItems: the active ones, by priority, each its own
+// component (Notch*Item.qml, next to this file). When an item becomes active
+// the carousel scrolls to it if its spec says so ("always", or "fromTitle":
+// only while the carousel is on the first item); an item can also ask with
+// requestScroll(force).
 
 Item {
 	// Set by the Dynamic Surface host (#39); contents adopt it progressively.
@@ -32,103 +24,57 @@ Item {
 	readonly property int fw: Theme.notchRadius
 	readonly property int requiredWidth: Theme.cNotchMinWidth
 
-	// ── MPRIS ─────────────────────────────────────────────────────────────────
-	readonly property var    player: MediaService.firstPlayer
-	readonly property string artUrl: player?.trackArtUrl ?? ""
+	NotchItems { id: registry }
 
 	// ── Dynamic item list ─────────────────────────────────────────────────────
 	property var  _items:         ["title"]
 	property int  _carouselIndex: 0
 	readonly property real _itemStride: 45  // 30px height + 15px spacing
 
-	function _rebuildItems(autoScrollType) {
-		var currentType = (_items.length > _carouselIndex)
-		? _items[_carouselIndex] : "title"
+	readonly property var _specs: {
+		const m = {}
+		for (let i = 0; i < registry.items.length; i++) m[registry.items[i].key] = registry.items[i]
+		return m
+	}
 
-		var list = ["title"]
-		if (root.player                    !== null) list.push("music")
-		if (ClockService.timerStarted)                   list.push("timer")
-		if (ClockService.swStarted)                      list.push("stopwatch")
-		if (ShellModes.screenRecord && !ScreenRecService.recording) list.push("record_setup")
-		if (ScreenRecService.recording)           list.push("record_active")
+	// Rebuilds the list of active items; with `scrollTo`, scrolls to that item
+	// (`force`: from anywhere, otherwise only from the first item).
+	function _rebuildItems(scrollTo, force) {
+		const currentType = (_items.length > _carouselIndex) ? _items[_carouselIndex] : _items[0]
 
+		const list = Array.from(registry.items)
+			.filter(it => it.active)
+			.sort((a, b) => a.priority - b.priority)
+			.map(it => it.key)
 		root._items = list
 
-		var idx = list.indexOf(currentType)
+		let idx = list.indexOf(currentType)
 		if (idx < 0) idx = 0
 
-		if (autoScrollType) {
-			var nIdx = list.indexOf(autoScrollType)
-			if (nIdx >= 0) {
-				// Screen rec always takes priority — scroll regardless of where we are.
-				// Other items only auto-scroll when coming from "title".
-				var isScreenRec = (autoScrollType === "record_setup" ||
-				autoScrollType === "record_active")
-				if (isScreenRec || currentType === "title")
-				idx = nIdx
+		if (scrollTo) {
+			const nIdx = list.indexOf(scrollTo)
+			if (nIdx >= 0 && (force || currentType === list[0])) idx = nIdx
+		}
+
+		root._carouselIndex = idx
+		statusList.contentY = idx * root._itemStride
+	}
+
+	Instantiator {
+		model: registry.items
+		delegate: Connections {
+			required property var modelData
+			target: modelData
+			function onActiveChanged() {
+				const it = modelData
+				if (it.active && it.autoScroll !== "none") root._rebuildItems(it.key, it.autoScroll === "always")
+				else root._rebuildItems(null, false)
 			}
-		}
-
-		root._carouselIndex = idx
-		statusList.contentY = idx * root._itemStride
-	}
-
-	// Force-scroll to a specific type regardless of where the user is
-	function _forceScrollTo(type) {
-		var idx = root._items.indexOf(type)
-		if (idx < 0) return
-		root._carouselIndex = idx
-		statusList.contentY = idx * root._itemStride
-	}
-
-	onPlayerChanged: _rebuildItems(player !== null ? "music" : null)
-
-	// ── State monitor — timer urgency + carousel transitions ─────────────────
-	readonly property bool timerUrgent:
-	ClockService.timerRunning && ClockService.timerLeft <= 30 && ClockService.timerLeft > 0
-
-	Connections {
-		target: ClockService
-
-		function onTimerRunningChanged() {
-			root._rebuildItems(ClockService.timerRunning ? "timer" : null)
-		}
-
-		function onSwStartedChanged() {
-			root._rebuildItems(ClockService.swStarted ? "stopwatch" : null)
-			root._forceScrollTo("stopwatch")
-		}
-
-		function onTimerLeftChanged() {
-			if (ClockService.timerRunning && ClockService.timerLeft === 30 || ClockService.timerRunning && ClockService.timerLeft === 10)
-			root._forceScrollTo("timer")
-		}
-		
-		function onTimerStartedChanged() {
-			root._rebuildItems(ClockService.timerStarted ? "timer" : null)
-			root._forceScrollTo("timer")
+			function onRequestScroll(force) { root._rebuildItems(modelData.key, force) }
 		}
 	}
 
-	Connections {
-		target: ShellModes
-		function onScreenRecordChanged() {
-			if (ShellModes.screenRecord && !ScreenRecService.recording)
-			root._rebuildItems("record_setup")
-			else if (!ShellModes.screenRecord)
-			root._rebuildItems(null)
-		}
-	}
-
-	Connections {
-		target: ScreenRecService
-		function onRecordingChanged() {
-			if (ScreenRecService.recording)
-			root._rebuildItems("record_active")
-			else
-			root._rebuildItems(null)
-		}
-	}
+	Component.onCompleted: _rebuildItems(null, false)
 
 	// ── Scroll debounce ───────────────────────────────────────────────────────
 	property bool _scrollBusy: false
@@ -166,43 +112,6 @@ Item {
 			}
 		}
 
-		Component { id: titleItem;  NotchTitleItem {} }
-		Component { id: musicItem;  NotchMusicItem { artUrl: root.artUrl } }
-		Component {
-			id: timerItem
-			NotchCountItem {
-				glyph:   "󰔟"
-				display: ClockService.timerDisplay
-				running: ClockService.timerRunning
-				urgent:  root.timerUrgent
-				onToggled: ClockService.toggleTimer()
-				onReset:   ClockService.resetTimer()
-			}
-		}
-		Component {
-			id: stopwatchItem
-			NotchCountItem {
-				glyph:   ""
-				display: ClockService.swDisplay
-				running: ClockService.swRunning
-				onToggled: ClockService.toggleStopwatch()
-				onReset:   ClockService.resetStopwatch()
-			}
-		}
-		Component { id: recordSetupItem;  NotchRecordSetupItem {} }
-		Component { id: recordActiveItem; NotchRecordActiveItem {} }
-
-		readonly property var _components: ({
-			title:         titleItem,
-			music:         musicItem,
-			timer:         timerItem,
-			stopwatch:     stopwatchItem,
-			record_setup:  recordSetupItem,
-			record_active: recordActiveItem
-		})
-		// Items drawn inside the notch's flares get half a flare of margin each side.
-		readonly property var _inset: ({ music: true, record_setup: true, record_active: true })
-
 		ListView {
 			id: statusList
 			anchors.fill: parent
@@ -227,9 +136,9 @@ Item {
 
 				Loader {
 					anchors.fill: parent
-					anchors.leftMargin:  carousel._inset[cell.modelData] ? root.fw / 2 : 0
-					anchors.rightMargin: carousel._inset[cell.modelData] ? root.fw / 2 : 0
-					sourceComponent:     carousel._components[cell.modelData]
+					anchors.leftMargin:  root._specs[cell.modelData]?.inset ? root.fw / 2 : 0
+					anchors.rightMargin: root._specs[cell.modelData]?.inset ? root.fw / 2 : 0
+					sourceComponent:     root._specs[cell.modelData]?.component ?? null
 				}
 			}
 		}
