@@ -8,16 +8,5 @@ component	components/settings/SettingsTextField.qml
 component	components/settings/SettingsToggle.qml
 host	surface/DynamicSurface.qml
 host	surface/SurfaceBar.qml
-io	dialogs/ConfirmDialog.qml
-io	features/bar/left/LayoutIndicator.qml
-io	features/clipboard/HistoryTab.qml
-io	features/dashboard/apps/AppLauncher.qml
-io	features/dashboard/home/ProfileCard.qml
-io	features/dashboard/system/EnvyControl.qml
-io	features/dashboard/system/SystemStats.qml
-io	features/power/PowerMenu.qml
 io	services/data/PrefsService.qml
-io	state/ShellState.qml
 io	theme/ColorLoader.qml
-shell-c	features/clipboard/HistoryTab.qml
-shell-c	features/dashboard/apps/AppLauncher.qml

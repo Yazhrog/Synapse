@@ -1,6 +1,5 @@
 import QtQuick
 import Quickshell
-import Quickshell.Services.Mpris
 import qs.src.services.media
 import qs.src.services.time
 import qs.src.state
@@ -34,7 +33,7 @@ Item {
 	readonly property int requiredWidth: Theme.cNotchMinWidth
 
 	// ── MPRIS ─────────────────────────────────────────────────────────────────
-	readonly property var    player: Mpris.players.values.length > 0 ? Mpris.players.values[0] : null
+	readonly property var    player: MediaService.firstPlayer
 	readonly property string artUrl: player?.trackArtUrl ?? ""
 
 	// ── Dynamic item list ─────────────────────────────────────────────────────
@@ -50,7 +49,7 @@ Item {
 		if (root.player                    !== null) list.push("music")
 		if (ClockService.timerStarted)                   list.push("timer")
 		if (ClockService.swStarted)                      list.push("stopwatch")
-		if (ShellState.screenRecord && !ScreenRecService.recording) list.push("record_setup")
+		if (ShellModes.screenRecord && !ScreenRecService.recording) list.push("record_setup")
 		if (ScreenRecService.recording)           list.push("record_active")
 
 		root._items = list
@@ -112,11 +111,11 @@ Item {
 	}
 
 	Connections {
-		target: ShellState
+		target: ShellModes
 		function onScreenRecordChanged() {
-			if (ShellState.screenRecord && !ScreenRecService.recording)
+			if (ShellModes.screenRecord && !ScreenRecService.recording)
 			root._rebuildItems("record_setup")
-			else if (!ShellState.screenRecord)
+			else if (!ShellModes.screenRecord)
 			root._rebuildItems(null)
 		}
 	}
@@ -152,7 +151,7 @@ Item {
 			acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchPad
 			onWheel: function(event) {
 				// Block scroll only during setup (not during active recording)
-				if (ShellState.screenRecord && !ScreenRecService.recording) return
+				if (ShellModes.screenRecord && !ScreenRecService.recording) return
 				if (root._scrollBusy) return
 				root._scrollBusy = true
 				scrollCooldown.restart()
@@ -241,7 +240,7 @@ Item {
 		TapHandler {
 			onTapped: {
 				// Nothing during screen-rec setup — Esc / cancel handles it
-				if (ShellState.screenRecord && !ScreenRecService.recording) return
+				if (ShellModes.screenRecord && !ScreenRecService.recording) return
 				Popups.toggle("dashboard", QsWindow.window?.screen?.name ?? "")
 			}
 		}

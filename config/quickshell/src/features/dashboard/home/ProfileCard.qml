@@ -1,7 +1,8 @@
 import QtQuick
 import QtQuick.Effects
-import Quickshell.Io
 import qs.src.components.base
+import qs.src.core
+import qs.src.services.desktop
 import qs.src.theme
 // Profile card — circular avatar, username, window manager, uptime.
 
@@ -11,49 +12,11 @@ StatCard {
 
     property string avatarPath: ""
 
-    property string _user:   ""
-    property string _wm:     ""
-    property string _uptime: ""
+    readonly property string _user:   ProfileService.user
+    readonly property string _wm:     ProfileService.desktop
+    readonly property string _uptime: ProfileService.uptime
 
-    Process {
-        command: ["bash", "-c", "echo $USER"]
-        running: true
-        stdout: SplitParser {
-            onRead: function(line) {
-                if (line.trim() !== "") root._user = line.trim()
-            }
-        }
-    }
-
-    Process {
-        command: ["bash", "-c", "echo ${XDG_CURRENT_DESKTOP:-Hyprland}"]
-        running: true
-        stdout: SplitParser {
-            onRead: function(line) {
-                if (line.trim() !== "") root._wm = line.trim()
-            }
-        }
-    }
-
-    Process {
-        id: uptimeProc
-        command: ["bash", "-c",
-            "uptime -p | sed 's/up //' | sed 's/ hours\\?/h/' | " +
-            "sed 's/ minutes\\?/m/' | sed 's/ days\\?/d/' | sed 's/, / /g'"]
-        running: false
-        stdout: SplitParser {
-            onRead: function(line) {
-                if (line.trim() !== "") root._uptime = line.trim()
-            }
-        }
-    }
-
-    Timer {
-        interval: 60000; running: true; repeat: true
-        onTriggered: { uptimeProc.running = false; uptimeProc.running = true }
-    }
-
-    Component.onCompleted: uptimeProc.running = true
+    Lease { service: ProfileService; active: root.visible }
 
     Row {
         anchors {

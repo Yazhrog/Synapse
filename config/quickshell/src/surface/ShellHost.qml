@@ -41,7 +41,7 @@ Scope {
                 StrutWindow {
                     screen:  modelData
                     edge:    "top"
-                    reserve: ShellState.focusMode ? 0 : Math.round(Theme.exclusionGap * SurfaceState.scaleFor(modelData))
+                    reserve: ShellModes.focusMode ? 0 : Math.round(Theme.exclusionGap * SurfaceState.scaleFor(modelData))
                 }
 
                 // Border wider than the default: reserve the difference on

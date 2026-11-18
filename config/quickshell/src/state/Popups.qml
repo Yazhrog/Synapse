@@ -103,7 +103,6 @@ Singleton {
     property string confirmLabel:   "Confirm"
     property string confirmAction:  ""
     property string confirmGfxMode: ""
-    property bool   confirmRunning: false
 
     function showConfirm(title, message, label, action, gfxMode) {
         confirmTitle   = title

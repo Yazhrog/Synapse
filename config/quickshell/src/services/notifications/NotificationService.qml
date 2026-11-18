@@ -4,7 +4,7 @@ import Quickshell.Services.Notifications
 // ─────────────────────────────────────────────────────────────
 // NotificationService — the shell's notification server (global singleton).
 // `dnd` (Do Not Disturb) drops incoming notifications, except the battery
-// warnings; ShellState.dnd mirrors it.
+// warnings; ShellModes.dnd mirrors it.
 // ─────────────────────────────────────────────────────────────
 NotificationServer {
     id: root

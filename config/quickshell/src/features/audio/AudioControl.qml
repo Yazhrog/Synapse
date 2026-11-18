@@ -1,46 +1,24 @@
 import QtQuick
-import Quickshell.Services.Pipewire
 import qs.src.components.base
+import qs.src.core
+import qs.src.services.media
 import qs.src.state
 import qs.src.theme
 Item {
     id: root
 
-    readonly property var sink:   Pipewire.defaultAudioSink
-    readonly property var source: Pipewire.defaultAudioSource
-    
+    readonly property var sink:   AudioService.sink
+    readonly property var source: AudioService.source
+
     function reset() { switcher.reset() }
 
-    PwObjectTracker {
-        objects: Pipewire.nodes.values
-    }
+    // The mixer lists every device: AudioService tracks them while shown.
+    Lease { service: AudioService; active: root.visible }
 
-    readonly property var sinkNodes: {
-        var result = []
-        var nodes = Pipewire.nodes.values
-        for (var i = 0; i < nodes.length; i++) {
-            var n = nodes[i]
-            if (n.audio !== null && !n.isStream && n.isSink)
-                result.push(n)
-        }
-        return result
-    }
+    readonly property var sinkNodes:   AudioService.sinkNodes
+    readonly property var sourceNodes: AudioService.sourceNodes
 
-    readonly property var sourceNodes: {
-        var result = []
-        var nodes = Pipewire.nodes.values
-        for (var i = 0; i < nodes.length; i++) {
-            var n = nodes[i]
-            if (n.audio !== null && !n.isStream && !n.isSink)
-                result.push(n)
-        }
-        return result
-    }
-
-    function deviceName(node) {
-        if (!node) return "Unknown"
-        return node.nickname || node.description || node.name || "Unknown"
-    }
+    function deviceName(node) { return AudioService.deviceName(node) }
 
     property string page: Popups.audioPage
 
@@ -79,13 +57,8 @@ Item {
                     value:  (root.sink && root.sink.ready) ? root.sink.audio.volume : 0
                     muted:  (root.sink && root.sink.audio) ? root.sink.audio.muted : false
                     active: (root.sink && root.sink.ready) || false
-                    onVolumeChanged: function(v) {
-                        if (root.sink && root.sink.ready) root.sink.audio.volume = v
-                    }
-                    onMuteToggled: {
-                        if (root.sink && root.sink.ready)
-                            root.sink.audio.muted = !root.sink.audio.muted
-                    }
+                    onVolumeChanged: function(v) { AudioService.setVolume(v) }
+                    onMuteToggled: AudioService.toggleMute()
                 }
             }
 
@@ -101,13 +74,8 @@ Item {
                     value:  (root.source && root.source.ready) ? root.source.audio.volume : 0
                     muted:  (root.source && root.source.audio) ? root.source.audio.muted : false
                     active: (root.source && root.source.ready) || false
-                    onVolumeChanged: function(v) {
-                        if (root.source && root.source.ready) root.source.audio.volume = v
-                    }
-                    onMuteToggled: {
-                        if (root.source && root.source.ready)
-                            root.source.audio.muted = !root.source.audio.muted
-                    }
+                    onVolumeChanged: function(v) { AudioService.setSourceVolume(v) }
+                    onMuteToggled: AudioService.toggleSourceMute()
                 }
             }
 
@@ -124,7 +92,7 @@ Item {
                         width:     parent.width
                         label:     root.deviceName(modelData)
                         isDefault: (root.sink && root.sink.ready && modelData.name === root.sink.name) || false
-                        onClicked: Pipewire.preferredDefaultAudioSink = modelData
+                        onClicked: AudioService.setDefaultSink(modelData)
                     }
                 }
 
@@ -149,7 +117,7 @@ Item {
                         width:     parent.width
                         label:     root.deviceName(modelData)
                         isDefault: (root.source && root.source.ready && modelData.name === root.source.name) || false
-                        onClicked: Pipewire.preferredDefaultAudioSource = modelData
+                        onClicked: AudioService.setDefaultSource(modelData)
                     }
                 }
 
