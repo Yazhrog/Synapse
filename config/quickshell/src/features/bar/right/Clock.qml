@@ -4,7 +4,7 @@ import qs.src.theme
 Text {
     id: clock
     text: ""
-    color: clockHov.hovered ? Theme.active : Theme.text
+    color: clockHov.hovered ? Theme.color.accent : Theme.color.text
     Behavior on color { ColorAnimation { duration: 120 } }
     font.bold: true
     anchors.verticalCenter: parent.verticalCenter

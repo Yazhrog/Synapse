@@ -20,10 +20,10 @@ Rectangle {
 
     width:  schemeDropdownCol.implicitWidth + 32
     height: schemeDropdownCol.implicitHeight + 16
-    radius: Theme.cornerRadius
+    radius: Theme.radius.card
 
-    color:        Theme.background
-    border.color: Theme.active
+    color:        Theme.color.background
+    border.color: Theme.color.accent
     border.width: 1
 
     opacity:            open ? 1 : 0
@@ -61,11 +61,11 @@ Rectangle {
 
                 radius: 8
                 color: schemeItemMA.containsMouse 
-                    ? Qt.rgba(Theme.active.r, Theme.active.g, Theme.active.b, 0.14) 
-                    : (sel ? Qt.rgba(Theme.active.r, Theme.active.g, Theme.active.b, 0.22) : "transparent")
+                    ? Qt.rgba(Theme.color.accent.r, Theme.color.accent.g, Theme.color.accent.b, 0.14) 
+                    : (sel ? Qt.rgba(Theme.color.accent.r, Theme.color.accent.g, Theme.color.accent.b, 0.22) : "transparent")
 
                 border.color: (sel || schemeItemMA.containsMouse) 
-                    ? Qt.rgba(Theme.active.r, Theme.active.g, Theme.active.b, 0.28)
+                    ? Qt.rgba(Theme.color.accent.r, Theme.color.accent.g, Theme.color.accent.b, 0.28)
                     : "transparent"
                 border.width: 1
 
@@ -81,14 +81,14 @@ Rectangle {
                     Text {
                         text:                   sel ? "●" : "○"
                         font.pixelSize:         10
-                        color:                  (sel || schemeItemMA.containsMouse) ? Theme.active : Qt.rgba(1,1,1,0.3)
+                        color:                  (sel || schemeItemMA.containsMouse) ? Theme.color.accent : Qt.rgba(1,1,1,0.3)
                         anchors.verticalCenter: parent.verticalCenter
                     }
                     Text {
                         id:                     schemeItemText
                         text:                   modelData
                         font.pixelSize:         13
-                        color:                  (sel || schemeItemMA.containsMouse) ? Theme.text : Qt.rgba(1,1,1,0.65)
+                        color:                  (sel || schemeItemMA.containsMouse) ? Theme.color.text : Qt.rgba(1,1,1,0.65)
                         anchors.verticalCenter: parent.verticalCenter
                     }
                 }

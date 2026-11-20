@@ -436,6 +436,32 @@ A strategy is a small QML object chosen by a pref, so adding an implementation n
 - "State layers" are colours of the **foreground** with a fixed alpha (`Theme.color.alpha(Theme.color.text, 0.07)`), not white, so light mode (F17) works without touching views.
 - v0.7.0 creates the token API **with today's values** and renames the existing `Theme.*` reads; replacing the remaining literals is decision D1 (§14).
 
+**Literal → token mapping for the D1 passes** (v0.8.0, #80–#84). The state layers are the foreground (`text`, `#cdd6f4` by default) rather than white, so a pass that applies them shifts those pixels slightly and is labelled `visual-change`.
+
+| Literal in a view | Token |
+|---|---|
+| `Qt.rgba(1,1,1,0.04)` | `Theme.color.fillSubtle` |
+| `Qt.rgba(1,1,1,0.05)` (card fill) | `Theme.color.surfaceRaised` |
+| `Qt.rgba(1,1,1,0.07)` (separator, outline) | `Theme.color.hairline` |
+| `Qt.rgba(1,1,1,0.08)` | `Theme.color.fillHover` |
+| `Qt.rgba(1,1,1,0.12)` | `Theme.color.fillPressed` |
+| any other `Qt.rgba(1,1,1,a)` | `Theme.color.alpha(Theme.color.text, a)` |
+| `Qt.rgba(Theme.color.accent.r, …g, …b, a)` | `Theme.color.alpha(Theme.color.accent, a)` |
+| `"#99000000"`, dark overlays | `Theme.color.scrim` |
+| `"#f87171"`, `"#ff4444"`, `"#cc3a3a"`, `"#f38ba8"`, `"#e06c75"` | `Theme.color.danger` |
+| `"#f5c47a"`, `"#ffcc00"` | `Theme.color.warning` |
+| `"#a6e3a1"` | `Theme.color.success` |
+| `pixelSize` 9 / 10 / 11 / 12 / 13 / 15 / 32 | `Theme.font.caption` / `small` / `body` / `bodyLarge` / `title` / `heading` / `display` |
+| `"JetBrainsMono Nerd Font"` / `"monospace"` | `Theme.font.icon` / `Theme.font.mono` |
+| `Font.Medium`, `Font.DemiBold`, `Font.Bold` | `Theme.font.medium` / `semibold` / `bold` |
+| spacing / margin 2, 4, 6, 8, 12, 16, 24 | `Theme.space.xxs` … `xxl` |
+| `radius` 4 / 6 / 8 | `Theme.radius.sm` / `md` / `lg` |
+| `duration` 80 / 100–160 / 200 / 320 | `Theme.motion.instant` / `fast` / `normal` / `slow` |
+| `Easing.OutCubic` / `InOutCubic` / `OutBack` | `Theme.motion.standard` / `emphasized` / `overshoot` |
+| `NumberAnimation { duration; easing }` | `Anim { … }`; an opacity cross-fade `Fade {}` |
+
+Sizes in between (14, 130 ms, 10 px gaps…) snap to the nearest token in the pass, where a reviewer looks at the result.
+
 ### 5.13 Composition root
 
 `shell.qml` only instantiates `app/App.qml`, which:
@@ -571,6 +597,8 @@ Every directory is imported as `import qs.src.<path>` _(verified on 0.3.2: no `q
 ## 7. File map: today → target
 
 Paths relative to `config/quickshell/src/`. "split" means the file is cut into the parts listed; "→" alone is a move (and rename where the name changes).
+
+**Done in #147 (S10)** — design tokens behind the `Theme` facade (§5.12): `theme/tokens/{Color,Font,Space,Radius,Motion,Frame}Tokens.qml` (plain `QtObject`s instantiated by `Theme`; `FrameTokens` is the old `Metrics`, minus the radii and durations), `theme/sources/ColorSource.qml` + `MatugenSource.qml` (the old `ColorLoader`, on a read-only, watched `JsonStore`; only the keys present in `colors.json` replace a colour, so a broken or half-written file keeps the palette), `theme/Anim.qml` / `Fade.qml`. `Metrics`, `Colors` and `ColorLoader` are deleted and every flat `Theme.*` read renamed (no alias kept): `Theme.active` → `color.accent`, `subtext` → `color.textMuted`, `surfaceBackground` → `color.surface`, `cornerRadius` → `radius.card`, `notchRadius` → `radius.notch`, `animDuration` → `motion.slow`, `Metrics.regionFadeDuration` → `motion.fast` (`Fade`), `backgroundOpacity` → `frame.opacity`, every size → `frame.<name>`; `barEnabled` and `icon` (unused) dropped. Same values, golden identical. `scrim` is made from the background, not the foreground: it has to darken in both palettes. Test: `tests/theme.qml`.
 
 **Done in #146 (S9)** — `services/data/Prefs.qml` on `JsonStore` (same `shell_prefs.json`, same keys; written with 4-space indent) + `PrefSchema.qml` (`{ default, type, options | min/max, strict, label, description }`); validation on read and write (the `barStyle` check left `Metrics`; numbers clamped to the settings' ranges); `Prefs.data.<key>`, `set`, `reset`, `resetAll`, `isDefault`; `PrefsService` deleted. `components/settings/Settings*` are presentational (`value`, `defaultValue`, `edited(v)`, `resetRequested()`); `features/dashboard/config/controls/Pref{Toggle,Slider,Dropdown,TextField}.qml` bind them to a schema key. `ToastCard` and `BrightnessSlider` became presentational too, so layer rule 4 (`component`) passes for all of `components/`. `JsonStore` got a `created()` signal (the legacy `update_prefs.json` carry-over uses it). Test: `tests/prefs.qml` loads an old file.
 

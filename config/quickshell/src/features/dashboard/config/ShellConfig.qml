@@ -27,7 +27,7 @@ Item {
         Rectangle {
             width:  Math.floor((parent.width - parent.spacing) * 0.30)
             height: parent.height
-            radius: Theme.cornerRadius
+            radius: Theme.radius.card
             color:  Qt.rgba(1, 1, 1, 0.04)
             border.color: Qt.rgba(1, 1, 1, 0.07)
             border.width: 1

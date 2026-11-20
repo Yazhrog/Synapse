@@ -54,7 +54,7 @@ SettingsRow {
         color:  btnHover.hovered || root.open
             ? Qt.rgba(1, 1, 1, 0.10) : Qt.rgba(1, 1, 1, 0.05)
         border.color: root.open
-            ? Qt.rgba(Theme.active.r, Theme.active.g, Theme.active.b, 0.45)
+            ? Qt.rgba(Theme.color.accent.r, Theme.color.accent.g, Theme.color.accent.b, 0.45)
             : Qt.rgba(1, 1, 1, 0.10)
         border.width: 1
         Behavior on color { ColorAnimation { duration: 110 } }
@@ -66,12 +66,12 @@ SettingsRow {
             Text {
                 text:           root._index >= 0 ? root._label(root.options[root._index]) : "—"
                 font.pixelSize: 11
-                color:          Theme.text
+                color:          Theme.color.text
             }
             Text {
                 text:           root.open ? "󰅃" : "󰅀"
                 font.pixelSize: 11
-                color:          Qt.rgba(Theme.text.r, Theme.text.g, Theme.text.b, 0.55)
+                color:          Qt.rgba(Theme.color.text.r, Theme.color.text.g, Theme.color.text.b, 0.55)
             }
         }
 
@@ -100,7 +100,7 @@ SettingsRow {
                 height: 28
                 radius: 8
                 color: current
-                    ? Qt.rgba(Theme.active.r, Theme.active.g, Theme.active.b, 0.18)
+                    ? Qt.rgba(Theme.color.accent.r, Theme.color.accent.g, Theme.color.accent.b, 0.18)
                     : (optHover.hovered ? Qt.rgba(1, 1, 1, 0.07) : "transparent")
                 Behavior on color { ColorAnimation { duration: 100 } }
 
@@ -112,7 +112,7 @@ SettingsRow {
                     }
                     text:           root._label(modelData)
                     font.pixelSize: 11
-                    color:          current ? Theme.active : Theme.text
+                    color:          current ? Theme.color.accent : Theme.color.text
                 }
 
                 HoverHandler { id: optHover; cursorShape: Qt.PointingHandCursor }

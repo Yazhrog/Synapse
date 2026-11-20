@@ -15,9 +15,9 @@ Item {
 
     Rectangle {
         anchors.fill: parent
-        radius:       Theme.cornerRadius - 6
-        color:        Theme.surfaceBackground
-        border.color: Qt.rgba(Theme.active.r, Theme.active.g, Theme.active.b, 0.15)
+        radius:       Theme.radius.card - 6
+        color:        Theme.color.surface
+        border.color: Qt.rgba(Theme.color.accent.r, Theme.color.accent.g, Theme.color.accent.b, 0.15)
         border.width: 1
     }
 
@@ -91,7 +91,7 @@ Item {
             anchors.fill: parent
             radius:       5
             color: row._selected
-                   ? Qt.rgba(Theme.active.r, Theme.active.g, Theme.active.b, 0.18)
+                   ? Qt.rgba(Theme.color.accent.r, Theme.color.accent.g, Theme.color.accent.b, 0.18)
                    : rH.hovered ? Qt.rgba(1, 1, 1, 0.07) : "transparent"
             Behavior on color { ColorAnimation { duration: 100 } }
         }
@@ -103,7 +103,7 @@ Item {
             Text {
                 text:           row._icon
                 font.pixelSize: 13
-                color:          row._selected ? Theme.active : Qt.rgba(1, 1, 1, 0.45)
+                color:          row._selected ? Theme.color.accent : Qt.rgba(1, 1, 1, 0.45)
                 anchors.verticalCenter: parent.verticalCenter
                 Behavior on color { ColorAnimation { duration: 100 } }
             }
@@ -111,7 +111,7 @@ Item {
                 id:             _lbl
                 text:           row._label
                 font.pixelSize: 12
-                color:          row._selected ? Theme.active : Qt.rgba(1, 1, 1, 0.70)
+                color:          row._selected ? Theme.color.accent : Qt.rgba(1, 1, 1, 0.70)
                 anchors.verticalCenter: parent.verticalCenter
                 Behavior on color { ColorAnimation { duration: 100 } }
             }

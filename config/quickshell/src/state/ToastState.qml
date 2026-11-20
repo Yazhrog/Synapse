@@ -73,7 +73,7 @@ Singleton {
 
     property Timer _slideOutTimer: Timer {
         id: slideOutTimer
-        interval: Theme.animDuration + 20
+        interval: Theme.motion.slow + 20
         onTriggered: {
             // Skip notifications that were closed while waiting in the queue.
             const queue = root.queue.filter(n => n && n.tracked)

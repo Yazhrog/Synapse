@@ -16,7 +16,7 @@ Item {
     required property var surface
     readonly property var s: surface
 
-    component Anim: NumberAnimation { duration: Theme.animDuration; easing.type: Easing.InOutCubic }
+    component FrameAnim: Anim { duration: Theme.motion.slow; easing.type: Theme.motion.emphasized }
 
     // ── Targets ──────────────────────────────────────────────────────────────
     // The open popup's size, or the passive content's, or closed ([0, 0]).
@@ -56,29 +56,29 @@ Item {
 
     // ── Animated geometry ────────────────────────────────────────────────────
     property real notchBottom: ShellModes.focusMode ? s.borderWidth : s.notchHeight
-    Behavior on notchBottom { Anim {} }
+    Behavior on notchBottom { FrameAnim {} }
 
     readonly property int lWidth: Math.max(
-        s.px(Theme.lNotchMinWidth),
-        Math.min(s.px(Theme.lNotchMaxWidth), s.barLeftWidth + s.notchPadding * 2))
+        s.px(Theme.frame.lNotchMinWidth),
+        Math.min(s.px(Theme.frame.lNotchMaxWidth), s.barLeftWidth + s.notchPadding * 2))
 
     property real cWidth: _topT[0] > 0 ? _topT[0]
-        : Math.max(s.px(Theme.cNotchMinWidth),
-                   Math.min(s.px(Theme.cNotchMaxWidth), s.barCenterWidth + s.notchPadding * 2))
-    Behavior on cWidth { Anim {} }
+        : Math.max(s.px(Theme.frame.cNotchMinWidth),
+                   Math.min(s.px(Theme.frame.cNotchMaxWidth), s.barCenterWidth + s.notchPadding * 2))
+    Behavior on cWidth { FrameAnim {} }
     property real _cDrop: Math.max(0, _topT[1] - notchBottom)
-    Behavior on _cDrop { Anim {} }
+    Behavior on _cDrop { FrameAnim {} }
     readonly property real centerBottom: notchBottom + _cDrop
 
     // The right notch follows its content instantly; only a popup or the
     // toast morph it.
     readonly property int _rBase: Math.max(
-        s.px(Theme.rNotchMinWidth),
-        Math.min(s.px(Theme.rNotchMaxWidth), s.barRightWidth + s.notchPadding * 2))
+        s.px(Theme.frame.rNotchMinWidth),
+        Math.min(s.px(Theme.frame.rNotchMaxWidth), s.barRightWidth + s.notchPadding * 2))
     property real _rGrow: _rightT[0]
-    Behavior on _rGrow { Anim {} }
+    Behavior on _rGrow { FrameAnim {} }
     property real _rDrop: Math.max(0, _rightT[1] - notchBottom)
-    Behavior on _rDrop { Anim {} }
+    Behavior on _rDrop { FrameAnim {} }
     readonly property real rWidth:      Math.max(_rBase, _rGrow)
     readonly property real rightBottom: notchBottom + _rDrop
 
@@ -90,12 +90,12 @@ Item {
     property real bottomCenterHeight: _bottomCenterT[1]
     property real bottomRightWidth:   _bottomRightT[0]
     property real bottomRightHeight:  _bottomRightT[1]
-    Behavior on leftCenterDepth    { Anim {} }
-    Behavior on rightCenterDepth   { Anim {} }
-    Behavior on bottomCenterWidth  { Anim {} }
-    Behavior on bottomCenterHeight { Anim {} }
-    Behavior on bottomRightWidth   { Anim {} }
-    Behavior on bottomRightHeight  { Anim {} }
+    Behavior on leftCenterDepth    { FrameAnim {} }
+    Behavior on rightCenterDepth   { FrameAnim {} }
+    Behavior on bottomCenterWidth  { FrameAnim {} }
+    Behavior on bottomCenterHeight { FrameAnim {} }
+    Behavior on bottomRightWidth   { FrameAnim {} }
+    Behavior on bottomRightHeight  { FrameAnim {} }
 
     // Current (animated) rectangle of a region, in surface coordinates.
     function rect(region) {

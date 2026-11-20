@@ -50,13 +50,13 @@ Item {
 
     // ── Color ─────────────────────────────────────────────────────────────────
     readonly property color iconColor: {
-        if (full)      return Theme.active
-        if (charging)  return Theme.active
+        if (full)      return Theme.color.accent
+        if (charging)  return Theme.color.accent
         if (pct <= 5)  return "#ff4444"
         if (pct <= 10) return "#ff6b00"
         if (pct <= 20) return "#ffcc00"
         if (pct <= 30) return "#ff9900"
-        return Theme.text
+        return Theme.color.text
     }
 
     // ── Display ───────────────────────────────────────────────────────────────
@@ -97,12 +97,12 @@ Item {
             implicitHeight: pctText.implicitHeight
             clip: true
             anchors.verticalCenter: parent.verticalCenter
-            Behavior on implicitWidth { NumberAnimation { duration: Theme.animDuration; easing.type: Easing.InOutCubic } }
+            Behavior on implicitWidth { NumberAnimation { duration: Theme.motion.slow; easing.type: Easing.InOutCubic } }
 
             Text {
                 id: pctText
                 text:           root.pct + "%"
-                color:          hov.hovered ? Theme.active : Theme.text
+                color:          hov.hovered ? Theme.color.accent : Theme.color.text
                 font.pixelSize: 12
                 anchors.verticalCenter: parent.verticalCenter
                 Behavior on color { ColorAnimation { duration: 120 } }

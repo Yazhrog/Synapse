@@ -32,7 +32,7 @@ Item {
         Text {
             anchors.horizontalCenter: parent.horizontalCenter
             text:           col.pctText
-            color:          col.muted ? Qt.rgba(1,1,1,0.25) : Theme.text
+            color:          col.muted ? Qt.rgba(1,1,1,0.25) : Theme.color.text
             font.pixelSize: 13
             font.bold:      true
             Behavior on color { ColorAnimation { duration: 150 } }
@@ -54,7 +54,7 @@ Item {
                     anchors { bottom: parent.bottom; left: parent.left; right: parent.right }
                     height: Math.max(parent.radius * 2, parent.height * col.value)
                     radius: parent.radius
-                    color:  col.muted ? Qt.rgba(1,1,1,0.15) : Theme.active
+                    color:  col.muted ? Qt.rgba(1,1,1,0.15) : Theme.color.accent
                     Behavior on color  { ColorAnimation  { duration: 150 } }
                     Behavior on height { NumberAnimation { duration: 80; easing.type: Easing.OutCubic } }
                 }
@@ -104,9 +104,9 @@ Item {
             anchors.horizontalCenter: parent.horizontalCenter
             width:  col.barW + 32
             height: 28
-            radius: Theme.cornerRadius
+            radius: Theme.radius.card
             color:  col.muted
-                        ? Qt.rgba(Theme.active.r, Theme.active.g, Theme.active.b, 0.2)
+                        ? Qt.rgba(Theme.color.accent.r, Theme.color.accent.g, Theme.color.accent.b, 0.2)
                         : Qt.rgba(1,1,1,0.06)
             Behavior on color { ColorAnimation { duration: 150 } }
 
@@ -116,14 +116,14 @@ Item {
                 Text {
                     text:           col.icon
                     font.pixelSize: 13
-                    color:          col.muted ? Theme.active : Qt.rgba(1,1,1,0.55)
+                    color:          col.muted ? Theme.color.accent : Qt.rgba(1,1,1,0.55)
                     anchors.verticalCenter: parent.verticalCenter
                     Behavior on color { ColorAnimation { duration: 150 } }
                 }
                 Text {
                     text:           col.muted ? "Muted" : "Mute"
                     font.pixelSize: 11
-                    color:          col.muted ? Theme.active : Qt.rgba(1,1,1,0.4)
+                    color:          col.muted ? Theme.color.accent : Qt.rgba(1,1,1,0.4)
                     anchors.verticalCenter: parent.verticalCenter
                     Behavior on color { ColorAnimation { duration: 150 } }
                 }

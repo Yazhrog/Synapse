@@ -44,14 +44,14 @@ Item {
             anchors.bottom: parent.bottom
             height: cardDelegate.labelH
             color: isPreview
-                ? Qt.rgba(Theme.active.r, Theme.active.g, Theme.active.b, 0.22)
+                ? Qt.rgba(Theme.color.accent.r, Theme.color.accent.g, Theme.color.accent.b, 0.22)
                 : Qt.rgba(1,1,1,0.09)
 
             Text {
                 anchors.centerIn: parent
                 width:               parent.width - 10
                 text:                modelData.split("/").pop().replace(/\.[^/.]+$/, "")
-                color:               isPreview ? Theme.active : Qt.rgba(1,1,1,0.65)
+                color:               isPreview ? Theme.color.accent : Qt.rgba(1,1,1,0.65)
                 font.pixelSize:      10
                 font.weight:         isPreview ? Font.Medium : Font.Normal
                 elide:               Text.ElideRight
@@ -82,8 +82,8 @@ Item {
         radius: 10
         color: "transparent"
         border.width: isPreview ? 2 : 1
-        border.color: isPreview ? Theme.active
-            : isCurrent ? Qt.rgba(Theme.active.r, Theme.active.g, Theme.active.b, 0.45)
+        border.color: isPreview ? Theme.color.accent
+            : isCurrent ? Qt.rgba(Theme.color.accent.r, Theme.color.accent.g, Theme.color.accent.b, 0.45)
             : Qt.rgba(1,1,1,0.15)
         Behavior on border.color { ColorAnimation { duration: 120 } }
         Behavior on border.width { NumberAnimation  { duration: 120 } }

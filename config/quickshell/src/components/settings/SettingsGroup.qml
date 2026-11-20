@@ -23,13 +23,13 @@ Column {
         text:           group.title.toUpperCase()
         font.pixelSize: 9
         font.weight:    Font.Bold
-        color:          Qt.rgba(Theme.active.r, Theme.active.g, Theme.active.b, 0.55)
+        color:          Qt.rgba(Theme.color.accent.r, Theme.color.accent.g, Theme.color.accent.b, 0.55)
     }
 
     Rectangle {
         width:        parent.width
         height:       body.implicitHeight
-        radius:       Theme.cornerRadius
+        radius:       Theme.radius.card
         color:        Qt.rgba(1, 1, 1, 0.04)
         border.color: Qt.rgba(1, 1, 1, 0.07)
         border.width: 1

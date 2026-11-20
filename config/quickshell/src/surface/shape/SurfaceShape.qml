@@ -15,14 +15,14 @@ Shape {
     id: root
 
     // ── Geometry ─────────────────────────────────────────────────────────────
-    property real borderWidth:  Theme.borderWidth   // t: frame thickness
-    property real notchBottom:  Theme.notchHeight   // h: y of the notches' bottom edge
-    property real notchRadius:  Theme.notchRadius   // r: notch corners and flares
-    property real cornerRadius: Theme.cornerRadius  // R: frame inner corners and border flares
+    property real borderWidth:  Theme.frame.borderWidth   // t: frame thickness
+    property real notchBottom:  Theme.frame.notchHeight   // h: y of the notches' bottom edge
+    property real notchRadius:  Theme.radius.notch   // r: notch corners and flares
+    property real cornerRadius: Theme.radius.card  // R: frame inner corners and border flares
 
-    property real leftWidth:    Theme.lNotchMinWidth
-    property real centerWidth:  Theme.cNotchMinWidth
-    property real rightWidth:   Theme.rNotchMinWidth
+    property real leftWidth:    Theme.frame.lNotchMinWidth
+    property real centerWidth:  Theme.frame.cNotchMinWidth
+    property real rightWidth:   Theme.frame.rNotchMinWidth
 
     // Each top notch can grow down past the bar (e.g. the right notch for a
     // notification toast). Default: all at notchBottom.
@@ -45,7 +45,7 @@ Shape {
     property real bottomRightWidth:   0
     property real bottomRightHeight:  0
 
-    property color color: Theme.surfaceBackground
+    property color color: Theme.color.surface
     // "frame", "bar" or "pills" (see surfacePath.js). In pills, borderWidth
     // is the gap to the screen edges.
     property string style: "frame"

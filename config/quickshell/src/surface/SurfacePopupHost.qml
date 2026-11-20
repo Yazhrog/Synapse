@@ -42,7 +42,7 @@ FocusScope {
             clip:    true
             visible: opacity > 0
             opacity: host.surface.openContent === spec.key ? 1 : 0
-            Behavior on opacity { NumberAnimation { duration: Metrics.regionFadeDuration } }
+            Behavior on opacity { Fade {} }
 
             Loader {
                 readonly property rect p: regionClip.spec.place(host.surface, regionClip.width, regionClip.height)

@@ -24,7 +24,7 @@ Item {
 
             Text {
                 anchors { left: parent.left; leftMargin: 2; verticalCenter: parent.verticalCenter }
-                text: "VPN"; font.pixelSize: 15; font.weight: Font.Bold; color: Theme.text
+                text: "VPN"; font.pixelSize: 15; font.weight: Font.Bold; color: Theme.color.text
             }
 
             Row {
@@ -36,10 +36,10 @@ Item {
                     height: 28; radius: 14
                     width: ksRow.implicitWidth + 18
                     color: VpnService.killSwitch
-                        ? Qt.rgba(Theme.active.r, Theme.active.g, Theme.active.b, 0.18)
+                        ? Qt.rgba(Theme.color.accent.r, Theme.color.accent.g, Theme.color.accent.b, 0.18)
                         : ksH.hovered ? Qt.rgba(1,1,1,0.08) : Qt.rgba(1,1,1,0.04)
                     border.color: VpnService.killSwitch
-                        ? Qt.rgba(Theme.active.r, Theme.active.g, Theme.active.b, 0.40)
+                        ? Qt.rgba(Theme.color.accent.r, Theme.color.accent.g, Theme.color.accent.b, 0.40)
                         : Qt.rgba(1,1,1,0.10)
                     border.width: 1
                     Behavior on color        { ColorAnimation { duration: 130 } }
@@ -51,13 +51,13 @@ Item {
                         Text {
                             anchors.verticalCenter: parent.verticalCenter
                             text: "󰒃"; font.pixelSize: 13
-                            color: VpnService.killSwitch ? Theme.active : Qt.rgba(1,1,1,0.40)
+                            color: VpnService.killSwitch ? Theme.color.accent : Qt.rgba(1,1,1,0.40)
                             Behavior on color { ColorAnimation { duration: 130 } }
                         }
                         Text {
                             anchors.verticalCenter: parent.verticalCenter
                             text: "Kill Switch"; font.pixelSize: 11; font.weight: Font.Medium
-                            color: VpnService.killSwitch ? Theme.active : Qt.rgba(1,1,1,0.45)
+                            color: VpnService.killSwitch ? Theme.color.accent : Qt.rgba(1,1,1,0.45)
                             Behavior on color { ColorAnimation { duration: 130 } }
                         }
                     }
@@ -89,7 +89,7 @@ Item {
                     Text {
                         id: aLbl; text: "ACTIVE"
                         font.pixelSize: 9; font.weight: Font.Bold; font.letterSpacing: 1.2
-                        color: Qt.rgba(Theme.active.r, Theme.active.g, Theme.active.b, 0.5)
+                        color: Qt.rgba(Theme.color.accent.r, Theme.color.accent.g, Theme.color.accent.b, 0.5)
                     }
                 }
 
@@ -143,7 +143,7 @@ Item {
                                 id: codeText; anchors.centerIn: parent
                                 text: "nmcli con import type wireguard file <conf>"
                                 font.pixelSize: 9; font.family: "JetBrainsMono Nerd Font"
-                                color: Qt.rgba(Theme.active.r, Theme.active.g, Theme.active.b, 0.5)
+                                color: Qt.rgba(Theme.color.accent.r, Theme.color.accent.g, Theme.color.accent.b, 0.5)
                             }
                         }
                     }
@@ -157,7 +157,7 @@ Item {
                         anchors.centerIn: parent; spacing: 8
                         Text {
                             anchors.horizontalCenter: parent.horizontalCenter
-                            text: "○"; font.pixelSize: 20; color: Theme.active
+                            text: "○"; font.pixelSize: 20; color: Theme.color.accent
                             SequentialAnimation on opacity {
                                 running: VpnService.loading && VpnService.connections.length === 0
                                 loops:   Animation.Infinite

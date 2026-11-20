@@ -8,7 +8,7 @@ Text {
     signal clicked()
 
     font.pixelSize: 16
-    color: _hov.hovered ? Theme.active : Theme.text
+    color: _hov.hovered ? Theme.color.accent : Theme.color.text
     HoverHandler { id: _hov }
     MouseArea {
         anchors.fill: parent

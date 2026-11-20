@@ -29,10 +29,10 @@ Item {
     Behavior on opacity { NumberAnimation { duration: 150 } }
 
     Rectangle {
-        anchors.fill: parent; radius: Theme.cornerRadius
+        anchors.fill: parent; radius: Theme.radius.card
         color:        Qt.rgba(1, 1, 1, 0.03)
         border.color: colItem.keyFocused
-                      ? Qt.rgba(Theme.active.r, Theme.active.g, Theme.active.b, 0.35)
+                      ? Qt.rgba(Theme.color.accent.r, Theme.color.accent.g, Theme.color.accent.b, 0.35)
                       : Qt.rgba(1, 1, 1, 0.07)
         border.width: 1
         Behavior on border.color { ColorAnimation { duration: 100 } }
@@ -51,17 +51,17 @@ Item {
                 spacing: 7
                 Text {
                     anchors.verticalCenter: parent.verticalCenter
-                    text: colItem.cLabel; color: Theme.active
+                    text: colItem.cLabel; color: Theme.color.accent
                     font.pixelSize: 12; font.weight: Font.DemiBold
                 }
                 Rectangle {
                     anchors.verticalCenter: parent.verticalCenter
                     width: cntT.implicitWidth + 10; height: 16; radius: 8
-                    color: Qt.rgba(Theme.active.r, Theme.active.g, Theme.active.b, 0.12)
+                    color: Qt.rgba(Theme.color.accent.r, Theme.color.accent.g, Theme.color.accent.b, 0.12)
                     Text {
                         id: cntT; anchors.centerIn: parent
                         text: colItem.cTasks.length
-                        color: Theme.active; font.pixelSize: 9; font.weight: Font.Bold
+                        color: Theme.color.accent; font.pixelSize: 9; font.weight: Font.Bold
                     }
                 }
             }
@@ -93,12 +93,12 @@ Item {
                 anchors { right: parent.right; verticalCenter: parent.verticalCenter }
                 width: 22; height: 22; radius: 6
                 color: addH.hovered
-                    ? Qt.rgba(Theme.active.r, Theme.active.g, Theme.active.b, 0.18)
+                    ? Qt.rgba(Theme.color.accent.r, Theme.color.accent.g, Theme.color.accent.b, 0.18)
                     : Qt.rgba(1, 1, 1, 0.05)
-                border.color: Qt.rgba(Theme.active.r, Theme.active.g, Theme.active.b, 0.20)
+                border.color: Qt.rgba(Theme.color.accent.r, Theme.color.accent.g, Theme.color.accent.b, 0.20)
                 border.width: 1
                 Behavior on color { ColorAnimation { duration: 100 } }
-                Text { anchors.centerIn: parent; text: "+"; color: Theme.active; font.pixelSize: 15 }
+                Text { anchors.centerIn: parent; text: "+"; color: Theme.color.accent; font.pixelSize: 15 }
                 HoverHandler { id: addH; cursorShape: Qt.PointingHandCursor }
                 MouseArea {
                     anchors.fill: parent
@@ -130,10 +130,10 @@ Item {
                     id: draftRect
                     anchors { left: parent.left; right: parent.right; top: parent.top; topMargin: 3 }
                     radius: 8
-                    color: Qt.rgba(Theme.active.r, Theme.active.g, Theme.active.b, 0.06)
+                    color: Qt.rgba(Theme.color.accent.r, Theme.color.accent.g, Theme.color.accent.b, 0.06)
                     border.color: draftInput.activeFocus
-                        ? Qt.rgba(Theme.active.r, Theme.active.g, Theme.active.b, 0.50)
-                        : Qt.rgba(Theme.active.r, Theme.active.g, Theme.active.b, 0.22)
+                        ? Qt.rgba(Theme.color.accent.r, Theme.color.accent.g, Theme.color.accent.b, 0.50)
+                        : Qt.rgba(Theme.color.accent.r, Theme.color.accent.g, Theme.color.accent.b, 0.22)
                     border.width: 1
                     implicitHeight: draftInput.contentHeight + 24
                     Behavior on border.color { ColorAnimation { duration: 100 } }
@@ -147,9 +147,9 @@ Item {
                     TextInput {
                         id: draftInput
                         anchors { left: parent.left; right: parent.right; leftMargin: 10; rightMargin: 10; verticalCenter: parent.verticalCenter }
-                        color: Theme.text; font.pixelSize: 12
+                        color: Theme.color.text; font.pixelSize: 12
                         wrapMode: TextInput.WordWrap
-                        selectionColor: Qt.rgba(Theme.active.r, Theme.active.g, Theme.active.b, 0.35)
+                        selectionColor: Qt.rgba(Theme.color.accent.r, Theme.color.accent.g, Theme.color.accent.b, 0.35)
 
                         function commit() {
                             var t = text.trim()

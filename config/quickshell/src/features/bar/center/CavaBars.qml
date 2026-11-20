@@ -10,7 +10,7 @@ Item {
     property var   bars:       []
     property real  barWidth:   5
     property real  barSpacing: 1
-    property color tint:       Theme.active
+    property color tint:       Theme.color.accent
     property real  minAlpha:   0.28
     property bool  muted:      false
 

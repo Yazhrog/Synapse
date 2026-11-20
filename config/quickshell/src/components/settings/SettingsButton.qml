@@ -59,7 +59,7 @@ SettingsRow {
         }
     }
 
-    readonly property color _tint: root.destructive ? "#f87171" : Theme.active
+    readonly property color _tint: root.destructive ? "#f87171" : Theme.color.accent
 
     Rectangle {
         width:   Math.max(104, label.implicitWidth + 24)
