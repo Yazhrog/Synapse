@@ -15,7 +15,7 @@ Item {
     readonly property color barColor: {
         if (usedPct >= 90) return "#f38ba8"
         if (usedPct >= 75) return "#f5c47a"
-        return Theme.active
+        return Theme.color.accent
     }
 
     // Mount label — left, fixed width

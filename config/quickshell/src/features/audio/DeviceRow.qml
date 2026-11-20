@@ -11,9 +11,9 @@ Item {
 
     Rectangle {
         anchors.fill: parent
-        radius: Theme.cornerRadius - 4
+        radius: Theme.radius.card - 4
         color:  row.isDefault
-                    ? Qt.rgba(Theme.active.r, Theme.active.g, Theme.active.b, 0.12)
+                    ? Qt.rgba(Theme.color.accent.r, Theme.color.accent.g, Theme.color.accent.b, 0.12)
                     : (rowHov.hovered ? Qt.rgba(1,1,1,0.05) : "transparent")
         Behavior on color { ColorAnimation { duration: 120 } }
     }
@@ -25,13 +25,13 @@ Item {
         Rectangle {
             width: 6; height: 6; radius: 3
             anchors.verticalCenter: parent.verticalCenter
-            color: row.isDefault ? Theme.active : Qt.rgba(1,1,1,0.2)
+            color: row.isDefault ? Theme.color.accent : Qt.rgba(1,1,1,0.2)
             Behavior on color { ColorAnimation { duration: 150 } }
         }
 
         Text {
             text:           row.label
-            color:          row.isDefault ? Theme.text : Qt.rgba(1,1,1,0.5)
+            color:          row.isDefault ? Theme.color.text : Qt.rgba(1,1,1,0.5)
             font.pixelSize: 11
             elide:          Text.ElideRight
             width:          parent.width - 14 - parent.spacing

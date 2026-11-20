@@ -38,7 +38,7 @@ ShellRoot {
         if (cond) console.log("PASS " + name)
         else { failures++; console.log("FAIL " + name + ": " + msg) }
     }
-    readonly property int settle: Theme.animDuration + 120
+    readonly property int settle: Theme.motion.slow + 120
 
     property var steps: [
         () => {

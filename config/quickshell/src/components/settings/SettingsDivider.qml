@@ -8,8 +8,8 @@ Item {
     Rectangle {
         anchors {
             fill:        parent
-            leftMargin:  Theme.settingsRowPadding
-            rightMargin: Theme.settingsRowPadding
+            leftMargin:  Theme.frame.settingsRowPadding
+            rightMargin: Theme.frame.settingsRowPadding
         }
         color: Qt.rgba(1, 1, 1, 0.07)
     }

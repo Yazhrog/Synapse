@@ -23,7 +23,7 @@ Item {
         Text {
             anchors { horizontalCenter: parent.horizontalCenter; leftMargin: 16; verticalCenter: parent.verticalCenter }
             text:           "Notifications"
-            color:          Theme.text
+            color:          Theme.color.text
             font.pixelSize: 14
             font.bold:      true
         }
@@ -45,7 +45,7 @@ Item {
                 id:               clearLabel
                 anchors.centerIn: parent
                 text:             "Clear all"
-                color:            Theme.subtext
+                color:            Theme.color.textMuted
                 font.pixelSize:   12
             }
             HoverHandler { id: clearHover }
@@ -116,12 +116,12 @@ Item {
                 text:           "󰂚"
                 color:          Qt.rgba(1, 1, 1, 0.15)
                 font.pixelSize: 28
-                font.family:    Theme.iconFont
+                font.family:    Theme.color.iconFont
             }
             Text {
                 anchors.horizontalCenter: parent.horizontalCenter
                 text:           "No notifications"
-                color:          Theme.subtext
+                color:          Theme.color.textMuted
                 font.pixelSize: 12
             }
         }
@@ -136,11 +136,11 @@ Item {
 
         // Urgency accent color — guard against undefined notification/urgency
         readonly property color urgencyColor: {
-            if (!notification) return Theme.active
+            if (!notification) return Theme.color.accent
             switch (notification.urgency) {
                 case NotificationUrgency.Critical: return "#e06c75"
                 case NotificationUrgency.Low:      return Qt.rgba(1, 1, 1, 0.25)
-                default:                           return Theme.active
+                default:                           return Theme.color.accent
             }
         }
 
@@ -204,7 +204,7 @@ Item {
                     Text {
                         anchors.centerIn: parent
                         text:           (card.notification?.appName ?? "?").charAt(0).toUpperCase()
-                        color:          Theme.text
+                        color:          Theme.color.text
                         font.pixelSize: 14
                         font.bold:      true
                     }
@@ -222,7 +222,7 @@ Item {
                 Text {
                     width:          parent.width
                     text:           card.notification?.appName ?? ""
-                    color:          Theme.subtext
+                    color:          Theme.color.textMuted
                     font.pixelSize: 11
                     elide:          Text.ElideRight
                     visible:        text !== ""
@@ -232,7 +232,7 @@ Item {
                 Text {
                     width:            parent.width
                     text:             card.notification?.summary ?? ""
-                    color:            Theme.text
+                    color:            Theme.color.text
                     font.pixelSize:   13
                     font.bold:        true
                     wrapMode:         Text.WordWrap
@@ -245,7 +245,7 @@ Item {
                 Text {
                     width:            parent.width
                     text:             card.notification?.body ?? ""
-                    color:            Theme.subtext
+                    color:            Theme.color.textMuted
                     font.pixelSize:   12
                     wrapMode:         Text.WordWrap
                     maximumLineCount: 3
@@ -278,7 +278,7 @@ Item {
                                 id:               actionLbl
                                 anchors.centerIn: parent
                                 text:             modelData?.text ?? ""
-                                color:            Theme.text
+                                color:            Theme.color.text
                                 font.pixelSize:   11
                             }
                             HoverHandler { id: actHover }
@@ -303,7 +303,7 @@ Item {
                 Text {
                     anchors.centerIn: parent
                     text:             "✕"
-                    color:            Theme.subtext
+                    color:            Theme.color.textMuted
                     font.pixelSize:   10
                 }
                 HoverHandler { id: xHover }

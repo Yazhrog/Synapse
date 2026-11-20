@@ -25,10 +25,10 @@ Item {
         anchors.fill: parent
         radius:       height / 2
         color: root.open
-            ? Qt.rgba(Theme.active.r, Theme.active.g, Theme.active.b, 0.15)
+            ? Qt.rgba(Theme.color.accent.r, Theme.color.accent.g, Theme.color.accent.b, 0.15)
             : hov.hovered ? Qt.rgba(1,1,1,0.08) : Qt.rgba(1,1,1,0.04)
         border.color: root.open
-            ? Qt.rgba(Theme.active.r, Theme.active.g, Theme.active.b, 0.3)
+            ? Qt.rgba(Theme.color.accent.r, Theme.color.accent.g, Theme.color.accent.b, 0.3)
             : Qt.rgba(1,1,1,0.1)
         border.width: 1
         Behavior on color        { ColorAnimation { duration: 100 } }
@@ -42,14 +42,14 @@ Item {
         Text {
             text: root.icon
             font.pixelSize: root.tintIcon ? 13 : 12
-            color: root.open ? Theme.active : Qt.rgba(1,1,1,0.7)
+            color: root.open ? Theme.color.accent : Qt.rgba(1,1,1,0.7)
             anchors.verticalCenter: parent.verticalCenter
             Behavior on color { ColorAnimation { duration: 100 } }
         }
         Text {
             text: root.label
             font.pixelSize: 11
-            color: root.open ? Theme.active : Qt.rgba(1,1,1,0.7)
+            color: root.open ? Theme.color.accent : Qt.rgba(1,1,1,0.7)
             anchors.verticalCenter: parent.verticalCenter
             Behavior on color { ColorAnimation { duration: 100 } }
         }

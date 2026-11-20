@@ -35,8 +35,6 @@ PanelWindow {
     // features/bar/BarWidgets.qml's widgets (BarWidgetSpec list)
     property var barWidgets: []
 
-    component Fade: NumberAnimation { duration: Metrics.regionFadeDuration }
-
     anchors {
         top:    true
         bottom: true
@@ -104,7 +102,7 @@ PanelWindow {
     }
 
     // ── Resolution scaling ───────────────────────────────────────────────────
-    // Every frame and region size is a Metrics value times localScale, rounded
+    // Every frame and region size is a Theme.frame value times localScale, rounded
     // to whole pixels (see SurfaceState.scaleFor; off by default, because the
     // hosted contents aren't scaled yet).
     readonly property real localScale: SurfaceState.scaleFor(screen)
@@ -114,15 +112,15 @@ PanelWindow {
     // frame's border; there are no borders in bar, and in pills it's the gap
     // between the floating shapes and the screen edges, so every region rect
     // and placement below works unchanged in the three styles.
-    readonly property string barStyle: Theme.barStyle
+    readonly property string barStyle: Theme.frame.barStyle
     readonly property bool   framed:   barStyle === "frame"
     readonly property bool   pills:    barStyle === "pills"
-    readonly property int borderWidth:  framed ? px(Theme.borderWidth)
-                                        : pills ? px(Metrics.pillGap) : 0
-    readonly property int notchHeight:  px(Theme.notchHeight)
-    readonly property int notchRadius:  px(Theme.notchRadius)
-    readonly property int cornerRadius: px(Theme.cornerRadius)
-    readonly property int notchPadding: px(Theme.notchPadding)
+    readonly property int borderWidth:  framed ? px(Theme.frame.borderWidth)
+                                        : pills ? px(Theme.frame.pillGap) : 0
+    readonly property int notchHeight:  px(Theme.frame.notchHeight)
+    readonly property int notchRadius:  px(Theme.radius.notch)
+    readonly property int cornerRadius: px(Theme.radius.card)
+    readonly property int notchPadding: px(Theme.frame.notchPadding)
 
     // ── Interactive popups (app/PopupManifest.qml) ──────────────────────────
     readonly property var popups: manifest ? manifest.popups : []
@@ -136,14 +134,14 @@ PanelWindow {
     // Notification toast: grows the right notch on the screen it was shown on.
     readonly property bool toastShown: ToastState.isOn(screenName) && ToastState.showing
                                        && openRegion !== "right" && regions.toastFits
-    readonly property int  toastWidth: px(Theme.notificationToastWidth + Theme.notchRadius + Metrics.toastNotchExtra)
+    readonly property int  toastWidth: px(Theme.frame.notificationToastWidth + Theme.radius.notch + Theme.frame.toastNotchExtra)
 
     // Quick Controls OSD: right-center region, on the focused monitor or while
     // its border trigger is hovered, unless a popup owns that region.
     readonly property bool quickShown: ((Popups.quickOpen && _focusedHere) || triggers.quickHoverOpen)
                                        && openRegion !== "rightCenter" && regions.quickFits
-    readonly property int  quickWidth:  px(Metrics.osdWidth)
-    readonly property int  sideHeight:  px(Metrics.sideRegionHeight)
+    readonly property int  quickWidth:  px(Theme.frame.osdWidth)
+    readonly property int  sideHeight:  px(Theme.frame.sideRegionHeight)
     readonly property real toastHeight: toastCard.implicitHeight
 
     // ── Frame geometry (Regions.qml) ─────────────────────────────────────────
@@ -248,9 +246,9 @@ PanelWindow {
         Loader {
             id:     osdLoader
             x:      root.px(8)
-            y:      root.px(Metrics.osdTopPadding)
+            y:      root.px(Theme.frame.osdTopPadding)
             width:  root.quickWidth - root.px(16)
-            height: parent.height - root.px(Metrics.osdTopPadding)
+            height: parent.height - root.px(Theme.frame.osdTopPadding)
             sourceComponent: root.manifest ? root.manifest.osd : null
             Binding { target: osdLoader.item; property: "fastPoll"; value: root.quickShown; when: osdLoader.item !== null }
         }
@@ -277,8 +275,8 @@ PanelWindow {
         id: recOptions
         // Hangs just under the bar, aligned with the button that opened it
         // (like the other dropdowns), one pill gap below the notch.
-        x:       Math.min(ScreenRecService.popupTargetX, root.width - width - root.px(Metrics.pillGap))
-        y:       root.notchBottom + root.px(Metrics.pillGap)
+        x:       Math.min(ScreenRecService.popupTargetX, root.width - width - root.px(Theme.frame.pillGap))
+        y:       root.notchBottom + root.px(Theme.frame.pillGap)
         width:   item ? item.implicitWidth : 0
         height:  item ? item.implicitHeight : 0
         visible: ScreenRecService.openStrip !== "" && ScreenRecService.popupTargetScreen === root.screenName

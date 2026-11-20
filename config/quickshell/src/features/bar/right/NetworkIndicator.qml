@@ -27,7 +27,7 @@ Item {
         if (!WifiService.ethernet && WifiService.signal <= 0) return Qt.rgba(1,1,1,0.28)
         if (WifiService.connectivity === "none")   return "#f87171"
         if (WifiService.limited)                   return "#f5c47a"
-        return hov.hovered ? Theme.active : Theme.text
+        return hov.hovered ? Theme.color.accent : Theme.color.text
     }
 
     // VPN blink
@@ -76,7 +76,7 @@ Item {
             font.pixelSize: 14
             anchors.verticalCenter: parent.verticalCenter
             opacity:        root._vpnOpacity
-            color: VpnService.active ? Theme.active : Qt.rgba(Theme.active.r, Theme.active.g, Theme.active.b, 0.70)
+            color: VpnService.active ? Theme.color.accent : Qt.rgba(Theme.color.accent.r, Theme.color.accent.g, Theme.color.accent.b, 0.70)
             Behavior on color   { ColorAnimation  { duration: 200 } }
             Behavior on opacity { NumberAnimation { duration: 80  } }
             MouseArea {
@@ -95,7 +95,7 @@ Item {
             text:           BluetoothService.connected ? "󰂱" : "󰂯"
             font.pixelSize: 14
             anchors.verticalCenter: parent.verticalCenter
-            color: BluetoothService.connected ? (hov.hovered ? Theme.active : Theme.text) : Qt.rgba(1,1,1,0.32)
+            color: BluetoothService.connected ? (hov.hovered ? Theme.color.accent : Theme.color.text) : Qt.rgba(1,1,1,0.32)
             Behavior on color { ColorAnimation { duration: 200 } }
             MouseArea {
                 anchors.fill: parent
@@ -113,7 +113,7 @@ Item {
             text:           "󰀂"
             font.pixelSize: 14
             anchors.verticalCenter: parent.verticalCenter
-            color:          Theme.active
+            color:          Theme.color.accent
             Behavior on color { ColorAnimation { duration: 200 } }
             MouseArea {
                 anchors.fill: parent

@@ -3,7 +3,7 @@ import qs.src.state
 import qs.src.theme
 // SurfaceTriggers — the border trigger zones of a DynamicSurface (#42).
 //
-// Each zone is Metrics.edgeTriggerDepth deep (Hyprland's gaps_out), so it's
+// Each zone is Theme.frame.edgeTriggerDepth deep (Hyprland's gaps_out), so it's
 // easy to hit at the screen edge without covering windows, and at least as
 // deep as the border:
 //   • right border middle — hovering shows the Quick Controls OSD
@@ -28,26 +28,26 @@ Item {
     readonly property Item bottomZone: bottomTrigger
     readonly property Item cornerZone: cornerTrigger
 
-    readonly property int _depth: Math.max(surface.px(Metrics.edgeTriggerDepth), surface.borderWidth)
+    readonly property int _depth: Math.max(surface.px(Theme.frame.edgeTriggerDepth), surface.borderWidth)
 
     Item {
         id: rightTrigger
         x: triggers.surface.width - width; y: (triggers.surface.height - height) / 2
-        width: triggers._depth; height: triggers.surface.px(Metrics.sideTriggerLength)
+        width: triggers._depth; height: triggers.surface.px(Theme.frame.sideTriggerLength)
         HoverHandler { id: rightTriggerHover }
     }
 
     Item {
         id: bottomTrigger
         x: (triggers.surface.width - width) / 2; y: triggers.surface.height - height
-        width: triggers.surface.px(Metrics.bottomTriggerWidth); height: triggers._depth
+        width: triggers.surface.px(Theme.frame.bottomTriggerWidth); height: triggers._depth
         TapHandler { onTapped: Popups.toggle("wallpaper", triggers.surface.screenName) }
     }
 
     Item {
         id: cornerTrigger
         x: triggers.surface.width - width; y: triggers.surface.height - height
-        width: triggers.surface.px(Metrics.cornerTriggerWidth); height: triggers._depth
+        width: triggers.surface.px(Theme.frame.cornerTriggerWidth); height: triggers._depth
         TapHandler { onTapped: Popups.toggle("clipboard", triggers.surface.screenName) }
     }
 

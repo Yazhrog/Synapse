@@ -5,7 +5,7 @@ import qs.src.services.data
 import qs.src.theme
 // AppearancePage — Config → Appearance: how the frame looks.
 //
-// Every control edits a Prefs key that Metrics/Theme read, so the
+// Every control edits a Prefs key that Theme reads, so the
 // frame, the bar and every popup follow live. Theme presets and colour
 // overrides will land in this tab later.
 Item {
@@ -46,9 +46,9 @@ Item {
 
             PrefDropdown {
                 key: "barStyle"
-                description: Theme.barStyle === "pills"
+                description: Theme.frame.barStyle === "pills"
                     ? "Floating capsules; popups grow out of them."
-                    : Theme.barStyle === "bar"
+                    : Theme.frame.barStyle === "bar"
                         ? "One full-width bar along the top, no borders."
                         : "Notches joined by the borders around the screen."
             }
@@ -57,10 +57,10 @@ Item {
 
             PrefSlider {
                 key: "borderWidth"
-                description: Theme.barStyle === "frame"
+                description: Theme.frame.barStyle === "frame"
                     ? "Of the side and bottom borders. 0 hides them."
                     : "Only in the Frame style."
-                enabled:     Theme.barStyle === "frame"
+                enabled:     Theme.frame.barStyle === "frame"
                 opacity:     enabled ? 1 : 0.45
                 stepSize:    1
                 unit:        " px"

@@ -94,7 +94,7 @@ StatCard {
             Text {
                 anchors.centerIn: parent
                 text: root._label; font.pixelSize: 10; font.weight: Font.Bold
-                color: Theme.text
+                color: Theme.color.text
             }
             Text {
                 anchors { right: parent.right; verticalCenter: parent.verticalCenter }
@@ -159,7 +159,7 @@ StatCard {
                             anchors.centerIn: parent; text: modelData.n
                             font.pixelSize: 9; font.family: "JetBrainsMono Nerd Font"
                             font.weight: isToday ? Font.Bold : Font.Normal
-                            color: isToday ? Theme.active
+                            color: isToday ? Theme.color.accent
                                    : modelData.cur ? Qt.rgba(205/255,214/255,244/255,0.55)
                                                    : Qt.rgba(1,1,1,0.13)
                         }

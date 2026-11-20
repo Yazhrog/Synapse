@@ -45,11 +45,11 @@ Item {
         anchors.centerIn: parent
         width:  Math.min(root.width - 16, Math.max(230, col.implicitWidth + 32))
         height: col.implicitHeight + 28
-        radius: Theme.cornerRadius
+        radius: Theme.radius.card
         color: Qt.rgba(
-            Math.min(1, Theme.background.r + 0.06),
-            Math.min(1, Theme.background.g + 0.06),
-            Math.min(1, Theme.background.b + 0.06), 0.98)
+            Math.min(1, Theme.color.background.r + 0.06),
+            Math.min(1, Theme.color.background.g + 0.06),
+            Math.min(1, Theme.color.background.b + 0.06), 0.98)
         border.color: Qt.rgba(1,1,1,0.15); border.width: 1
 
         // Swallow clicks so they don't reach the dim below
@@ -61,7 +61,7 @@ Item {
 
             Text {
                 anchors.horizontalCenter: parent.horizontalCenter
-                text: root.heading; color: Theme.text; font.pixelSize: 12; font.weight: Font.Medium
+                text: root.heading; color: Theme.color.text; font.pixelSize: 12; font.weight: Font.Medium
             }
             Text {
                 anchors.horizontalCenter: parent.horizontalCenter
@@ -77,7 +77,7 @@ Item {
                 Rectangle {
                     width: 64; height: 24; radius: 6
                     color: cnH.hovered || root.choice === 0 ? Qt.rgba(1,1,1,0.12) : Qt.rgba(1,1,1,0.05)
-                    border.color: root.choice === 0 ? Theme.active : Qt.rgba(1,1,1,0.10)
+                    border.color: root.choice === 0 ? Theme.color.accent : Qt.rgba(1,1,1,0.10)
                     border.width: root.choice === 0 ? 2 : 1
                     Behavior on color { ColorAnimation { duration: 80 } }
                     Text { anchors.centerIn: parent; text: "Cancel"; font.pixelSize: 11; color: Qt.rgba(1,1,1,0.60) }
@@ -87,7 +87,7 @@ Item {
                 Rectangle {
                     width: 64; height: 24; radius: 6
                     color: cfH.hovered || root.choice === 1 ? "#cc3a3a" : "#993030"
-                    border.color: root.choice === 1 ? Theme.active : "transparent"
+                    border.color: root.choice === 1 ? Theme.color.accent : "transparent"
                     border.width: 2
                     Behavior on color { ColorAnimation { duration: 80 } }
                     Text { anchors.centerIn: parent; text: "Delete"; font.pixelSize: 11; font.weight: Font.Bold; color: "white" }

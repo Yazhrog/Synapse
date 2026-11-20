@@ -68,7 +68,7 @@ Item {
                 text:           "Clipboard"
                 font.pixelSize: 14
                 font.weight:    Font.DemiBold
-                color:          Theme.text
+                color:          Theme.color.text
             }
 
             // Clear unpinned history button
@@ -120,7 +120,7 @@ Item {
                          && root.pinned.length  === 0
                 Text {
                     anchors.horizontalCenter: parent.horizontalCenter
-                    text: "○"; font.pixelSize: 22; color: Theme.active
+                    text: "○"; font.pixelSize: 22; color: Theme.color.accent
                     SequentialAnimation on opacity {
                         running: parent.visible; loops: Animation.Infinite
                         NumberAnimation { to: 0.15; duration: 500 }
@@ -255,11 +255,11 @@ component ClipRow: Item {
         radius: 9
 
         color: row.isPinned
-            ? Qt.rgba(Theme.active.r, Theme.active.g, Theme.active.b, rHov.hovered ? 0.10 : 0.055)
+            ? Qt.rgba(Theme.color.accent.r, Theme.color.accent.g, Theme.color.accent.b, rHov.hovered ? 0.10 : 0.055)
             : rHov.hovered ? Qt.rgba(1, 1, 1, 0.065) : Qt.rgba(1, 1, 1, 0.024)
 
         border.color: row.isPinned
-            ? Qt.rgba(Theme.active.r, Theme.active.g, Theme.active.b, rHov.hovered ? 0.30 : 0.18)
+            ? Qt.rgba(Theme.color.accent.r, Theme.color.accent.g, Theme.color.accent.b, rHov.hovered ? 0.30 : 0.18)
             : rHov.hovered ? Qt.rgba(1, 1, 1, 0.13) : Qt.rgba(1, 1, 1, 0.065)
         border.width: 1
 

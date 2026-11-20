@@ -33,7 +33,7 @@ Item {
             width: parent.width; height: 48   // header: 8 px around the 32 px buttons
 
             Text { anchors { left: parent.left; leftMargin: 2; verticalCenter: parent.verticalCenter }
-            text: "Bluetooth"; font.pixelSize: 15; font.weight: Font.Bold; color: Theme.text }
+            text: "Bluetooth"; font.pixelSize: 15; font.weight: Font.Bold; color: Theme.color.text }
 
             Row {
                 anchors { right: parent.right; verticalCenter: parent.verticalCenter }
@@ -47,21 +47,21 @@ Item {
                     width: scanRow.implicitWidth + 20; height: 30; radius: 15
                     opacity: BluetoothService.powered ? 1.0 : 0.35
                     Behavior on opacity { NumberAnimation { duration: 200 } }
-                    color: BluetoothService.scanning ? Qt.rgba(Theme.active.r, Theme.active.g, Theme.active.b, 0.18) : scanH.hovered && BluetoothService.powered ? Qt.rgba(Theme.active.r, Theme.active.g, Theme.active.b, 0.12) : Qt.rgba(1,1,1,0.05)
-                    border.color: BluetoothService.scanning ? Qt.rgba(Theme.active.r, Theme.active.g, Theme.active.b, 0.48) : Qt.rgba(Theme.active.r, Theme.active.g, Theme.active.b, 0.28); border.width: 1
+                    color: BluetoothService.scanning ? Qt.rgba(Theme.color.accent.r, Theme.color.accent.g, Theme.color.accent.b, 0.18) : scanH.hovered && BluetoothService.powered ? Qt.rgba(Theme.color.accent.r, Theme.color.accent.g, Theme.color.accent.b, 0.12) : Qt.rgba(1,1,1,0.05)
+                    border.color: BluetoothService.scanning ? Qt.rgba(Theme.color.accent.r, Theme.color.accent.g, Theme.color.accent.b, 0.48) : Qt.rgba(Theme.color.accent.r, Theme.color.accent.g, Theme.color.accent.b, 0.28); border.width: 1
                     Behavior on color { ColorAnimation { duration: 130 } }
                     Row {
                         id: scanRow; anchors.centerIn: parent; spacing: 7
                         Rectangle {
                             width: 7; height: 7; radius: 4; anchors.verticalCenter: parent.verticalCenter
-                            color: BluetoothService.scanning ? Theme.active : Qt.rgba(Theme.active.r, Theme.active.g, Theme.active.b, 0.55)
+                            color: BluetoothService.scanning ? Theme.color.accent : Qt.rgba(Theme.color.accent.r, Theme.color.accent.g, Theme.color.accent.b, 0.55)
                             Behavior on color { ColorAnimation { duration: 120 } }
                             SequentialAnimation on opacity { 
                                 running: BluetoothService.scanning; loops: Animation.Infinite; NumberAnimation { to: 0.15; duration: 450 }
                                 NumberAnimation { to: 1.0; duration: 450 }
                             }
                         }
-                        Text { anchors.verticalCenter: parent.verticalCenter; text: BluetoothService.scanning ? "Stop" : "Scan"; font.pixelSize: 12; font.weight: Font.Medium; color: BluetoothService.scanning ? Theme.active : Qt.rgba(1,1,1,0.6); Behavior on color { ColorAnimation { duration: 130 } } }
+                        Text { anchors.verticalCenter: parent.verticalCenter; text: BluetoothService.scanning ? "Stop" : "Scan"; font.pixelSize: 12; font.weight: Font.Medium; color: BluetoothService.scanning ? Theme.color.accent : Qt.rgba(1,1,1,0.6); Behavior on color { ColorAnimation { duration: 130 } } }
                     }
                     HoverHandler { id: scanH; cursorShape: BluetoothService.powered ? Qt.PointingHandCursor : Qt.ArrowCursor }
                     MouseArea { anchors.fill: parent; onClicked: if (BluetoothService.powered) BluetoothService.toggleScan() }
@@ -78,7 +78,7 @@ Item {
             Behavior on height { NumberAnimation { duration: 250; easing.type: Easing.OutCubic } }
             ScanRings { running: BluetoothService.scanning; anchors.centerIn: parent; width: 52; height: 52; centerGlyph: "󰂯"; glyphSize: 14 }
             Text { anchors { horizontalCenter: parent.horizontalCenter; bottom: parent.bottom; bottomMargin: 6 }
-            text: "Scanning for devices…"; font.pixelSize: 10; color: Qt.rgba(Theme.active.r, Theme.active.g, Theme.active.b, 0.50) }
+            text: "Scanning for devices…"; font.pixelSize: 10; color: Qt.rgba(Theme.color.accent.r, Theme.color.accent.g, Theme.color.accent.b, 0.50) }
         }
 
         Flickable {
@@ -93,7 +93,7 @@ Item {
                 id: devCol; width: parent.width; height: implicitHeight; spacing: 4
 
                 Item { width: parent.width; height: visible ? pLbl.implicitHeight + 4 : 0; visible: BluetoothService.paired.length > 0
-                    Text { id: pLbl; text: "PAIRED"; font.pixelSize: 9; font.weight: Font.Bold; font.letterSpacing: 1.2; color: Qt.rgba(Theme.active.r, Theme.active.g, Theme.active.b, 0.5) } }
+                    Text { id: pLbl; text: "PAIRED"; font.pixelSize: 9; font.weight: Font.Bold; font.letterSpacing: 1.2; color: Qt.rgba(Theme.color.accent.r, Theme.color.accent.g, Theme.color.accent.b, 0.5) } }
 
                 Repeater {
                     model: BluetoothService.paired

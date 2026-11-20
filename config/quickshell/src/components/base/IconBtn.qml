@@ -7,10 +7,10 @@ Rectangle {
     radius: 4
     
     // 1. Correct: referencing the ID 'hover' directly works here
-    color: hover.hovered ? Theme.active : "transparent"
+    color: hover.hovered ? Theme.color.accent : "transparent"
     
     property string text: "" 
-    property color textColor: Theme.text
+    property color textColor: Theme.color.text
     signal clicked()
 
     Text {
@@ -18,7 +18,7 @@ Rectangle {
         text: root.text
         
         // 2. FIX: Changed 'root.hoverHandler.hovered' to 'hover.hovered'
-        color: hover.hovered ? Theme.background : root.textColor
+        color: hover.hovered ? Theme.color.background : root.textColor
         
         font.pixelSize: 14
     }

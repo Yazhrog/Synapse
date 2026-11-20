@@ -16,13 +16,13 @@ Item {
         id: brightLbl
         anchors { left: parent.left; top: parent.top }
         text: "BRIGHTNESS"; font.pixelSize: 9; font.weight: Font.Bold
-        color: Qt.rgba(Theme.active.r, Theme.active.g, Theme.active.b, 0.55)
+        color: Qt.rgba(Theme.color.accent.r, Theme.color.accent.g, Theme.color.accent.b, 0.55)
     }
     Text {
         anchors { right: parent.right; top: parent.top }
         text: Math.round(root.value * 100) + "%"
         font.pixelSize: 9; font.family: "JetBrainsMono Nerd Font"; font.weight: Font.Bold
-        color: Qt.rgba(Theme.active.r, Theme.active.g, Theme.active.b, 0.7)
+        color: Qt.rgba(Theme.color.accent.r, Theme.color.accent.g, Theme.color.accent.b, 0.7)
     }
 
     Row {
@@ -32,7 +32,7 @@ Item {
         Text {
             anchors.verticalCenter: parent.verticalCenter
             text: "󰃞"; font.pixelSize: 13
-            color: Qt.rgba(Theme.text.r, Theme.text.g, Theme.text.b, 0.35)
+            color: Qt.rgba(Theme.color.text.r, Theme.color.text.g, Theme.color.text.b, 0.35)
         }
 
         Item {
@@ -45,11 +45,11 @@ Item {
                 id: btrack
                 anchors.verticalCenter: parent.verticalCenter
                 width: parent.width; height: 5; radius: height / 2
-                color: Qt.rgba(Theme.text.r, Theme.text.g, Theme.text.b, 0.12)
+                color: Qt.rgba(Theme.color.text.r, Theme.color.text.g, Theme.color.text.b, 0.12)
                 Rectangle {
                     anchors { left: parent.left; top: parent.top; bottom: parent.bottom }
                     width: Math.max(parent.radius * 2, parent.width * root.value)
-                    radius: parent.radius; color: Theme.active
+                    radius: parent.radius; color: Theme.color.accent
                     Behavior on width { NumberAnimation { duration: 80; easing.type: Easing.OutCubic } }
                 }
                 MouseArea {
@@ -80,7 +80,7 @@ Item {
         Text {
             anchors.verticalCenter: parent.verticalCenter
             text: "󰃠"; font.pixelSize: 13
-            color: Qt.rgba(Theme.active.r, Theme.active.g, Theme.active.b, 0.75)
+            color: Qt.rgba(Theme.color.accent.r, Theme.color.accent.g, Theme.color.accent.b, 0.75)
         }
     }
 }

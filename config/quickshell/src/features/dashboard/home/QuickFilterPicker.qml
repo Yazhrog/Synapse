@@ -29,14 +29,14 @@ Rectangle {
     width:  180
     // Fits "Off" + every shader row, capped at 280
     height: Math.min(280, pickerCol.implicitHeight + 16)
-    radius: Theme.cornerRadius
+    radius: Theme.radius.card
 
     color: Qt.rgba(
-        Math.min(1, Theme.background.r + 0.05),
-        Math.min(1, Theme.background.g + 0.05),
-        Math.min(1, Theme.background.b + 0.05),
+        Math.min(1, Theme.color.background.r + 0.05),
+        Math.min(1, Theme.color.background.g + 0.05),
+        Math.min(1, Theme.color.background.b + 0.05),
         0.98)
-    border.color: Qt.rgba(Theme.text.r, Theme.text.g, Theme.text.b, 0.10)
+    border.color: Qt.rgba(Theme.color.text.r, Theme.color.text.g, Theme.color.text.b, 0.10)
     border.width: 1
 
     // Subtle entrance scale + fade
@@ -58,8 +58,8 @@ Rectangle {
         height: 28
         radius: 6
         color: isActive
-            ? Qt.rgba(Theme.active.r, Theme.active.g, Theme.active.b, 0.14)
-            : rowH.hovered ? Qt.rgba(Theme.text.r, Theme.text.g, Theme.text.b, 0.07) : "transparent"
+            ? Qt.rgba(Theme.color.accent.r, Theme.color.accent.g, Theme.color.accent.b, 0.14)
+            : rowH.hovered ? Qt.rgba(Theme.color.text.r, Theme.color.text.g, Theme.color.text.b, 0.07) : "transparent"
         Behavior on color { ColorAnimation { duration: 100 } }
 
         Row {
@@ -68,14 +68,14 @@ Rectangle {
             Text {
                 text:           row.isActive ? "●" : "○"
                 font.pixelSize: 9
-                color: row.isActive ? Theme.active : Qt.rgba(Theme.text.r, Theme.text.g, Theme.text.b, 0.30)
+                color: row.isActive ? Theme.color.accent : Qt.rgba(Theme.color.text.r, Theme.color.text.g, Theme.color.text.b, 0.30)
                 anchors.verticalCenter: parent.verticalCenter
                 Behavior on color { ColorAnimation { duration: 100 } }
             }
             Text {
                 text:           row.name === "" ? "Off" : row.name
                 font.pixelSize: 12
-                color: row.isActive ? Theme.active : Qt.rgba(Theme.text.r, Theme.text.g, Theme.text.b, 0.65)
+                color: row.isActive ? Theme.color.accent : Qt.rgba(Theme.color.text.r, Theme.color.text.g, Theme.color.text.b, 0.65)
                 anchors.verticalCenter: parent.verticalCenter
                 elide: Text.ElideRight
                 width: row.name === "" ? implicitWidth : pickerCol.width - 38
@@ -107,7 +107,7 @@ Rectangle {
                 width: parent.width
                 text: "SHADER"
                 font.pixelSize: 9; font.weight: Font.Bold
-                color: Qt.rgba(Theme.active.r, Theme.active.g, Theme.active.b, 0.55)
+                color: Qt.rgba(Theme.color.accent.r, Theme.color.accent.g, Theme.color.accent.b, 0.55)
                 leftPadding: 4
                 bottomPadding: 4
             }
@@ -116,7 +116,7 @@ Rectangle {
 
             Rectangle {
                 width: parent.width; height: 1
-                color: Qt.rgba(Theme.text.r, Theme.text.g, Theme.text.b, 0.07)
+                color: Qt.rgba(Theme.color.text.r, Theme.color.text.g, Theme.color.text.b, 0.07)
             }
 
             Repeater {
@@ -133,7 +133,7 @@ Rectangle {
                 visible: ScreenFilterService.list.length === 0
                 text:    "Loading…"
                 font.pixelSize: 11
-                color:   Qt.rgba(Theme.text.r, Theme.text.g, Theme.text.b, 0.25)
+                color:   Qt.rgba(Theme.color.text.r, Theme.color.text.g, Theme.color.text.b, 0.25)
                 horizontalAlignment: Text.AlignHCenter
                 topPadding: 4
             }

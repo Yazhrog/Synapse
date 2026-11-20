@@ -79,7 +79,7 @@ Singleton {
     property string networkPage: "wifi"
 
     // ── Hover behaviour ───────────────────────────────────────────────────────
-    property int  hoverCloseDelay: Theme.animDuration + 200   // delay after hover leaves before closing
+    property int  hoverCloseDelay: Theme.motion.slow + 200   // delay after hover leaves before closing
 
     // ── Global state ──────────────────────────────────────────────────────────
     // True while an interactive popup is open. The passive OSD and toast are

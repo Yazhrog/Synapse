@@ -22,7 +22,7 @@ Item {
             Text {
                 anchors { left: parent.left; verticalCenter: parent.verticalCenter }
                 text: "Alarms"; font.pixelSize: 12; font.weight: Font.DemiBold
-                color: Qt.rgba(Theme.text.r, Theme.text.g, Theme.text.b, 0.7)
+                color: Qt.rgba(Theme.color.text.r, Theme.color.text.g, Theme.color.text.b, 0.7)
             }
 
             ClockAddButton {
@@ -46,9 +46,9 @@ Item {
             anchors { left: parent.left; right: parent.right; top: alarmHeader.bottom; topMargin: 6 }
             height:  root._addOpen ? 140 : 0
             clip:    true
-            color:   Qt.rgba(Theme.active.r, Theme.active.g, Theme.active.b, 0.05)
+            color:   Qt.rgba(Theme.color.accent.r, Theme.color.accent.g, Theme.color.accent.b, 0.05)
             radius:  8
-            border.color: Qt.rgba(Theme.active.r, Theme.active.g, Theme.active.b,0.1); border.width: 1
+            border.color: Qt.rgba(Theme.color.accent.r, Theme.color.accent.g, Theme.color.accent.b,0.1); border.width: 1
             opacity: root._addOpen ? 1 : 0
             Behavior on height  { NumberAnimation { duration: 180; easing.type: Easing.OutCubic } }
             Behavior on opacity { NumberAnimation { duration: 150 } }
@@ -92,7 +92,7 @@ Item {
                 width: alarmList.width; height: 36; radius: 8
                 color: Qt.rgba(1,1,1,0.04)
                 border.color: modelData.enabled
-                              ? Qt.rgba(Theme.active.r, Theme.active.g, Theme.active.b,0.15)
+                              ? Qt.rgba(Theme.color.accent.r, Theme.color.accent.g, Theme.color.accent.b,0.15)
                               : Qt.rgba(1,1,1,0.07)
                 border.width: 1
 
@@ -102,7 +102,7 @@ Item {
                     text: ClockService.zp(modelData.hour) + ":" + ClockService.zp(modelData.minute)
                     font.pixelSize: 15; font.weight: Font.Bold; font.family: "JetBrainsMono Nerd Font"
                     color: modelData.enabled
-                           ? Qt.rgba(Theme.text.r, Theme.text.g, Theme.text.b, 0.9)
+                           ? Qt.rgba(Theme.color.text.r, Theme.color.text.g, Theme.color.text.b, 0.9)
                            : Qt.rgba(1,1,1,0.3)
                 }
 
@@ -111,14 +111,14 @@ Item {
                     anchors { right: deleteBtn.left; rightMargin: 6; verticalCenter: parent.verticalCenter }
                     width: 28; height: 18; radius: 9
                     color: modelData.enabled
-                           ? Qt.rgba(Theme.active.r, Theme.active.g, Theme.active.b,0.25)
+                           ? Qt.rgba(Theme.color.accent.r, Theme.color.accent.g, Theme.color.accent.b,0.25)
                            : Qt.rgba(1,1,1,0.1)
                     Behavior on color { ColorAnimation { duration: 130 } }
                     Rectangle {
                         width: 12; height: 12; radius: 6
                         anchors.verticalCenter: parent.verticalCenter
                         x: modelData.enabled ? parent.width - width - 3 : 3
-                        color: modelData.enabled ? Theme.active : Qt.rgba(1,1,1,0.3)
+                        color: modelData.enabled ? Theme.color.accent : Qt.rgba(1,1,1,0.3)
                         Behavior on x     { NumberAnimation { duration: 130; easing.type: Easing.OutCubic } }
                         Behavior on color { ColorAnimation  { duration: 130 } }
                     }

@@ -5,7 +5,7 @@ import qs.src.theme
 
 Text {
     text:  ActiveWindowService.title
-    color: Theme.text
+    color: Theme.color.text
     font.pixelSize: 13
     verticalAlignment:   Text.AlignVCenter
     horizontalAlignment: Text.AlignHCenter

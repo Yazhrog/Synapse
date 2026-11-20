@@ -35,21 +35,21 @@ Item {
 
     width:          parent ? parent.width : 0
     implicitHeight: line.height + (belowSlot.childrenRect.height > 0
-                                   ? belowSlot.childrenRect.height + Theme.settingsRowPadding
+                                   ? belowSlot.childrenRect.height + Theme.frame.settingsRowPadding
                                    : 0)
     height:         implicitHeight
 
     Item {
         id: line
         width:  parent.width
-        height: Math.max(Theme.settingsRowMinHeight,
-                         texts.implicitHeight + 2 * Theme.settingsRowPadding)
+        height: Math.max(Theme.frame.settingsRowMinHeight,
+                         texts.implicitHeight + 2 * Theme.frame.settingsRowPadding)
 
         Column {
             id: texts
             anchors {
                 left:           parent.left
-                leftMargin:     Theme.settingsRowPadding
+                leftMargin:     Theme.frame.settingsRowPadding
                 right:          controls.left
                 rightMargin:    12
                 verticalCenter: parent.verticalCenter
@@ -60,7 +60,7 @@ Item {
                 width:          parent.width
                 text:           row.label
                 font.pixelSize: 12
-                color:          row.activeFocus ? Theme.active : Theme.text
+                color:          row.activeFocus ? Theme.color.accent : Theme.color.text
                 elide:          Text.ElideRight
                 Behavior on color { ColorAnimation { duration: 120 } }
             }
@@ -70,7 +70,7 @@ Item {
                 text:           row.description
                 font.pixelSize: row.monoDescription ? 11 : 10
                 font.family:    row.monoDescription ? "monospace" : Qt.application.font.family
-                color:          Qt.rgba(Theme.text.r, Theme.text.g, Theme.text.b,
+                color:          Qt.rgba(Theme.color.text.r, Theme.color.text.g, Theme.color.text.b,
                                         row.monoDescription ? 0.70 : 0.45)
                 elide:          row.monoDescription ? Text.ElideMiddle : Text.ElideRight
             }
@@ -80,7 +80,7 @@ Item {
             id: controls
             anchors {
                 right:          parent.right
-                rightMargin:    Theme.settingsRowPadding
+                rightMargin:    Theme.frame.settingsRowPadding
                 verticalCenter: parent.verticalCenter
             }
             spacing: 8
@@ -107,8 +107,8 @@ Item {
             top:         line.bottom
             left:        parent.left
             right:       parent.right
-            leftMargin:  Theme.settingsRowPadding
-            rightMargin: Theme.settingsRowPadding
+            leftMargin:  Theme.frame.settingsRowPadding
+            rightMargin: Theme.frame.settingsRowPadding
         }
         height: childrenRect.height
     }

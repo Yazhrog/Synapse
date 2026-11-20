@@ -37,7 +37,7 @@ Item {
         Text {
             id: iconText
             text:           root.icon
-            color:          hov.hovered ? Theme.active : Theme.text
+            color:          hov.hovered ? Theme.color.accent : Theme.color.text
             font.pixelSize: 18
             anchors.verticalCenter: parent.verticalCenter
             Behavior on color { ColorAnimation { duration: 120 } }
@@ -50,12 +50,12 @@ Item {
             implicitHeight: pctText.implicitHeight
             clip: true
             anchors.verticalCenter: parent.verticalCenter
-            Behavior on implicitWidth { NumberAnimation { duration: Theme.animDuration; easing.type: Easing.InOutCubic } }
+            Behavior on implicitWidth { NumberAnimation { duration: Theme.motion.slow; easing.type: Easing.InOutCubic } }
         
             Text {
                 id: pctText
                 text:           root.pct + "%"
-                color:          hov.hovered ? Theme.active : Theme.text
+                color:          hov.hovered ? Theme.color.accent : Theme.color.text
                 font.pixelSize: 12
                 anchors.verticalCenter: parent.verticalCenter
                 Behavior on color { ColorAnimation { duration: 120 } }

@@ -9,7 +9,7 @@ Item {
 
     property string label:      ""
     property string value:      ""
-    property color  valueColor: Theme.text
+    property color  valueColor: Theme.color.text
 
     implicitHeight: 20
 

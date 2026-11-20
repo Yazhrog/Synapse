@@ -21,10 +21,10 @@ Item {
         radius:       height / 2
 
         color: root.active
-                   ? Theme.active
+                   ? Theme.color.accent
                    : (hov.hovered && root.enabled ? Qt.rgba(1,1,1,0.08) : "transparent")
         border.color: root.active
-                          ? Theme.active
+                          ? Theme.color.accent
                           : Qt.rgba(1, 1, 1, 0.18)
         border.width: 1
 
@@ -41,7 +41,7 @@ Item {
             visible:        root.icon !== ""
             text:           root.icon
             font.pixelSize: 12
-            color:          root.active ? Theme.background : Qt.rgba(1, 1, 1, 0.7)
+            color:          root.active ? Theme.color.background : Qt.rgba(1, 1, 1, 0.7)
             anchors.verticalCenter: parent.verticalCenter
             Behavior on color { ColorAnimation { duration: 120 } }
         }
@@ -50,7 +50,7 @@ Item {
             text:           root.label
             font.pixelSize: 11
             font.weight:    root.active ? Font.Medium : Font.Normal
-            color:          root.active ? Theme.background : Qt.rgba(1, 1, 1, 0.7)
+            color:          root.active ? Theme.color.background : Qt.rgba(1, 1, 1, 0.7)
             anchors.verticalCenter: parent.verticalCenter
             Behavior on color { ColorAnimation { duration: 120 } }
         }

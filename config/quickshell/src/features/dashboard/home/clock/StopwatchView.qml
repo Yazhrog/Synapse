@@ -12,7 +12,7 @@ Item {
             text: ClockService.swDisplay
             font.pixelSize: 52; font.weight: Font.Bold
             font.family: "JetBrainsMono Nerd Font"; font.letterSpacing: -1
-            color: Qt.rgba(Theme.text.r, Theme.text.g, Theme.text.b, 0.9)
+            color: Qt.rgba(Theme.color.text.r, Theme.color.text.g, Theme.color.text.b, 0.9)
         }
 
         Row {
