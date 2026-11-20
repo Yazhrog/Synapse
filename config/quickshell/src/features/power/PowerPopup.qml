@@ -6,10 +6,10 @@ PopupSpec {
     key:    "powerMenu"
     region: "leftCenter"
     action: "PowerMenu-toggle"; actionLabel: "Power Menu"
-    size:   s => [s.px(Metrics.powerMenuWidth + 2 * Metrics.powerMenuPadding),
-                  s.px(Metrics.powerMenuHeight + 2 * Metrics.powerMenuPadding)]
-    place:  (s, w, h) => Qt.rect(s.px(4), s.px(Metrics.powerMenuPadding),
-                                 s.px(Metrics.powerMenuWidth), s.px(Metrics.powerMenuHeight))
+    size:   s => [s.px(Theme.frame.powerMenuWidth + 2 * Theme.frame.powerMenuPadding),
+                  s.px(Theme.frame.powerMenuHeight + 2 * Theme.frame.powerMenuPadding)]
+    place:  (s, w, h) => Qt.rect(s.px(4), s.px(Theme.frame.powerMenuPadding),
+                                 s.px(Theme.frame.powerMenuWidth), s.px(Theme.frame.powerMenuHeight))
     focus:  item => item.reset()
     component: Component { PowerMenu {} }
 }

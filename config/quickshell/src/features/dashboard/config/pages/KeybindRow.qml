@@ -87,12 +87,12 @@ Item {
         anchors.fill: parent
         radius: 8
         color: br.isCapturing
-            ? Qt.rgba(Theme.active.r, Theme.active.g, Theme.active.b, 0.07)
+            ? Qt.rgba(Theme.color.accent.r, Theme.color.accent.g, Theme.color.accent.b, 0.07)
             : _rH.hovered ? Qt.rgba(1, 1, 1, 0.04) : "transparent"
         border.color: br._savedDupe
             ? Qt.rgba(248/255, 113/255, 113/255, 0.35)
             : br.isCapturing
-                ? Qt.rgba(Theme.active.r, Theme.active.g, Theme.active.b, 0.20)
+                ? Qt.rgba(Theme.color.accent.r, Theme.color.accent.g, Theme.color.accent.b, 0.20)
                 : "transparent"
         border.width: 1
         Behavior on color { ColorAnimation { duration: 120 } }
@@ -198,7 +198,7 @@ Item {
                 color: _rstH.hovered ? Qt.rgba(1,1,1,0.09) : "transparent"
                 Behavior on color { ColorAnimation { duration: 100 } }
                 Text { anchors.centerIn: parent; text: "↺"; font.pixelSize: 11
-                    color: _rstH.hovered ? Theme.active : Qt.rgba(1,1,1,0.28) }
+                    color: _rstH.hovered ? Theme.color.accent : Qt.rgba(1,1,1,0.28) }
                 HoverHandler { id: _rstH; cursorShape: Qt.PointingHandCursor }
                 MouseArea {
                     anchors.fill: parent
@@ -227,14 +227,14 @@ Item {
                 color: br._isUnbound
                     ? Qt.rgba(1, 1, 1, 0.04)
                     : ((_pillH.hovered && br._interactive)
-                        ? Qt.rgba(Theme.active.r, Theme.active.g, Theme.active.b, 0.16)
-                        : Qt.rgba(Theme.active.r, Theme.active.g, Theme.active.b, 0.08))
+                        ? Qt.rgba(Theme.color.accent.r, Theme.color.accent.g, Theme.color.accent.b, 0.16)
+                        : Qt.rgba(Theme.color.accent.r, Theme.color.accent.g, Theme.color.accent.b, 0.08))
                         
                 border.color: br._isUnbound
                     ? Qt.rgba(1, 1, 1, 0.1)
                     : (br._isPending
                         ? Qt.rgba(1.0, 0.74, 0.22, 0.55)
-                        : Qt.rgba(Theme.active.r, Theme.active.g, Theme.active.b, 0.24))
+                        : Qt.rgba(Theme.color.accent.r, Theme.color.accent.g, Theme.color.accent.b, 0.24))
                         
                 border.width: 1
                 
@@ -253,7 +253,7 @@ Item {
                     
                     color: br._isUnbound 
                         ? Qt.rgba(1, 1, 1, 0.45) 
-                        : (br._isPending ? Qt.rgba(1.0, 0.74, 0.22, 1.0) : Theme.active)
+                        : (br._isPending ? Qt.rgba(1.0, 0.74, 0.22, 1.0) : Theme.color.accent)
                         
                     Behavior on color { ColorAnimation { duration: 150 } }
                 }
@@ -293,10 +293,10 @@ Item {
                 Rectangle {
                     height: 24; radius: 6
                     width:  Math.max(120, _capT.implicitWidth + 18)
-                    color:  Qt.rgba(Theme.active.r, Theme.active.g, Theme.active.b, 0.08)
+                    color:  Qt.rgba(Theme.color.accent.r, Theme.color.accent.g, Theme.color.accent.b, 0.08)
                     border.color: br._hasConflict
                         ? Qt.rgba(248/255, 113/255, 113/255, 0.55)
-                        : Qt.rgba(Theme.active.r, Theme.active.g, Theme.active.b,
+                        : Qt.rgba(Theme.color.accent.r, Theme.color.accent.g, Theme.color.accent.b,
                                   br.capturedKey !== "" ? 0.40 : 0.18)
                     border.width: 1
                     Behavior on border.color { ColorAnimation { duration: 120 } }
@@ -308,8 +308,8 @@ Item {
                         color: br._hasConflict
                             ? "#f87171"
                             : br.capturedKey !== ""
-                                ? Theme.active
-                                : Qt.rgba(Theme.active.r, Theme.active.g, Theme.active.b, 0.45)
+                                ? Theme.color.accent
+                                : Qt.rgba(Theme.color.accent.r, Theme.color.accent.g, Theme.color.accent.b, 0.45)
                         text: {
                             if (br.capturedKey !== "")
                                 return (br.capturedMods ? br.capturedMods + " + " : "") + br.capturedKey

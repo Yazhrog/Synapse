@@ -100,7 +100,7 @@ Item {
                     Text {
                         anchors.centerIn: parent
                         text:           (root.notification?.appName ?? "?").charAt(0).toUpperCase()
-                        color:          Theme.text
+                        color:          Theme.color.text
                         font.pixelSize: 9
                         font.bold:      true
                     }
@@ -111,7 +111,7 @@ Item {
                 width:                  parent.width - 16 - 24 - parent.spacing * 2
                 anchors.verticalCenter: parent.verticalCenter
                 text:                   root.notification?.appName ?? ""
-                color:                  Theme.subtext
+                color:                  Theme.color.textMuted
                 font.pixelSize:         11
                 elide:                  Text.ElideRight
             }
@@ -129,7 +129,7 @@ Item {
                 Text {
                     anchors.centerIn: parent
                     text:             "✕"
-                    color:            Theme.subtext
+                    color:            Theme.color.textMuted
                     font.pixelSize:   9
                 }
                 HoverHandler { id: xHover }
@@ -140,7 +140,7 @@ Item {
         Text {
             width:            parent.width
             text:             root.notification?.summary ?? ""
-            color:            Theme.text
+            color:            Theme.color.text
             font.pixelSize:   13
             font.bold:        true
             wrapMode:         Text.WordWrap
@@ -152,7 +152,7 @@ Item {
         Text {
             width:            parent.width
             text:             root.notification?.body ?? ""
-            color:            Theme.subtext
+            color:            Theme.color.textMuted
             font.pixelSize:   12
             wrapMode:         Text.WordWrap
             maximumLineCount: 2
@@ -182,7 +182,7 @@ Item {
                         id:               actionLbl
                         anchors.centerIn: parent
                         text:             modelData?.text ?? ""
-                        color:            Theme.text
+                        color:            Theme.color.text
                         font.pixelSize:   11
                     }
                     HoverHandler { id: actHover }

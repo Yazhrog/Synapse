@@ -10,10 +10,10 @@ PopupSpec {
     actionGroup: "Network Tabs"
     pages:    _registry.pages
     pageProp: "networkPage"
-    size:   s => [s.px(Metrics.networkPopupBodyWidth) + s.borderWidth,
-                  s.px(Metrics.networkPopupHeight - Theme.notchRadius)]
-    place:  (s, w, h) => Qt.rect(s.px(Theme.notchRadius), 0,
-                                 s.px(Metrics.networkPopupBodyWidth - Theme.notchRadius - 7),
-                                 s.px(Metrics.networkPopupHeight - Theme.notchRadius - Theme.cornerRadius) - s.notchHeight)
+    size:   s => [s.px(Theme.frame.networkPopupBodyWidth) + s.borderWidth,
+                  s.px(Theme.frame.networkPopupHeight - Theme.radius.notch)]
+    place:  (s, w, h) => Qt.rect(s.px(Theme.radius.notch), 0,
+                                 s.px(Theme.frame.networkPopupBodyWidth - Theme.radius.notch - 7),
+                                 s.px(Theme.frame.networkPopupHeight - Theme.radius.notch - Theme.radius.card) - s.notchHeight)
     component: Component { NetworkContent { page: Popups.networkPage || "wifi" } }
 }

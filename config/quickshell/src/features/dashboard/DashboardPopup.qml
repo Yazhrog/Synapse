@@ -11,10 +11,10 @@ PopupSpec {
     pages:           _registry.pages
     pageProp:        "dashboardPage"
     defaultPagePref: "defaultDashboardPage"
-    size:   s => [s.px(_registry.widthOf(Popups.dashboardPage)), s.px(Theme.dashboardHeight)]
-    place:  (s, w, h) => Qt.rect(s.px(8), s.px(Theme.notchRadius + 8),
+    size:   s => [s.px(_registry.widthOf(Popups.dashboardPage)), s.px(Theme.frame.dashboardHeight)]
+    place:  (s, w, h) => Qt.rect(s.px(8), s.px(Theme.radius.notch + 8),
                                  s.px(_registry.widthOf(Popups.dashboardPage) - 16),
-                                 s.px(Theme.dashboardHeight - Theme.notchRadius - 16))
+                                 s.px(Theme.frame.dashboardHeight - Theme.radius.notch - 16))
     focus:  item => item.focusPage()
     afterClose: item => item.reset()
     component: Component { DashboardContent {} }

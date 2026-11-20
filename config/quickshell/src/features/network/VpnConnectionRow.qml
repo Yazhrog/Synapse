@@ -17,12 +17,12 @@ Item {
 
     // Card background
     Rectangle {
-        id: card; anchors.fill: parent; radius: Theme.cornerRadius
+        id: card; anchors.fill: parent; radius: Theme.radius.card
         color: vRow.con.active
-            ? Qt.rgba(Theme.active.r, Theme.active.g, Theme.active.b, 0.08)
+            ? Qt.rgba(Theme.color.accent.r, Theme.color.accent.g, Theme.color.accent.b, 0.08)
             : vHov.hovered ? Qt.rgba(1,1,1,0.04) : "transparent"
         border.color: vRow.con.active
-            ? Qt.rgba(Theme.active.r, Theme.active.g, Theme.active.b, 0.22)
+            ? Qt.rgba(Theme.color.accent.r, Theme.color.accent.g, Theme.color.accent.b, 0.22)
             : Qt.rgba(1,1,1,0.07)
         border.width: 1
         Behavior on color        { ColorAnimation { duration: 200 } }
@@ -30,8 +30,8 @@ Item {
 
         SequentialAnimation {
             id: pulseAnim; running: false
-            ColorAnimation { target: card; to: Qt.rgba(Theme.active.r, Theme.active.g, Theme.active.b, 0.30); duration: 160 }
-            ColorAnimation { target: card; to: Qt.rgba(Theme.active.r, Theme.active.g, Theme.active.b, 0.08); duration: 500; easing.type: Easing.OutCubic }
+            ColorAnimation { target: card; to: Qt.rgba(Theme.color.accent.r, Theme.color.accent.g, Theme.color.accent.b, 0.30); duration: 160 }
+            ColorAnimation { target: card; to: Qt.rgba(Theme.color.accent.r, Theme.color.accent.g, Theme.color.accent.b, 0.08); duration: 500; easing.type: Easing.OutCubic }
         }
     }
 
@@ -44,9 +44,9 @@ Item {
             anchors.verticalCenter: parent.verticalCenter
             text: "󰦝"; font.pixelSize: 20
             color: vRow.con.active
-                ? Theme.active
+                ? Theme.color.accent
                 : vRow.con.busy
-                    ? Qt.rgba(Theme.active.r, Theme.active.g, Theme.active.b, 0.5)
+                    ? Qt.rgba(Theme.color.accent.r, Theme.color.accent.g, Theme.color.accent.b, 0.5)
                     : Qt.rgba(1,1,1,0.28)
             Behavior on color { ColorAnimation { duration: 200 } }
         }
@@ -57,7 +57,7 @@ Item {
             Text {
                 text: vRow.con.name; font.pixelSize: 13
                 font.weight: vRow.con.active ? Font.Medium : Font.Normal
-                color: vRow.con.active ? Theme.text : Qt.rgba(1,1,1,0.65)
+                color: vRow.con.active ? Theme.color.text : Qt.rgba(1,1,1,0.65)
                 width: 160; elide: Text.ElideRight
             }
             Text {
@@ -66,8 +66,8 @@ Item {
                     ? (vRow.con.active ? "Disconnecting…" : "Connecting…")
                     : vRow.con.active ? "Connected" : "Disconnected"
                 color: vRow.con.busy
-                    ? Qt.rgba(Theme.active.r, Theme.active.g, Theme.active.b, 0.60)
-                    : vRow.con.active ? Theme.active : Qt.rgba(1,1,1,0.32)
+                    ? Qt.rgba(Theme.color.accent.r, Theme.color.accent.g, Theme.color.accent.b, 0.60)
+                    : vRow.con.active ? Theme.color.accent : Qt.rgba(1,1,1,0.32)
                 Behavior on color { ColorAnimation { duration: 200 } }
             }
         }
@@ -80,7 +80,7 @@ Item {
 
         Text {
             anchors.centerIn: parent; visible: vRow.con.busy
-            text: "○"; font.pixelSize: 16; color: Theme.active
+            text: "○"; font.pixelSize: 16; color: Theme.color.accent
             SequentialAnimation on opacity {
                 running: vRow.con.busy; loops: Animation.Infinite
                 NumberAnimation { to: 0.15; duration: 450 }
@@ -92,7 +92,7 @@ Item {
             anchors.centerIn: parent; visible: !vRow.con.busy
             width: 10; height: 10; radius: 5
             color: vRow.con.active
-                ? Theme.active
+                ? Theme.color.accent
                 : vHov.hovered ? Qt.rgba(1,1,1,0.35) : Qt.rgba(1,1,1,0.18)
             Behavior on color { ColorAnimation { duration: 200 } }
         }

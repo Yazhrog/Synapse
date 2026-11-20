@@ -12,8 +12,8 @@ Item {
     id: root
 
     property bool open: false
-    property int  fw:   Theme.notchRadius
-    property int  fh:   Theme.notchRadius
+    property int  fw:   Theme.radius.notch
+    property int  fh:   Theme.radius.notch
     // Filled frame below the panel (the bottom border in the frame style; 0 in
     // bar and pills, where the panel's bottom edge is the shape's edge).
     property int  edgeInset: 0
@@ -78,7 +78,7 @@ Item {
 
     Timer {
         id: centerLockTimer
-        interval: Theme.animDuration
+        interval: Theme.motion.slow
         onTriggered: wallGrid.targetCenterIndex = -1
     }
 
@@ -113,11 +113,11 @@ Item {
         opacity: root.open ? 1 : 0
         transform: Translate {
             y: root.open ? 0 : 40
-            Behavior on y { NumberAnimation { duration: Theme.animDuration; easing.type: Easing.OutExpo } }
+            Behavior on y { NumberAnimation { duration: Theme.motion.slow; easing.type: Easing.OutExpo } }
         }
         Behavior on opacity {
             NumberAnimation {
-                duration: root.open ? Theme.animDuration * 0.5 : Theme.animDuration * 0.15
+                duration: root.open ? Theme.motion.slow * 0.5 : Theme.motion.slow * 0.15
             }
         }
 

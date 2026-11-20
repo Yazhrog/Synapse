@@ -20,12 +20,12 @@ Item {
         Rectangle {
             anchors.horizontalCenter: parent.horizontalCenter
             width: enRow.implicitWidth + 24; height: 34; radius: 17
-            color: enH.hovered ? Qt.rgba(Theme.active.r, Theme.active.g, Theme.active.b, 0.22) : Qt.rgba(Theme.active.r, Theme.active.g, Theme.active.b, 0.12)
-            border.color: Qt.rgba(Theme.active.r, Theme.active.g, Theme.active.b, 0.40); border.width: 1
+            color: enH.hovered ? Qt.rgba(Theme.color.accent.r, Theme.color.accent.g, Theme.color.accent.b, 0.22) : Qt.rgba(Theme.color.accent.r, Theme.color.accent.g, Theme.color.accent.b, 0.12)
+            border.color: Qt.rgba(Theme.color.accent.r, Theme.color.accent.g, Theme.color.accent.b, 0.40); border.width: 1
             Behavior on color { ColorAnimation { duration: 120 } }
             Row { id: enRow; anchors.centerIn: parent; spacing: 8
-                Text { anchors.verticalCenter: parent.verticalCenter; text: root.buttonGlyph; font.pixelSize: 14; color: Theme.active }
-                Text { anchors.verticalCenter: parent.verticalCenter; text: "Turn On"; font.pixelSize: 12; font.weight: Font.Medium; color: Theme.active }
+                Text { anchors.verticalCenter: parent.verticalCenter; text: root.buttonGlyph; font.pixelSize: 14; color: Theme.color.accent }
+                Text { anchors.verticalCenter: parent.verticalCenter; text: "Turn On"; font.pixelSize: 12; font.weight: Font.Medium; color: Theme.color.accent }
             }
             HoverHandler { id: enH; cursorShape: Qt.PointingHandCursor }
             MouseArea { anchors.fill: parent; onClicked: root.turnOn() }

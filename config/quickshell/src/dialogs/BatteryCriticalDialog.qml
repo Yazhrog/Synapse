@@ -42,8 +42,8 @@ PanelWindow {
         anchors.centerIn: parent
         width:  360
         height: col.implicitHeight + 48
-        radius: Theme.notchRadius
-        color:  Theme.background
+        radius: Theme.radius.notch
+        color:  Theme.color.background
         border.color: "#ff4444"
         border.width: 1
 
@@ -90,7 +90,7 @@ PanelWindow {
                 anchors.horizontalCenter: parent.horizontalCenter
                 width:  130
                 height: 38
-                radius: Theme.cornerRadius
+                radius: Theme.radius.card
                 color:  ackHov.hovered ? "#cc3a3a" : "#993030"
                 Behavior on color { ColorAnimation { duration: 120 } }
 

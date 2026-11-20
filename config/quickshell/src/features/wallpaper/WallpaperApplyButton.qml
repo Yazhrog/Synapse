@@ -14,11 +14,11 @@ Rectangle {
     opacity:                active ? 1 : 0
     clip:                   true
     color: applyBtnMA.containsMouse
-        ? Qt.rgba(Theme.active.r, Theme.active.g, Theme.active.b, 0.28)
-        : Qt.rgba(Theme.active.r, Theme.active.g, Theme.active.b, 0.18)
+        ? Qt.rgba(Theme.color.accent.r, Theme.color.accent.g, Theme.color.accent.b, 0.28)
+        : Qt.rgba(Theme.color.accent.r, Theme.color.accent.g, Theme.color.accent.b, 0.18)
     border.color: applyBtnMA.containsMouse
-        ? Theme.active
-        : Qt.rgba(Theme.active.r, Theme.active.g, Theme.active.b, 0.4)
+        ? Theme.color.accent
+        : Qt.rgba(Theme.color.accent.r, Theme.color.accent.g, Theme.color.accent.b, 0.4)
     border.width: 1
     Behavior on width        { NumberAnimation { duration: 200; easing.type: Easing.OutCubic } }
     Behavior on opacity      { NumberAnimation { duration: 160 } }
@@ -29,7 +29,7 @@ Rectangle {
         text:             WallpaperService.applying ? "…" : "Apply"
         font.pixelSize:   12
         font.weight:      Font.Medium 
-        color:            Theme.active
+        color:            Theme.color.accent
         opacity:          applyBtn.active ? 1 : 0
         Behavior on opacity { NumberAnimation { duration: 100 } }
     }

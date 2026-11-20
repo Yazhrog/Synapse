@@ -33,7 +33,7 @@ Item {
             text:           ScreenRecService.elapsedDisplay
             font.pixelSize: 13; font.weight: Font.Bold
             font.family:    "JetBrainsMono Nerd Font"
-            color:          Theme.text
+            color:          Theme.color.text
         }
     }
 
@@ -57,7 +57,7 @@ Item {
             rightMargin:    10
             verticalCenter: parent.verticalCenter
         }
-        spacing: Theme.notchRadius / 2
+        spacing: Theme.radius.notch / 2
 
         // Discard button
         Rectangle {

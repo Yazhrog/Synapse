@@ -17,12 +17,12 @@ Item {
 
 	id: root
 
-	width:  Theme.cNotchMinWidth
+	width:  Theme.frame.cNotchMinWidth
 	height: 30
 
 	// DynamicSurface sizes the centre notch from it.
-	readonly property int fw: Theme.notchRadius
-	readonly property int requiredWidth: Theme.cNotchMinWidth
+	readonly property int fw: Theme.radius.notch
+	readonly property int requiredWidth: Theme.frame.cNotchMinWidth
 
 	NotchItems { id: registry }
 
@@ -131,7 +131,7 @@ Item {
 				id: cell
 				required property string modelData
 
-				width:  Theme.cNotchMinWidth
+				width:  Theme.frame.cNotchMinWidth
 				height: 30
 
 				Loader {

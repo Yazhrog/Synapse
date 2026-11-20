@@ -112,11 +112,11 @@ Item {
 
         width:  230
         height: pickerCol.implicitHeight + 24
-        radius: Theme.cornerRadius
+        radius: Theme.radius.card
         color: Qt.rgba(
-            Math.min(1, Theme.background.r + 0.06),
-            Math.min(1, Theme.background.g + 0.06),
-            Math.min(1, Theme.background.b + 0.06), 0.98)
+            Math.min(1, Theme.color.background.r + 0.06),
+            Math.min(1, Theme.color.background.g + 0.06),
+            Math.min(1, Theme.color.background.b + 0.06), 0.98)
         border.color: Qt.rgba(1,1,1,0.15); border.width: 1
 
         // Swallow clicks so they don't reach the dim overlay below
@@ -147,7 +147,7 @@ Item {
                 Text {
                     anchors.centerIn: parent
                     text:  root._monthNames[root.pickerMonth].substring(0,3) + "  " + root.pickerYear
-                    color: Theme.text; font.pixelSize: 11; font.weight: Font.DemiBold
+                    color: Theme.color.text; font.pixelSize: 11; font.weight: Font.DemiBold
                 }
                 Text {
                     anchors { right: parent.right; verticalCenter: parent.verticalCenter }
@@ -209,10 +209,10 @@ Item {
                             anchors.centerIn: parent
                             width: Math.min(dayGrid.cW, dayGrid.cH) - 2; height: width; radius: width / 2
                             color: isSel
-                                ? Qt.rgba(Theme.active.r, Theme.active.g, Theme.active.b, 0.82)
-                                : isNow ? Qt.rgba(Theme.active.r, Theme.active.g, Theme.active.b, 0.12)
+                                ? Qt.rgba(Theme.color.accent.r, Theme.color.accent.g, Theme.color.accent.b, 0.82)
+                                : isNow ? Qt.rgba(Theme.color.accent.r, Theme.color.accent.g, Theme.color.accent.b, 0.12)
                                         : dayH.hovered && modelData.cur ? Qt.rgba(1,1,1,0.08) : "transparent"
-                            border.color: isNow && !isSel ? Qt.rgba(Theme.active.r, Theme.active.g, Theme.active.b, 0.35) : "transparent"
+                            border.color: isNow && !isSel ? Qt.rgba(Theme.color.accent.r, Theme.color.accent.g, Theme.color.accent.b, 0.35) : "transparent"
                             border.width: 1
                             Behavior on color { ColorAnimation { duration: 80 } }
 
@@ -220,7 +220,7 @@ Item {
                                 anchors.centerIn: parent
                                 text: modelData.n
                                 font.pixelSize: 9; font.weight: isSel ? Font.Bold : Font.Normal
-                                color: isSel ? Theme.background
+                                color: isSel ? Theme.color.background
                                     : modelData.cur ? Qt.rgba(1,1,1,0.78) : Qt.rgba(1,1,1,0.14)
                             }
                         }
@@ -270,7 +270,7 @@ Item {
                                     anchors.centerIn: parent
                                     text: TaskService.zp2(root.pickerTimeH)
                                     font.pixelSize: 13; font.family: "JetBrainsMono Nerd Font"; font.weight: Font.Bold
-                                    color: Theme.active
+                                    color: Theme.color.accent
                                 }
                             }
                             Rectangle {
@@ -284,7 +284,7 @@ Item {
                             }
                         }
 
-                        Text { anchors.verticalCenter: parent.verticalCenter; text: ":"; font.pixelSize: 15; font.weight: Font.Bold; color: Theme.text }
+                        Text { anchors.verticalCenter: parent.verticalCenter; text: ":"; font.pixelSize: 15; font.weight: Font.Bold; color: Theme.color.text }
 
                         // ── Minute col ────────────────────────────────────────
                         Column {
@@ -305,7 +305,7 @@ Item {
                                     anchors.centerIn: parent
                                     text: TaskService.zp2(root.pickerTimeM)
                                     font.pixelSize: 13; font.family: "JetBrainsMono Nerd Font"; font.weight: Font.Bold
-                                    color: Theme.active
+                                    color: Theme.color.accent
                                 }
                             }
                             Rectangle {
@@ -337,14 +337,14 @@ Item {
                         anchors.verticalCenter: parent.verticalCenter
                         width: addTL.implicitWidth + 18; height: 24; radius: 12
                         color: addTH.hovered
-                            ? Qt.rgba(Theme.active.r, Theme.active.g, Theme.active.b, 0.15)
+                            ? Qt.rgba(Theme.color.accent.r, Theme.color.accent.g, Theme.color.accent.b, 0.15)
                             : Qt.rgba(1,1,1,0.06)
                         border.color: Qt.rgba(1,1,1,0.10); border.width: 1
                         Behavior on color { ColorAnimation { duration: 80 } }
                         Text {
                             id: addTL; anchors.centerIn: parent
                             text: "Add time"; font.pixelSize: 10
-                            color: addTH.hovered ? Theme.active : Qt.rgba(1,1,1,0.45)
+                            color: addTH.hovered ? Theme.color.accent : Qt.rgba(1,1,1,0.45)
                             Behavior on color { ColorAnimation { duration: 80 } }
                         }
                         HoverHandler { id: addTH; cursorShape: Qt.PointingHandCursor }
@@ -378,12 +378,12 @@ Item {
 
                 Rectangle {
                     width: 86; height: 28; radius: 8
-                    color: Qt.rgba(Theme.active.r, Theme.active.g, Theme.active.b, doneH.hovered ? 0.28 : 0.16)
-                    border.color: Qt.rgba(Theme.active.r, Theme.active.g, Theme.active.b, 0.38); border.width: 1
+                    color: Qt.rgba(Theme.color.accent.r, Theme.color.accent.g, Theme.color.accent.b, doneH.hovered ? 0.28 : 0.16)
+                    border.color: Qt.rgba(Theme.color.accent.r, Theme.color.accent.g, Theme.color.accent.b, 0.38); border.width: 1
                     Behavior on color { ColorAnimation { duration: 80 } }
                     Text {
                         anchors.centerIn: parent; text: "Done"
-                        font.pixelSize: 11; font.weight: Font.Medium; color: Theme.active
+                        font.pixelSize: 11; font.weight: Font.Medium; color: Theme.color.accent
                     }
                     HoverHandler { id: doneH; cursorShape: Qt.PointingHandCursor }
                     MouseArea { anchors.fill: parent; onClicked: root.commit() }

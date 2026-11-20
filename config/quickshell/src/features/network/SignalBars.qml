@@ -21,7 +21,7 @@ Item {
                         case 3: return barsRoot.signal > 75
                     }; return false
                 }
-                color: lit ? Qt.rgba(Theme.active.r, Theme.active.g, Theme.active.b, 0.85) : Qt.rgba(1,1,1,0.15)
+                color: lit ? Qt.rgba(Theme.color.accent.r, Theme.color.accent.g, Theme.color.accent.b, 0.85) : Qt.rgba(1,1,1,0.15)
                 Behavior on color { ColorAnimation { duration: 200 } }
             }
         }

@@ -138,7 +138,7 @@ Singleton {
 
     // Pushes the new primary color to the Hyprland border after an apply.
     // The color is read from the colors.lua / colors.conf matugen just wrote,
-    // not from Theme.active: Theme reloads colors.json asynchronously, so right
+    // not from Theme.color.accent: Theme reloads colors.json asynchronously, so right
     // after an apply (or at startup, before colors.json is read) it still holds
     // the previous or fallback color.
     // Not called at startup: appearance.lua already loads colors.lua.

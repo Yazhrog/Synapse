@@ -116,9 +116,9 @@ Column {
 
             width:  root.width
             height: 44
-            radius: Theme.cornerRadius
+            radius: Theme.radius.card
             color:  highlighted
-                        ? (modelData.danger ? "#4d2020" : Theme.active)
+                        ? (modelData.danger ? "#4d2020" : Theme.color.accent)
                         : "transparent"
 
             Behavior on color { ColorAnimation { duration: 120 } }
@@ -130,14 +130,14 @@ Column {
                 Text {
                     text:           modelData.icon
                     font.pixelSize: 16
-                    color:          modelData.danger && highlighted ? "#ff6b6b" : highlighted?"#000000":Theme.text
+                    color:          modelData.danger && highlighted ? "#ff6b6b" : highlighted?"#000000":Theme.color.text
                     anchors.verticalCenter: parent.verticalCenter
                 }
 
                 Text {
                     text:           modelData.label
                     font.pixelSize: 13
-                    color:          modelData.danger && highlighted ? "#ff6b6b" : highlighted?"#000000":Theme.text
+                    color:          modelData.danger && highlighted ? "#ff6b6b" : highlighted?"#000000":Theme.color.text
                     anchors.verticalCenter: parent.verticalCenter
                 }
             }

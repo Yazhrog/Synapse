@@ -41,14 +41,14 @@ StatCard {
 
         Rectangle {
             width: parent.width; height: 1
-            color: Qt.rgba(Theme.text.r, Theme.text.g, Theme.text.b, 0.08)
+            color: Qt.rgba(Theme.color.text.r, Theme.color.text.g, Theme.color.text.b, 0.08)
         }
         Item { width: parent.width; height: 8 }
 
         Text {
             id: qsLbl; width: parent.width
             text: "QUICK SETTINGS"; font.pixelSize: 9; font.weight: Font.Bold
-            color: Qt.rgba(Theme.active.r, Theme.active.g, Theme.active.b, 0.55)
+            color: Qt.rgba(Theme.color.accent.r, Theme.color.accent.g, Theme.color.accent.b, 0.55)
         }
         Item { width: parent.width; height: 8 }
 
