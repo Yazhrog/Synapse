@@ -134,8 +134,7 @@ PanelWindow {
                 spacing: 10
 
                 Text {
-                    text: UpdateService.commitsBehind + " new commit" +
-                          (UpdateService.commitsBehind === 1 ? "" : "s") + " on main"
+                    text: UpdateService.summary
                     font.pixelSize: 12
                     color: Qt.rgba(Theme.color.text.r, Theme.color.text.g, Theme.color.text.b, 0.55)
                 }

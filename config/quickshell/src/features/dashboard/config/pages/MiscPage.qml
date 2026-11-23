@@ -43,7 +43,7 @@ Item {
             SettingsButton {
                 label:       "Check for updates now"
                 description: UpdateService.updateAvailable
-                    ? UpdateService.commitsBehind + " update(s) pending"
+                    ? "Update pending: " + UpdateService.summary
                     : "Up to date"
                 buttonText:  UpdateService.checking ? "Checking…" : "Check Now"
                 busy:        UpdateService.checking || UpdateService.updating

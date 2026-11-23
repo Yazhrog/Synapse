@@ -23,6 +23,13 @@ Singleton {
 
     property int    commitsBehind:   0
     property var    commitMessages:  []
+    // VERSION on the install (HEAD) and on origin/main, "" when a side has no
+    // VERSION file (installs from before it existed).
+    property string installedVersion: ""
+    property string incomingVersion:  ""
+    // "v0.6.3 → v0.7.0", or the commit count when a version is missing.
+    readonly property string summary:
+        UpdateScript.availableSummary(commitsBehind, installedVersion, incomingVersion)
     property string lastError:       ""
 
     // Set when the pull brought in changes that a relink alone can't apply —
@@ -172,6 +179,19 @@ Singleton {
         command: ["git", "-C", root._dir, "log", "HEAD..origin/main", "--oneline", "--no-decorate"]
         onFinished: {
             root.commitMessages  = lastOutput.trim().split("\n").filter(l => l.trim() !== "")
+            _versionProc.run(["bash", "-c", UpdateScript.versionScript, "--", root._dir])
+        }
+    }
+
+    // ── Step 4: read both VERSION files (UpdateScript.versionScript) ───────
+    // A failed read leaves the versions empty: the popup falls back to the
+    // commit count.
+    property Exec _versionProc: Exec {
+        onFinished: {
+            const v = UpdateScript.parseVersions(lastOutput)
+            root.installedVersion = v.installed
+            root.incomingVersion  = v.incoming
+            console.log("UpdateService: version " + (v.installed || "?") + " → " + (v.incoming || "?"))
             root.checking        = false
             root.updateAvailable = true
         }
@@ -227,6 +247,8 @@ Singleton {
         root.updateAvailable   = false
         root.updateSuccess     = false
         root.hasConflict       = false
+        root.installedVersion  = ""
+        root.incomingVersion   = ""
         _preflightProc.run()
     }
 
