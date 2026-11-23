@@ -19,9 +19,9 @@ Rectangle {
     height: 32
     radius: 8
     color: ma.containsMouse
-           ? Qt.rgba(Theme.active.r, Theme.active.g, Theme.active.b, 0.14)
-           : (active ? Qt.rgba(Theme.active.r, Theme.active.g, Theme.active.b, 0.18) : Qt.rgba(1,1,1,0.04))
-    border.color: _lit ? Qt.rgba(Theme.active.r, Theme.active.g, Theme.active.b, 0.4) : Qt.rgba(1,1,1,0.09)
+           ? Qt.rgba(Theme.color.accent.r, Theme.color.accent.g, Theme.color.accent.b, 0.14)
+           : (active ? Qt.rgba(Theme.color.accent.r, Theme.color.accent.g, Theme.color.accent.b, 0.18) : Qt.rgba(1,1,1,0.04))
+    border.color: _lit ? Qt.rgba(Theme.color.accent.r, Theme.color.accent.g, Theme.color.accent.b, 0.4) : Qt.rgba(1,1,1,0.09)
     border.width: 1
     Behavior on color        { ColorAnimation { duration: 100 } }
     Behavior on border.color { ColorAnimation { duration: 100 } }
@@ -33,7 +33,7 @@ Rectangle {
         Text {
             text: root.icon
             font.pixelSize: root.label === "" ? 15 : 14
-            color: root._lit ? Theme.active : Qt.rgba(1,1,1, root.label === "" ? 0.5 : 0.55)
+            color: root._lit ? Theme.color.accent : Qt.rgba(1,1,1, root.label === "" ? 0.5 : 0.55)
             anchors.verticalCenter: parent.verticalCenter
             Behavior on color { ColorAnimation { duration: 100 } }
         }
@@ -41,7 +41,7 @@ Rectangle {
             visible: root.label !== ""
             text: root.label
             font.pixelSize: 12
-            color: root._lit ? Theme.active : Qt.rgba(1,1,1,0.7)
+            color: root._lit ? Theme.color.accent : Qt.rgba(1,1,1,0.7)
             anchors.verticalCenter: parent.verticalCenter
             Behavior on color { ColorAnimation { duration: 100 } }
         }
@@ -49,7 +49,7 @@ Rectangle {
             visible: root.showArrow
             text: root.active ? "▴" : "▾"
             font.pixelSize: 8
-            color: root._lit ? Theme.active : Qt.rgba(1,1,1,0.35)
+            color: root._lit ? Theme.color.accent : Qt.rgba(1,1,1,0.35)
             anchors.verticalCenter: parent.verticalCenter
         }
     }

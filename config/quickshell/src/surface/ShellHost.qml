@@ -11,7 +11,7 @@ import qs.src.theme
 // drawing the frame, the bar and every popup, and the centered modal windows,
 // which stay separate windows.
 //
-// Space reservation: the top reserves Theme.exclusionGap, scaled per screen
+// Space reservation: the top reserves Theme.frame.exclusionGap, scaled per screen
 // (0 in focus mode). At the default border width the side and bottom borders
 // reserve nothing and Hyprland's gaps_out keeps windows clear of them; a wider
 // border (Config → Appearance) reserves the extra width on those edges.
@@ -46,13 +46,13 @@ Scope {
                 StrutWindow {
                     screen:  modelData
                     edge:    "top"
-                    reserve: ShellModes.focusMode ? 0 : Math.round(Theme.exclusionGap * SurfaceState.scaleFor(modelData))
+                    reserve: ShellModes.focusMode ? 0 : Math.round(Theme.frame.exclusionGap * SurfaceState.scaleFor(modelData))
                 }
 
                 // Border wider than the default: reserve the difference on
                 // the sides and bottom (none at the default, as before).
-                readonly property int _extraBorder: Theme.barStyle !== "frame" ? 0 : Math.max(0, Math.round(
-                    (Theme.borderWidth - Prefs.defaults.borderWidth) * SurfaceState.scaleFor(modelData)))
+                readonly property int _extraBorder: Theme.frame.barStyle !== "frame" ? 0 : Math.max(0, Math.round(
+                    (Theme.frame.borderWidth - Prefs.defaults.borderWidth) * SurfaceState.scaleFor(modelData)))
 
                 LazyLoader {
                     active: _extraBorder > 0

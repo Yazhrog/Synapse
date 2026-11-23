@@ -126,7 +126,7 @@ Item {
     Rectangle {
         id: bgMask
         anchors.fill:  parent
-        radius:        Theme.cornerRadius
+        radius:        Theme.radius.card
         visible:       false
         layer.enabled: true
     }
@@ -192,16 +192,16 @@ Item {
                     width:  isPlay ? 44 : 36; height: isPlay ? 44 : 36
                     radius: height / 2
                     color: isPlay
-                           ? Qt.rgba(Theme.active.r, Theme.active.g, Theme.active.b, 0.18)
+                           ? Qt.rgba(Theme.color.accent.r, Theme.color.accent.g, Theme.color.accent.b, 0.18)
                            : cH.hovered ? Qt.rgba(1,1,1,0.14) : Qt.rgba(1,1,1,0.06)
-                    border.color: isPlay ? Qt.rgba(Theme.active.r, Theme.active.g, Theme.active.b, 0.3) : "transparent"
+                    border.color: isPlay ? Qt.rgba(Theme.color.accent.r, Theme.color.accent.g, Theme.color.accent.b, 0.3) : "transparent"
                     border.width: 1
                     Behavior on color { ColorAnimation { duration: 100 } }
                     Text {
                         anchors.centerIn: parent
                         text: parent.dispIcon
                         font.pixelSize: isPlay ? 18 : 14
-                        color: isPlay ? Theme.active : Qt.rgba(1,1,1,0.7)
+                        color: isPlay ? Theme.color.accent : Qt.rgba(1,1,1,0.7)
                     }
                     HoverHandler { id: cH; cursorShape: Qt.PointingHandCursor }
                     MouseArea {
@@ -239,7 +239,7 @@ Item {
                     Rectangle {
                         anchors { left: parent.left; top: parent.top; bottom: parent.bottom }
                         width:  Math.max(radius * 2, parent.width * root._progress)
-                        radius: parent.radius; color: Theme.active
+                        radius: parent.radius; color: Theme.color.accent
                         Behavior on width { NumberAnimation { duration: 200; easing.type: Easing.OutCubic } }
                     }
                 }
@@ -295,9 +295,9 @@ Item {
 
             radius:       _rowH / 2
             clip:         true
-            color:        Qt.rgba(Theme.active.r, Theme.active.g, Theme.active.b, 0.18)
+            color:        Qt.rgba(Theme.color.accent.r, Theme.color.accent.g, Theme.color.accent.b, 0.18)
             border.color: root._dropdownOpen
-                          ? Qt.rgba(Theme.active.r, Theme.active.g, Theme.active.b, 0.30)
+                          ? Qt.rgba(Theme.color.accent.r, Theme.color.accent.g, Theme.color.accent.b, 0.30)
                           : "transparent"
             border.width: 1
             Behavior on border.color { ColorAnimation { duration: 150 } }
@@ -378,7 +378,7 @@ Item {
                             anchors.verticalCenter: parent.verticalCenter
                             text:           root._playerIcon(root.player)
                             font.pixelSize: 11
-                            color:          Theme.active
+                            color:          Theme.color.accent
                         }
                         Text {
                             anchors.verticalCenter: parent.verticalCenter
@@ -420,7 +420,7 @@ Item {
                         readonly property real _amp: root.isPlaying ? (modelData / 100) : 0
                         height: Math.max(2, _amp * 32)
                         radius: width / 2
-                        color:  Qt.rgba(Theme.active.r, Theme.active.g, Theme.active.b, 0.25 + _amp * 0.65)
+                        color:  Qt.rgba(Theme.color.accent.r, Theme.color.accent.g, Theme.color.accent.b, 0.25 + _amp * 0.65)
                         Behavior on height { NumberAnimation { duration: 50; easing.type: Easing.OutCubic } }
                     }
                 }
@@ -431,7 +431,7 @@ Item {
     // Border
     Rectangle {
         anchors.fill: parent
-        radius:       Theme.cornerRadius
+        radius:       Theme.radius.card
         color:        "transparent"
         border.color: Qt.rgba(1,1,1,0.08)
         border.width: 1

@@ -52,7 +52,7 @@ Item {
                     centerText:  cpu.usagePercent + "%"
                     bottomText:  cpuFreq.curFreqStr
                     active:      true
-                    accentColor: Theme.active
+                    accentColor: Theme.color.accent
                 }
             }
 

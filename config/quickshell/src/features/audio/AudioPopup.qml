@@ -15,7 +15,7 @@ PopupSpec {
 
     function _width(s, item) { return s.px(_registry.widthOf(item ? item.page : Popups.audioPage)) }
 
-    size:   (s, item) => [spec._width(s, item), s.px(Metrics.sideRegionHeight)]
+    size:   (s, item) => [spec._width(s, item), s.px(Theme.frame.sideRegionHeight)]
     place:  (s, w, h) => Qt.rect(s.px(10), s.px(6), w - s.px(16), h - s.px(12))
     afterClose: item => item.reset()
     component: Component { AudioControl {} }

@@ -15,7 +15,7 @@ Item {
     property string centerText:  "0%"
     property string bottomText:  ""
     property bool   active:      true
-    property color  accentColor: Theme.active
+    property color  accentColor: Theme.color.accent
     property real   size:        1.0       // scale factor
 
     implicitWidth:  Math.round(120 * size)
@@ -109,7 +109,7 @@ Item {
                 text:           root.centerText
                 font.pixelSize: Math.max(10, Math.round(18 * root.size))
                 font.weight:    Font.Bold
-                color:          Theme.text
+                color:          Theme.color.text
             }
 
             Text {

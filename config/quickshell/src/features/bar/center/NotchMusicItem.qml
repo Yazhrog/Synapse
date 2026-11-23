@@ -21,11 +21,11 @@ Item {
         Rectangle {
             anchors.fill: parent
             radius:       width / 2
-            color:        Qt.rgba(Theme.active.r, Theme.active.g, Theme.active.b, 0.18)
-            border.color: Qt.rgba(Theme.active.r, Theme.active.g, Theme.active.b, 0.38)
+            color:        Qt.rgba(Theme.color.accent.r, Theme.color.accent.g, Theme.color.accent.b, 0.18)
+            border.color: Qt.rgba(Theme.color.accent.r, Theme.color.accent.g, Theme.color.accent.b, 0.38)
             border.width: 1
             visible:      root.artUrl === ""
-            Text { anchors.centerIn: parent; text: "♪"; font.pixelSize: 9; color: Theme.active }
+            Text { anchors.centerIn: parent; text: "♪"; font.pixelSize: 9; color: Theme.color.accent }
         }
 
         Rectangle {

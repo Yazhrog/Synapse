@@ -56,3 +56,5 @@ run core.qml "CORE OK"
 run lifecycle.qml "LIFECYCLE OK"
 # prefs.qml: Prefs and PrefSchema on an old shell_prefs.json.
 run prefs.qml "PREFS OK"
+# theme.qml: the design tokens and the matugen colour source.
+run theme.qml "THEME OK"

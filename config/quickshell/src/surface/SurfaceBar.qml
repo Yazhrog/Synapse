@@ -23,7 +23,7 @@ Item {
     readonly property real rightContentWidth:  rightContent.implicitWidth
 
     opacity: ShellModes.focusMode ? 0 : 1
-    Behavior on opacity { NumberAnimation { duration: Theme.animDuration; easing.type: Easing.InOutCubic } }
+    Behavior on opacity { NumberAnimation { duration: Theme.motion.slow; easing.type: Easing.InOutCubic } }
 
     // In pills the capsules start one gap from the edges: center the
     // contents in them.
@@ -59,7 +59,7 @@ Item {
             anchors.centerIn: parent
             // The dashboard covers the notch while open.
             opacity: bar.surface.openRegion === "top" ? 0 : 1
-            Behavior on opacity { NumberAnimation { duration: Metrics.regionFadeDuration } }
+            Behavior on opacity { Fade {} }
         }
     }
 

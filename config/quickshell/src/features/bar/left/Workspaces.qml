@@ -28,12 +28,12 @@ Rectangle {
     }
 
     // --- 1. Capsule Container ---
-    color: Theme.wsBackground
-    radius: Theme.wsRadius
+    color: Theme.color.wsBackground
+    radius: Theme.frame.wsRadius
 
     // Auto-size
-    width: workspaceRow.width + (Theme.wsPadding * 2)
-    height: Theme.wsDotSize + (Theme.wsPadding * 2)
+    width: workspaceRow.width + (Theme.frame.wsPadding * 2)
+    height: Theme.frame.wsDotSize + (Theme.frame.wsPadding * 2)
 
     // --- 2. LOGIC: Raw Event Listener ---
     property bool isScratchpad: false
@@ -102,7 +102,7 @@ Rectangle {
     Row {
         id: workspaceRow
         anchors.centerIn: parent
-        spacing: Theme.wsSpacing
+        spacing: Theme.frame.wsSpacing
 
         // Logic: Fade out dots when Scratchpad is active
         opacity: root.isScratchpad ? 0 : 1
@@ -123,15 +123,15 @@ Rectangle {
                 property bool isUrgent:   ws !== undefined && ws.urgent
 
 
-                height: Theme.wsDotSize
+                height: Theme.frame.wsDotSize
                 radius: height / 2
-                width: isActive ? Theme.wsActiveWidth : Theme.wsDotSize
+                width: isActive ? Theme.frame.wsActiveWidth : Theme.frame.wsDotSize
                 
                 color: {
-                    if (isActive)   return Theme.wsActive
-                    if (isUrgent)   return Theme.wsUrgent
-                    if (isOccupied) return Theme.wsOccupied
-                    return Theme.wsEmpty
+                    if (isActive)   return Theme.color.wsActive
+                    if (isUrgent)   return Theme.color.wsUrgent
+                    if (isOccupied) return Theme.color.wsOccupied
+                    return Theme.color.wsEmpty
                 }
 
                 Behavior on width { NumberAnimation { duration: 200; easing.type: Easing.OutBack } }
@@ -178,7 +178,7 @@ Rectangle {
         id: overlay
         anchors.fill: parent
         radius: root.radius
-        color: Theme.wsOverlay
+        color: Theme.color.wsOverlay
         z: 99
         
         // Logic: Fade in overlay when Scratchpad is active

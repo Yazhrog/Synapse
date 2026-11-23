@@ -22,12 +22,12 @@ Item {
     height: baseRow.height + expandArea.height
 
     Rectangle {
-        anchors.fill: parent; radius: Theme.cornerRadius
+        anchors.fill: parent; radius: Theme.radius.card
         color: dRow.isConnected
-            ? Qt.rgba(Theme.active.r, Theme.active.g, Theme.active.b, 0.07)
+            ? Qt.rgba(Theme.color.accent.r, Theme.color.accent.g, Theme.color.accent.b, 0.07)
             : rowHov.hovered && !dRow.isPaired ? Qt.rgba(1,1,1,0.04) : "transparent"
         border.color: dRow.isConnected
-            ? Qt.rgba(Theme.active.r, Theme.active.g, Theme.active.b, 0.18)
+            ? Qt.rgba(Theme.color.accent.r, Theme.color.accent.g, Theme.color.accent.b, 0.18)
             : dRow.isRemovePending ? Qt.rgba(248/255,113/255,113/255,0.22) : Qt.rgba(1,1,1,0.06)
         border.width: 1
         Behavior on color        { ColorAnimation { duration: 130 } }
@@ -42,8 +42,8 @@ Item {
         Text {
             anchors { left: parent.left; leftMargin: 12; verticalCenter: parent.verticalCenter }
             text: BluetoothService.glyph(dRow.device.iconType); font.pixelSize: 18
-            color: dRow.isConnected ? Theme.active
-                : (dRow.inAction || dRow.inRemove) ? Qt.rgba(Theme.active.r, Theme.active.g, Theme.active.b, 0.5) : Qt.rgba(1,1,1,0.32)
+            color: dRow.isConnected ? Theme.color.accent
+                : (dRow.inAction || dRow.inRemove) ? Qt.rgba(Theme.color.accent.r, Theme.color.accent.g, Theme.color.accent.b, 0.5) : Qt.rgba(1,1,1,0.32)
             Behavior on color { ColorAnimation { duration: 150 } }
         }
 
@@ -53,14 +53,14 @@ Item {
             Text {
                 text: dRow.device.name; font.pixelSize: 13
                 font.weight: dRow.isConnected ? Font.Medium : Font.Normal
-                color: dRow.isConnected ? Theme.text : Qt.rgba(1,1,1,0.68)
+                color: dRow.isConnected ? Theme.color.text : Qt.rgba(1,1,1,0.68)
                 width: 160; elide: Text.ElideRight
             }
             Text {
                 visible: dRow.isConnected || dRow.inAction || dRow.inRemove
                 text: dRow.inRemove ? "Removing…" : dRow.inAction ? "Working…" : "Connected"
                 font.pixelSize: 10
-                color: (dRow.inAction || dRow.inRemove) ? Qt.rgba(Theme.active.r, Theme.active.g, Theme.active.b, 0.55) : Theme.active
+                color: (dRow.inAction || dRow.inRemove) ? Qt.rgba(Theme.color.accent.r, Theme.color.accent.g, Theme.color.accent.b, 0.55) : Theme.color.accent
             }
         }
 
@@ -71,7 +71,7 @@ Item {
             // Spinner
             Text {
                 visible: dRow.inAction || dRow.inRemove
-                text: "○"; font.pixelSize: 15; color: Theme.active
+                text: "○"; font.pixelSize: 15; color: Theme.color.accent
                 anchors.verticalCenter: parent.verticalCenter
                 SequentialAnimation on opacity {
                     running: dRow.inAction || dRow.inRemove; loops: Animation.Infinite
@@ -85,14 +85,14 @@ Item {
                 visible: dRow.isPaired && !dRow.inAction && !dRow.inRemove
                 anchors.verticalCenter: parent.verticalCenter
                 width: togContent.implicitWidth + 20; height: 28; radius: 14
-                color: dRow.isConnected ? Qt.rgba(Theme.active.r, Theme.active.g, Theme.active.b, 0.14) : togH.hovered ? Qt.rgba(1,1,1,0.09) : Qt.rgba(1,1,1,0.04)
-                border.color: dRow.isConnected ? Qt.rgba(Theme.active.r, Theme.active.g, Theme.active.b, 0.36) : Qt.rgba(1,1,1,0.11)
+                color: dRow.isConnected ? Qt.rgba(Theme.color.accent.r, Theme.color.accent.g, Theme.color.accent.b, 0.14) : togH.hovered ? Qt.rgba(1,1,1,0.09) : Qt.rgba(1,1,1,0.04)
+                border.color: dRow.isConnected ? Qt.rgba(Theme.color.accent.r, Theme.color.accent.g, Theme.color.accent.b, 0.36) : Qt.rgba(1,1,1,0.11)
                 border.width: 1
                 Behavior on color { ColorAnimation { duration: 120 } }
                 Row {
                     id: togContent; anchors.centerIn: parent; spacing: 7
-                    Rectangle { width: 7; height: 7; radius: 4; anchors.verticalCenter: parent.verticalCenter; color: dRow.isConnected ? Theme.active : Qt.rgba(1,1,1,0.25); Behavior on color { ColorAnimation { duration: 150 } } }
-                    Text { text: dRow.isConnected ? "Connected" : "Connect"; font.pixelSize: 11; font.weight: Font.Medium; anchors.verticalCenter: parent.verticalCenter; color: dRow.isConnected ? Theme.active : Qt.rgba(1,1,1,0.48); Behavior on color { ColorAnimation { duration: 120 } } }
+                    Rectangle { width: 7; height: 7; radius: 4; anchors.verticalCenter: parent.verticalCenter; color: dRow.isConnected ? Theme.color.accent : Qt.rgba(1,1,1,0.25); Behavior on color { ColorAnimation { duration: 150 } } }
+                    Text { text: dRow.isConnected ? "Connected" : "Connect"; font.pixelSize: 11; font.weight: Font.Medium; anchors.verticalCenter: parent.verticalCenter; color: dRow.isConnected ? Theme.color.accent : Qt.rgba(1,1,1,0.48); Behavior on color { ColorAnimation { duration: 120 } } }
                 }
                 HoverHandler { id: togH; cursorShape: Qt.PointingHandCursor }
                 MouseArea { anchors.fill: parent; onClicked: dRow.isConnected ? BluetoothService.disconnect(dRow.device.mac) : BluetoothService.connect(dRow.device.mac) }
@@ -116,18 +116,18 @@ Item {
 
                 Rectangle {
                     width: pairLbl.implicitWidth + 20; height: 28; radius: 8
-                    color: pairH.hovered ? Qt.rgba(Theme.active.r, Theme.active.g, Theme.active.b, 0.22) : Qt.rgba(Theme.active.r, Theme.active.g, Theme.active.b, 0.09)
-                    border.color: Qt.rgba(Theme.active.r, Theme.active.g, Theme.active.b, 0.35); border.width: 1
+                    color: pairH.hovered ? Qt.rgba(Theme.color.accent.r, Theme.color.accent.g, Theme.color.accent.b, 0.22) : Qt.rgba(Theme.color.accent.r, Theme.color.accent.g, Theme.color.accent.b, 0.09)
+                    border.color: Qt.rgba(Theme.color.accent.r, Theme.color.accent.g, Theme.color.accent.b, 0.35); border.width: 1
                     Behavior on color { ColorAnimation { duration: 100 } }
-                    Text { id: pairLbl; anchors.centerIn: parent; text: "Pair"; font.pixelSize: 11; font.weight: Font.Medium; color: Theme.active }
+                    Text { id: pairLbl; anchors.centerIn: parent; text: "Pair"; font.pixelSize: 11; font.weight: Font.Medium; color: Theme.color.accent }
                     HoverHandler { id: pairH; cursorShape: Qt.PointingHandCursor }
                     MouseArea { anchors.fill: parent; onClicked: { dRow.tab.removeMac = ""; dRow.tab.pairingMac = ""; BluetoothService.pair(dRow.device.mac, "") } }
                 }
 
                 Item {
                     width: 24; height: 28; anchors.verticalCenter: parent?.verticalCenter
-                    Rectangle { anchors.fill: parent; radius: 6; color: pinH.hovered ? Qt.rgba(1,1,1,0.10) : dRow.isPairingOpen ? Qt.rgba(Theme.active.r, Theme.active.g, Theme.active.b, 0.12) : Qt.rgba(1,1,1,0.04); border.color: dRow.isPairingOpen ? Qt.rgba(Theme.active.r, Theme.active.g, Theme.active.b, 0.30) : Qt.rgba(1,1,1,0.09); border.width: 1; Behavior on color { ColorAnimation { duration: 100 } } }
-                    Text { anchors.centerIn: parent; text: "󰌾"; font.pixelSize: 12; color: dRow.isPairingOpen ? Theme.active : pinH.hovered ? Qt.rgba(1,1,1,0.7) : Qt.rgba(1,1,1,0.28); Behavior on color { ColorAnimation { duration: 100 } } }
+                    Rectangle { anchors.fill: parent; radius: 6; color: pinH.hovered ? Qt.rgba(1,1,1,0.10) : dRow.isPairingOpen ? Qt.rgba(Theme.color.accent.r, Theme.color.accent.g, Theme.color.accent.b, 0.12) : Qt.rgba(1,1,1,0.04); border.color: dRow.isPairingOpen ? Qt.rgba(Theme.color.accent.r, Theme.color.accent.g, Theme.color.accent.b, 0.30) : Qt.rgba(1,1,1,0.09); border.width: 1; Behavior on color { ColorAnimation { duration: 100 } } }
+                    Text { anchors.centerIn: parent; text: "󰌾"; font.pixelSize: 12; color: dRow.isPairingOpen ? Theme.color.accent : pinH.hovered ? Qt.rgba(1,1,1,0.7) : Qt.rgba(1,1,1,0.28); Behavior on color { ColorAnimation { duration: 100 } } }
                     HoverHandler { id: pinH; cursorShape: Qt.PointingHandCursor }
                     MouseArea {
                         anchors.fill: parent
@@ -195,26 +195,26 @@ Item {
                     Rectangle {
                         width: parent.width - pairConfBtn.width - parent.spacing; height: 32; radius: 8
                         color: Qt.rgba(1,1,1,0.06)
-                        border.color: pinInput.activeFocus ? Qt.rgba(Theme.active.r, Theme.active.g, Theme.active.b, 0.55) : Qt.rgba(1,1,1,0.12)
+                        border.color: pinInput.activeFocus ? Qt.rgba(Theme.color.accent.r, Theme.color.accent.g, Theme.color.accent.b, 0.55) : Qt.rgba(1,1,1,0.12)
                         border.width: 1; Behavior on border.color { ColorAnimation { duration: 120 } }
                         Text { anchors { left: parent.left; leftMargin: 10; verticalCenter: parent.verticalCenter }
                         text: "PIN (optional)…"; font.pixelSize: 12; color: Qt.rgba(1,1,1,0.22); visible: pinInput.text === "" }
                         TextInput {
                             id: pinInput
                             anchors { fill: parent; leftMargin: 10; rightMargin: 10 }
-                            verticalAlignment: TextInput.AlignVCenter; color: Theme.text
+                            verticalAlignment: TextInput.AlignVCenter; color: Theme.color.text
                             font.pixelSize: 12; font.family: "JetBrainsMono Nerd Font"
                             inputMethodHints: Qt.ImhDigitsOnly; maximumLength: 8
-                            selectionColor: Qt.rgba(Theme.active.r, Theme.active.g, Theme.active.b, 0.35); clip: true
+                            selectionColor: Qt.rgba(Theme.color.accent.r, Theme.color.accent.g, Theme.color.accent.b, 0.35); clip: true
                             Keys.onReturnPressed: { dRow.tab.pairingMac = ""; BluetoothService.pair(dRow.device.mac, text) }
                         }
                     }
                     Rectangle {
                         id: pairConfBtn; width: 64; height: 32; radius: 8
-                        color: pcH.hovered ? Qt.rgba(Theme.active.r, Theme.active.g, Theme.active.b, 0.30) : Qt.rgba(Theme.active.r, Theme.active.g, Theme.active.b, 0.14)
-                        border.color: Qt.rgba(Theme.active.r, Theme.active.g, Theme.active.b, 0.42); border.width: 1
+                        color: pcH.hovered ? Qt.rgba(Theme.color.accent.r, Theme.color.accent.g, Theme.color.accent.b, 0.30) : Qt.rgba(Theme.color.accent.r, Theme.color.accent.g, Theme.color.accent.b, 0.14)
+                        border.color: Qt.rgba(Theme.color.accent.r, Theme.color.accent.g, Theme.color.accent.b, 0.42); border.width: 1
                         Behavior on color { ColorAnimation { duration: 100 } }
-                        Text { anchors.centerIn: parent; text: "Pair"; font.pixelSize: 11; font.weight: Font.Medium; color: Theme.active }
+                        Text { anchors.centerIn: parent; text: "Pair"; font.pixelSize: 11; font.weight: Font.Medium; color: Theme.color.accent }
                         HoverHandler { id: pcH; cursorShape: Qt.PointingHandCursor }
                         MouseArea { anchors.fill: parent; onClicked: { dRow.tab.pairingMac = ""; BluetoothService.pair(dRow.device.mac, pinInput.text) } }
                     }

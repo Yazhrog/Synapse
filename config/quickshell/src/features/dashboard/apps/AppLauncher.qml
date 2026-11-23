@@ -144,7 +144,7 @@ Item {
                 Text {
                     anchors.horizontalCenter: parent.horizontalCenter
                     text: "󰣪"; font.pixelSize: 32
-                    color: Qt.rgba(Theme.active.r, Theme.active.g, Theme.active.b, 0.3)
+                    color: Qt.rgba(Theme.color.accent.r, Theme.color.accent.g, Theme.color.accent.b, 0.3)
                 }
                 Text {
                     anchors.horizontalCenter: parent.horizontalCenter
@@ -229,14 +229,14 @@ Item {
                         radius: 9
 
                         color: isSel
-                               ? Qt.rgba(Theme.active.r, Theme.active.g, Theme.active.b, 0.14)
+                               ? Qt.rgba(Theme.color.accent.r, Theme.color.accent.g, Theme.color.accent.b, 0.14)
                                : modelData.pinned
-                                 ? Qt.rgba(Theme.active.r, Theme.active.g, Theme.active.b, rowH.hovered ? 0.10 : 0.055)
+                                 ? Qt.rgba(Theme.color.accent.r, Theme.color.accent.g, Theme.color.accent.b, rowH.hovered ? 0.10 : 0.055)
                                  : rowH.hovered ? Qt.rgba(1,1,1,0.06) : "transparent"
                         border.color: isSel
-                                      ? Qt.rgba(Theme.active.r, Theme.active.g, Theme.active.b, 0.28)
+                                      ? Qt.rgba(Theme.color.accent.r, Theme.color.accent.g, Theme.color.accent.b, 0.28)
                                       : modelData.pinned
-                                        ? Qt.rgba(Theme.active.r, Theme.active.g, Theme.active.b, rowH.hovered ? 0.30 : 0.18)
+                                        ? Qt.rgba(Theme.color.accent.r, Theme.color.accent.g, Theme.color.accent.b, rowH.hovered ? 0.30 : 0.18)
                                         : rowH.hovered ? Qt.rgba(1,1,1,0.08) : "transparent"
                         border.width: 1
 
@@ -292,13 +292,13 @@ Item {
                                 Rectangle {
                                     anchors.fill: parent
                                     radius:       7
-                                    color: Qt.rgba(Theme.active.r, Theme.active.g, Theme.active.b, 0.18)
+                                    color: Qt.rgba(Theme.color.accent.r, Theme.color.accent.g, Theme.color.accent.b, 0.18)
                                     visible: ico.status !== Image.Ready || modelData.icon === ""
                                     Text {
                                         anchors.centerIn: parent
                                         text:           modelData.name.charAt(0).toUpperCase()
                                         font.pixelSize: 13; font.bold: true
-                                        color:          Theme.active
+                                        color:          Theme.color.accent
                                     }
                                 }
                             }
@@ -309,7 +309,7 @@ Item {
                                 anchors.verticalCenter: parent.verticalCenter
                                 text:           modelData.name
                                 font.pixelSize: 13
-                                color:          isSel ? Theme.active : Theme.text
+                                color:          isSel ? Theme.color.accent : Theme.color.text
                                 elide:          Text.ElideRight
                                 Behavior on color { ColorAnimation { duration: 100 } }
                             }
@@ -337,7 +337,7 @@ Item {
             width: parent.width; height: 44; radius: 12
             color: Qt.rgba(1,1,1,0.06)
             border.color: searchInput.activeFocus
-                          ? Qt.rgba(Theme.active.r, Theme.active.g, Theme.active.b, 0.50)
+                          ? Qt.rgba(Theme.color.accent.r, Theme.color.accent.g, Theme.color.accent.b, 0.50)
                           : Qt.rgba(1,1,1,0.12)
             border.width: 1
             Behavior on border.color { ColorAnimation { duration: 120 } }
@@ -350,7 +350,7 @@ Item {
                     anchors.verticalCenter: parent.verticalCenter
                     text: "󰍉"; font.pixelSize: 16
                     color: searchInput.activeFocus
-                           ? Qt.rgba(Theme.active.r, Theme.active.g, Theme.active.b, 0.7)
+                           ? Qt.rgba(Theme.color.accent.r, Theme.color.accent.g, Theme.color.accent.b, 0.7)
                            : Qt.rgba(1,1,1,0.35)
                     Behavior on color { ColorAnimation { duration: 120 } }
                 }
@@ -383,9 +383,9 @@ Item {
                         id: searchInput
                         anchors { fill: parent; topMargin: 2; bottomMargin: 2 }
                         verticalAlignment: TextInput.AlignVCenter
-                        color:          Theme.text
+                        color:          Theme.color.text
                         font.pixelSize: 13
-                        selectionColor: Qt.rgba(Theme.active.r, Theme.active.g, Theme.active.b, 0.35)
+                        selectionColor: Qt.rgba(Theme.color.accent.r, Theme.color.accent.g, Theme.color.accent.b, 0.35)
                         clip: true
 
                         onTextChanged: {

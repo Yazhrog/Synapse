@@ -118,7 +118,7 @@ test("focus mode (notchBottom = t) stays valid", () => {
 
 test("border width and corner radius extremes (Config → Appearance)", () => {
     for (const t of [0, 16]) for (const R of [0, 30]) {
-        // The notch radius follows the corner radius (Metrics.notchRadius).
+        // The notch radius follows the corner radius (Theme.radius.notch).
         const g = { ...base, t, R, r: Math.round(R * 15 / 17), bottomCenter: { width: 980, height: 420 } }
         const d = build(g)
         assert.ok(!/NaN|Infinity|undefined/.test(d), `t=${t} R=${R}`)

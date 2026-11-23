@@ -16,14 +16,14 @@ Item {
     Rectangle {
         anchors.fill: parent; radius: 7
         color: _hov.hovered
-               ? Qt.rgba(Theme.active.r, Theme.active.g, Theme.active.b, 0.15)
+               ? Qt.rgba(Theme.color.accent.r, Theme.color.accent.g, Theme.color.accent.b, 0.15)
                : Qt.rgba(1, 1, 1, 0.06)
-        border.color: Qt.rgba(Theme.active.r, Theme.active.g, Theme.active.b, 0.2); border.width: 1
+        border.color: Qt.rgba(Theme.color.accent.r, Theme.color.accent.g, Theme.color.accent.b, 0.2); border.width: 1
         Behavior on color { ColorAnimation { duration: 100 } }
         Text {
             anchors.centerIn: parent
             text: root.open ? root.closeGlyph : "+"
-            font.pixelSize: 14; color: Theme.active
+            font.pixelSize: 14; color: Theme.color.accent
         }
     }
     HoverHandler { id: _hov; cursorShape: Qt.PointingHandCursor }

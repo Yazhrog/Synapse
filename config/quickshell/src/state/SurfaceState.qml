@@ -88,12 +88,12 @@ Singleton {
         switch (phase) {
         case "opening":
             opening(key, screen)
-            _after(Theme.animDuration, () => { if (_gen[id] === gen) _enter(key, screen, "open") })
+            _after(Theme.motion.slow, () => { if (_gen[id] === gen) _enter(key, screen, "open") })
             break
         case "open":    opened(key, screen); break
         case "closing":
             closing(key, screen)
-            _after(Theme.animDuration + 20, () => { if (_gen[id] === gen) _enter(key, screen, "closed") })
+            _after(Theme.motion.slow + 20, () => { if (_gen[id] === gen) _enter(key, screen, "closed") })
             break
         case "closed":  closed(key, screen); break
         }

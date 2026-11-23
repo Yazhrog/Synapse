@@ -14,7 +14,7 @@ Rectangle {
     color: ab.danger
         ? (aH.hovered ? Qt.rgba(248/255, 113/255, 113/255, 0.20) : "transparent")
         : ab.active
-            ? Qt.rgba(Theme.active.r, Theme.active.g, Theme.active.b, 0.22)
+            ? Qt.rgba(Theme.color.accent.r, Theme.color.accent.g, Theme.color.accent.b, 0.22)
             : (aH.hovered ? Qt.rgba(1, 1, 1, 0.11) : "transparent")
 
     Behavior on color { ColorAnimation { duration: 110 } }
@@ -35,7 +35,7 @@ Rectangle {
         color: ab.danger
             ? (aH.hovered ? "#f87171" : Qt.rgba(248/255, 113/255, 113/255, 0.50))
             : ab.active
-                ? Theme.active
+                ? Theme.color.accent
                 : (aH.hovered ? Qt.rgba(1, 1, 1, 0.88) : Qt.rgba(1, 1, 1, 0.38))
         Behavior on color { ColorAnimation { duration: 110 } }
     }

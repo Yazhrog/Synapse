@@ -39,7 +39,7 @@ Item {
         Item {
             width: parent.width; height: 48   // header: 8 px around the 32 px buttons
             Text { anchors { left: parent.left; leftMargin: 2; verticalCenter: parent.verticalCenter }
-            text: "Wi-Fi"; font.pixelSize: 15; font.weight: Font.Bold; color: Theme.text }
+            text: "Wi-Fi"; font.pixelSize: 15; font.weight: Font.Bold; color: Theme.color.text }
             Row {
                 anchors { right: parent.right; verticalCenter: parent.verticalCenter }
                 spacing: 8
@@ -73,7 +73,7 @@ Item {
                 id: contentCol; width: flick.width; height: implicitHeight; spacing: 4
 
                 Item { width: parent.width; height: visible ? sLbl1.implicitHeight + 4 : 0; visible: WifiService.current !== null
-                    Text { id: sLbl1; text: "CONNECTED"; font.pixelSize: 9; font.weight: Font.Bold; font.letterSpacing: 1.2; color: Qt.rgba(Theme.active.r, Theme.active.g, Theme.active.b, 0.5) } }
+                    Text { id: sLbl1; text: "CONNECTED"; font.pixelSize: 9; font.weight: Font.Bold; font.letterSpacing: 1.2; color: Qt.rgba(Theme.color.accent.r, Theme.color.accent.g, Theme.color.accent.b, 0.5) } }
 
                 WifiNetworkRow { tab: root; visible: WifiService.current !== null; width: parent.width - 2; x: 1; net: WifiService.current ?? { ssid: "", signal: 0, secured: false, inUse: true }; isCurrent: true }
 
@@ -101,7 +101,7 @@ Item {
                     ScanRings { running: WifiService.scanning; anchors { horizontalCenter: parent.horizontalCenter; top: parent.top; topMargin: 12 }
                     width: 96; height: 96; centerGlyph: "󰤨"; glyphSize: 18 }
                     Text { anchors { horizontalCenter: parent.horizontalCenter; bottom: parent.bottom; bottomMargin: 8 }
-                    text: "Scanning…"; font.pixelSize: 11; color: Qt.rgba(Theme.active.r, Theme.active.g, Theme.active.b, 0.5) }
+                    text: "Scanning…"; font.pixelSize: 11; color: Qt.rgba(Theme.color.accent.r, Theme.color.accent.g, Theme.color.accent.b, 0.5) }
                 }
 
                 Item { width: parent.width; height: 8 }

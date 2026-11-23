@@ -13,7 +13,7 @@ Item {
         if (t >= 90) return "#f38ba8"
         if (t >= 75) return "#f5c47a"
         if (t >= 60) return "#fab387"
-        return Theme.active
+        return Theme.color.accent
     }
 
     readonly property real s: 0.60

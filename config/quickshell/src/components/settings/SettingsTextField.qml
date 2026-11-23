@@ -33,7 +33,7 @@ SettingsRow {
         radius: 8
         color:  Qt.rgba(1, 1, 1, input.activeFocus ? 0.08 : 0.05)
         border.color: input.activeFocus
-            ? Qt.rgba(Theme.active.r, Theme.active.g, Theme.active.b, 0.45)
+            ? Qt.rgba(Theme.color.accent.r, Theme.color.accent.g, Theme.color.accent.b, 0.45)
             : Qt.rgba(1, 1, 1, 0.10)
         border.width: 1
         Behavior on color { ColorAnimation { duration: 110 } }
@@ -53,9 +53,9 @@ SettingsRow {
             selectByMouse:     true
             font.pixelSize:    11
             font.family:       "monospace"
-            color:             Theme.text
-            selectionColor:    Qt.rgba(Theme.active.r, Theme.active.g, Theme.active.b, 0.40)
-            selectedTextColor: Theme.text
+            color:             Theme.color.text
+            selectionColor:    Qt.rgba(Theme.color.accent.r, Theme.color.accent.g, Theme.color.accent.b, 0.40)
+            selectedTextColor: Theme.color.text
 
             onAccepted:          { root.commit(); focus = false }
             onActiveFocusChanged: if (!activeFocus) root.commit()
@@ -73,7 +73,7 @@ SettingsRow {
                 visible:        input.text === "" && !input.activeFocus
                 text:           root.placeholderText
                 font:           input.font
-                color:          Qt.rgba(Theme.text.r, Theme.text.g, Theme.text.b, 0.30)
+                color:          Qt.rgba(Theme.color.text.r, Theme.color.text.g, Theme.color.text.b, 0.30)
                 elide:          Text.ElideRight
                 verticalAlignment: Text.AlignVCenter
             }

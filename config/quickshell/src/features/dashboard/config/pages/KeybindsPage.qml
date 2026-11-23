@@ -87,8 +87,8 @@ Item {
         anchors { top: parent.top; left: parent.left; right: parent.right }
         height: root.hasPending ? 44 : 0
         clip:   true
-        color:  Qt.rgba(Theme.active.r, Theme.active.g, Theme.active.b, 0.07)
-        border.color: Qt.rgba(Theme.active.r, Theme.active.g, Theme.active.b, 0.20)
+        color:  Qt.rgba(Theme.color.accent.r, Theme.color.accent.g, Theme.color.accent.b, 0.07)
+        border.color: Qt.rgba(Theme.color.accent.r, Theme.color.accent.g, Theme.color.accent.b, 0.20)
         border.width: root.hasPending ? 1 : 0
         radius: 8
 
@@ -106,7 +106,7 @@ Item {
                     return n + " unsaved change" + (n > 1 ? "s" : "")
                 }
                 font.pixelSize: 11
-                color: Qt.rgba(Theme.active.r, Theme.active.g, Theme.active.b, 0.70)
+                color: Qt.rgba(Theme.color.accent.r, Theme.color.accent.g, Theme.color.accent.b, 0.70)
             }
 
             // Discard
@@ -125,13 +125,13 @@ Item {
             Rectangle {
                 width: 62; height: 26; radius: 7
                 color: _saveH.hovered
-                    ? Qt.rgba(Theme.active.r, Theme.active.g, Theme.active.b, 0.28)
-                    : Qt.rgba(Theme.active.r, Theme.active.g, Theme.active.b, 0.16)
-                border.color: Qt.rgba(Theme.active.r, Theme.active.g, Theme.active.b, 0.42)
+                    ? Qt.rgba(Theme.color.accent.r, Theme.color.accent.g, Theme.color.accent.b, 0.28)
+                    : Qt.rgba(Theme.color.accent.r, Theme.color.accent.g, Theme.color.accent.b, 0.16)
+                border.color: Qt.rgba(Theme.color.accent.r, Theme.color.accent.g, Theme.color.accent.b, 0.42)
                 border.width: 1
                 Behavior on color { ColorAnimation { duration: 100 } }
                 Text { anchors.centerIn: parent; text: "Save"; font.pixelSize: 10
-                    font.weight: Font.Medium; color: Theme.active }
+                    font.weight: Font.Medium; color: Theme.color.accent }
                 HoverHandler { id: _saveH; cursorShape: Qt.PointingHandCursor }
                 MouseArea { anchors.fill: parent; onClicked: root._applyPending() }
             }
@@ -187,7 +187,7 @@ Item {
                             text:           modelData.name
                             font.pixelSize: 9
                             font.weight:    Font.Bold
-                            color: Qt.rgba(Theme.active.r, Theme.active.g, Theme.active.b, 0.55)
+                            color: Qt.rgba(Theme.color.accent.r, Theme.color.accent.g, Theme.color.accent.b, 0.55)
                         }
                     }
 

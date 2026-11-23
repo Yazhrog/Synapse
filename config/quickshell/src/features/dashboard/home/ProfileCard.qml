@@ -70,7 +70,7 @@ StatCard {
                 anchors.centerIn: parent
                 text:           "󰀄"
                 font.pixelSize: 28
-                color:          Theme.active
+                color:          Theme.color.accent
                 visible:        !avatarImg.visible
             }
         }
@@ -83,13 +83,13 @@ StatCard {
             Text {
                 text:           root._user
                 font.pixelSize: 17; font.weight: Font.DemiBold
-                color:          Theme.active
+                color:          Theme.color.accent
             }
 
             Row {
                 spacing: 8
                 Text {
-                    text: "󰣇"; font.pixelSize: 12; color: Theme.active
+                    text: "󰣇"; font.pixelSize: 12; color: Theme.color.accent
                     anchors.verticalCenter: parent.verticalCenter
                 }
                 Text {
@@ -102,7 +102,7 @@ StatCard {
             Row {
                 spacing: 8
                 Text {
-                    text: "󰔚"; font.pixelSize: 12; color: Theme.active
+                    text: "󰔚"; font.pixelSize: 12; color: Theme.color.accent
                     anchors.verticalCenter: parent.verticalCenter
                 }
                 Text {

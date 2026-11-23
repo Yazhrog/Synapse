@@ -75,8 +75,8 @@ PanelWindow {
         id: card
         anchors.centerIn: parent
         width:  380
-        radius: Theme.notchRadius
-        color:  Theme.background
+        radius: Theme.radius.notch
+        color:  Theme.color.background
         border.color: Qt.rgba(1, 1, 1, 0.08)
         border.width: 1
 
@@ -133,7 +133,7 @@ PanelWindow {
                     // negative case rather than tinting every state a different hue.
                     color: (UpdateService.lastError !== "" && !UpdateService.updating)
                          ? "#cc3a3a"
-                         : Theme.active
+                         : Theme.color.accent
                     Behavior on color { ColorAnimation { duration: 200 } }
 
                     RotationAnimator {
@@ -153,7 +153,7 @@ PanelWindow {
                     anchors.verticalCenter: parent.verticalCenter
                     font.pixelSize: 13
                     font.weight:    Font.DemiBold
-                    color:          Theme.text
+                    color:          Theme.color.text
                     text: UpdateService.updating      ? "Updating…"
                         : UpdateService.updateSuccess ? "Update Complete"
                         : UpdateService.hasConflict   ? "Conflict Detected"
@@ -182,7 +182,7 @@ PanelWindow {
                     text: UpdateService.commitsBehind + " new commit" +
                           (UpdateService.commitsBehind === 1 ? "" : "s") + " on main"
                     font.pixelSize: 12
-                    color: Qt.rgba(Theme.text.r, Theme.text.g, Theme.text.b, 0.55)
+                    color: Qt.rgba(Theme.color.text.r, Theme.color.text.g, Theme.color.text.b, 0.55)
                 }
 
                 Column {
@@ -196,13 +196,13 @@ PanelWindow {
                             Text {
                                 text:           "·"
                                 font.pixelSize: 11
-                                color:          Qt.rgba(Theme.active.r, Theme.active.g, Theme.active.b, 0.60)
+                                color:          Qt.rgba(Theme.color.accent.r, Theme.color.accent.g, Theme.color.accent.b, 0.60)
                                 anchors.verticalCenter: parent.verticalCenter
                             }
                             Text {
                                 width:          parent.parent.width - 18
                                 font.pixelSize: 11
-                                color:          Qt.rgba(Theme.text.r, Theme.text.g, Theme.text.b, 0.55)
+                                color:          Qt.rgba(Theme.color.text.r, Theme.color.text.g, Theme.color.text.b, 0.55)
                                 elide:          Text.ElideRight
                                 // Strip the short hash prefix from the commit line
                                 text: {
@@ -218,7 +218,7 @@ PanelWindow {
                         visible:        UpdateService.commitMessages.length > 3
                         text:           "+ " + (UpdateService.commitMessages.length - 3) + " more"
                         font.pixelSize: 10
-                        color:          Qt.rgba(Theme.active.r, Theme.active.g, Theme.active.b, 0.40)
+                        color:          Qt.rgba(Theme.color.accent.r, Theme.color.accent.g, Theme.color.accent.b, 0.40)
                         leftPadding:    16
                     }
                 }
@@ -228,18 +228,18 @@ PanelWindow {
 
                     // Update Now
                     Rectangle {
-                        width: 108; height: 30; radius: Theme.cornerRadius
+                        width: 108; height: 30; radius: Theme.radius.card
                         color: uH.hovered
-                            ? Qt.rgba(Theme.active.r, Theme.active.g, Theme.active.b, 0.26)
-                            : Qt.rgba(Theme.active.r, Theme.active.g, Theme.active.b, 0.13)
-                        border.color: Qt.rgba(Theme.active.r, Theme.active.g, Theme.active.b, 0.40)
+                            ? Qt.rgba(Theme.color.accent.r, Theme.color.accent.g, Theme.color.accent.b, 0.26)
+                            : Qt.rgba(Theme.color.accent.r, Theme.color.accent.g, Theme.color.accent.b, 0.13)
+                        border.color: Qt.rgba(Theme.color.accent.r, Theme.color.accent.g, Theme.color.accent.b, 0.40)
                         border.width: 1
                         Behavior on color { ColorAnimation { duration: 120 } }
                         Text {
                             anchors.centerIn: parent
                             text:           "Update Now"
                             font.pixelSize: 11; font.weight: Font.Medium
-                            color:          Theme.active
+                            color:          Theme.color.accent
                         }
                         HoverHandler { id: uH; cursorShape: Qt.PointingHandCursor }
                         MouseArea { anchors.fill: parent; onClicked: UpdateService.applyUpdate() }
@@ -247,7 +247,7 @@ PanelWindow {
 
                     // Skip (dismiss this check)
                     Rectangle {
-                        width: 58; height: 30; radius: Theme.cornerRadius
+                        width: 58; height: 30; radius: Theme.radius.card
                         color:        skH.hovered ? Qt.rgba(1,1,1,0.08) : Qt.rgba(1,1,1,0.04)
                         border.color: Qt.rgba(1,1,1,0.09); border.width: 1
                         Behavior on color { ColorAnimation { duration: 120 } }
@@ -258,7 +258,7 @@ PanelWindow {
 
                     // Disable auto-update
                     Rectangle {
-                        width: 82; height: 30; radius: Theme.cornerRadius
+                        width: 82; height: 30; radius: Theme.radius.card
                         color:        disH.hovered ? Qt.rgba(1,1,1,0.06) : "transparent"
                         border.color: Qt.rgba(1,1,1,0.07); border.width: 1
                         Behavior on color { ColorAnimation { duration: 120 } }
@@ -278,7 +278,7 @@ PanelWindow {
                 Text {
                     text:           "Pulling latest changes from origin/main…"
                     font.pixelSize: 12
-                    color:          Qt.rgba(Theme.text.r, Theme.text.g, Theme.text.b, 0.55)
+                    color:          Qt.rgba(Theme.color.text.r, Theme.color.text.g, Theme.color.text.b, 0.55)
                     wrapMode:       Text.WordWrap
                     width:          parent.width
                 }
@@ -299,7 +299,7 @@ PanelWindow {
                     text: "Local uncommitted changes conflict with the update.\n" +
                           "Stash them aside to proceed, or cancel."
                     font.pixelSize: 12
-                    color:          Qt.rgba(Theme.text.r, Theme.text.g, Theme.text.b, 0.55)
+                    color:          Qt.rgba(Theme.color.text.r, Theme.color.text.g, Theme.color.text.b, 0.55)
                     wrapMode:       Text.WordWrap
                     width:          parent.width
                     lineHeight:     1.45
@@ -310,7 +310,7 @@ PanelWindow {
 
                     // Stash & Update
                     Rectangle {
-                        width: 128; height: 30; radius: Theme.cornerRadius
+                        width: 128; height: 30; radius: Theme.radius.card
                         color: saH.hovered
                             ? Qt.rgba(245/255, 196/255, 122/255, 0.22)
                             : Qt.rgba(245/255, 196/255, 122/255, 0.10)
@@ -328,7 +328,7 @@ PanelWindow {
 
                     // Cancel
                     Rectangle {
-                        width: 72; height: 30; radius: Theme.cornerRadius
+                        width: 72; height: 30; radius: Theme.radius.card
                         color:        cxH.hovered ? Qt.rgba(1,1,1,0.08) : Qt.rgba(1,1,1,0.04)
                         border.color: Qt.rgba(1,1,1,0.09); border.width: 1
                         Behavior on color { ColorAnimation { duration: 120 } }
@@ -360,7 +360,7 @@ PanelWindow {
                             : "Update applied and re-linked.\nReload to see the changes."
                     }
                     font.pixelSize: 12
-                    color:          Qt.rgba(Theme.text.r, Theme.text.g, Theme.text.b, 0.55)
+                    color:          Qt.rgba(Theme.color.text.r, Theme.color.text.g, Theme.color.text.b, 0.55)
                     wrapMode:       Text.WordWrap
                     width:          parent.width
                     lineHeight:     1.45
@@ -371,18 +371,18 @@ PanelWindow {
 
                     // Reload Shell — hyprctl reload + quickshell restart
                     Rectangle {
-                        width: 108; height: 30; radius: Theme.cornerRadius
+                        width: 108; height: 30; radius: Theme.radius.card
                         color: rlH.hovered
-                            ? Qt.rgba(Theme.active.r, Theme.active.g, Theme.active.b, 0.26)
-                            : Qt.rgba(Theme.active.r, Theme.active.g, Theme.active.b, 0.13)
-                        border.color: Qt.rgba(Theme.active.r, Theme.active.g, Theme.active.b, 0.40)
+                            ? Qt.rgba(Theme.color.accent.r, Theme.color.accent.g, Theme.color.accent.b, 0.26)
+                            : Qt.rgba(Theme.color.accent.r, Theme.color.accent.g, Theme.color.accent.b, 0.13)
+                        border.color: Qt.rgba(Theme.color.accent.r, Theme.color.accent.g, Theme.color.accent.b, 0.40)
                         border.width: 1
                         Behavior on color { ColorAnimation { duration: 120 } }
                         Text {
                             anchors.centerIn: parent
                             text:           "Reload Shell"
                             font.pixelSize: 11; font.weight: Font.Medium
-                            color:          Theme.active
+                            color:          Theme.color.accent
                         }
                         HoverHandler { id: rlH; cursorShape: Qt.PointingHandCursor }
                         MouseArea { anchors.fill: parent; onClicked: UpdateService.reloadShell() }
@@ -390,7 +390,7 @@ PanelWindow {
 
                     // Dismiss
                     Rectangle {
-                        width: 72; height: 30; radius: Theme.cornerRadius
+                        width: 72; height: 30; radius: Theme.radius.card
                         color:        dmH.hovered ? Qt.rgba(1,1,1,0.08) : Qt.rgba(1,1,1,0.04)
                         border.color: Qt.rgba(1,1,1,0.09); border.width: 1
                         Behavior on color { ColorAnimation { duration: 120 } }
@@ -412,7 +412,7 @@ PanelWindow {
                 Text {
                     text:           UpdateService.lastError
                     font.pixelSize: 12
-                    color:          Qt.rgba(Theme.text.r, Theme.text.g, Theme.text.b, 0.55)
+                    color:          Qt.rgba(Theme.color.text.r, Theme.color.text.g, Theme.color.text.b, 0.55)
                     wrapMode:       Text.WordWrap
                     width:          parent.width
                 }
@@ -422,21 +422,21 @@ PanelWindow {
 
                     // Retry
                     Rectangle {
-                        width: 72; height: 30; radius: Theme.cornerRadius
+                        width: 72; height: 30; radius: Theme.radius.card
                         color: rtH.hovered
-                            ? Qt.rgba(Theme.active.r, Theme.active.g, Theme.active.b, 0.22)
-                            : Qt.rgba(Theme.active.r, Theme.active.g, Theme.active.b, 0.09)
-                        border.color: Qt.rgba(Theme.active.r, Theme.active.g, Theme.active.b, 0.30)
+                            ? Qt.rgba(Theme.color.accent.r, Theme.color.accent.g, Theme.color.accent.b, 0.22)
+                            : Qt.rgba(Theme.color.accent.r, Theme.color.accent.g, Theme.color.accent.b, 0.09)
+                        border.color: Qt.rgba(Theme.color.accent.r, Theme.color.accent.g, Theme.color.accent.b, 0.30)
                         border.width: 1
                         Behavior on color { ColorAnimation { duration: 120 } }
-                        Text { anchors.centerIn: parent; text: "Retry"; font.pixelSize: 11; color: Theme.active }
+                        Text { anchors.centerIn: parent; text: "Retry"; font.pixelSize: 11; color: Theme.color.accent }
                         HoverHandler { id: rtH; cursorShape: Qt.PointingHandCursor }
                         MouseArea { anchors.fill: parent; onClicked: UpdateService.check() }
                     }
 
                     // Close
                     Rectangle {
-                        width: 72; height: 30; radius: Theme.cornerRadius
+                        width: 72; height: 30; radius: Theme.radius.card
                         color:        clH.hovered ? Qt.rgba(1,1,1,0.08) : Qt.rgba(1,1,1,0.04)
                         border.color: Qt.rgba(1,1,1,0.09); border.width: 1
                         Behavior on color { ColorAnimation { duration: 120 } }

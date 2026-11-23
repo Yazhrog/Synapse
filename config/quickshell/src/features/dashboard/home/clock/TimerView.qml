@@ -40,7 +40,7 @@ Item {
                     if (p > 0) {
                         ctx.beginPath()
                         ctx.arc(cx, cy, r, -Math.PI/2, -Math.PI/2 + Math.PI*2*p)
-                        ctx.strokeStyle = Qt.rgba(Theme.active.r, Theme.active.g, Theme.active.b, 0.85)
+                        ctx.strokeStyle = Qt.rgba(Theme.color.accent.r, Theme.color.accent.g, Theme.color.accent.b, 0.85)
                         ctx.lineWidth = 5; ctx.lineCap = "round"; ctx.stroke()
                     }
                 }
@@ -61,7 +61,7 @@ Item {
                     text: ClockService.timerDisplay
                     font.pixelSize: ClockService.timerLeft >= 3600 ? 16 : 22
                     font.weight: Font.Bold; font.family: "JetBrainsMono Nerd Font"
-                    color: Qt.rgba(Theme.text.r, Theme.text.g, Theme.text.b, 0.9)
+                    color: Qt.rgba(Theme.color.text.r, Theme.color.text.g, Theme.color.text.b, 0.9)
                 }
                 Text {
                     anchors.horizontalCenter: parent.horizontalCenter
@@ -81,7 +81,7 @@ Item {
                 delegate: Rectangle {
                     required property int modelData
                     width: 36; height: 22; radius: 6
-                    color: _pH.hovered ? Qt.rgba(Theme.active.r, Theme.active.g, Theme.active.b,0.1) : Qt.rgba(1,1,1,0.05)
+                    color: _pH.hovered ? Qt.rgba(Theme.color.accent.r, Theme.color.accent.g, Theme.color.accent.b,0.1) : Qt.rgba(1,1,1,0.05)
                     border.color: Qt.rgba(1,1,1,0.1); border.width: 1
                     Behavior on color { ColorAnimation { duration: 100 } }
                     Text {

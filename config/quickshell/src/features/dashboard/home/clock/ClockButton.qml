@@ -1,7 +1,7 @@
 import QtQuick
 import qs.src.theme
 // ClockButton — the 58×26 text button of the clock views (Start, Reset, Set …).
-// `accent` tints it with Theme.active; the alphas tune the accent fill.
+// `accent` tints it with Theme.color.accent; the alphas tune the accent fill.
 
 Rectangle {
     id: root
@@ -17,10 +17,10 @@ Rectangle {
 
     width: 58; height: 26; radius: 8
     color: accent
-           ? Qt.rgba(Theme.active.r, Theme.active.g, Theme.active.b, _hov.hovered ? hoverAlpha : restAlpha)
+           ? Qt.rgba(Theme.color.accent.r, Theme.color.accent.g, Theme.color.accent.b, _hov.hovered ? hoverAlpha : restAlpha)
            : Qt.rgba(1, 1, 1, _hov.hovered ? 0.1 : 0.05)
     border.color: accent
-                  ? Qt.rgba(Theme.active.r, Theme.active.g, Theme.active.b, borderAlpha)
+                  ? Qt.rgba(Theme.color.accent.r, Theme.color.accent.g, Theme.color.accent.b, borderAlpha)
                   : Qt.rgba(1, 1, 1, 0.1)
     border.width: 1
     Behavior on color { ColorAnimation { duration: 100 } }
@@ -29,7 +29,7 @@ Rectangle {
         anchors.centerIn: parent
         text: root.text
         font.pixelSize: root.fontSize; font.weight: Font.Medium
-        color: root.accent ? Theme.active : Qt.rgba(1, 1, 1, 0.4)
+        color: root.accent ? Theme.color.accent : Qt.rgba(1, 1, 1, 0.4)
     }
     HoverHandler { id: _hov; cursorShape: Qt.PointingHandCursor }
     MouseArea { anchors.fill: parent; onClicked: root.clicked() }

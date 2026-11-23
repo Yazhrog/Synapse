@@ -76,8 +76,8 @@ PanelWindow {
         anchors.centerIn: parent
         width:  360
         height: col.implicitHeight + 48
-        radius: Theme.notchRadius
-        color:  Theme.background
+        radius: Theme.radius.notch
+        color:  Theme.color.background
         visible: Dialogs.confirmOpen && !root.running
 
         MouseArea { anchors.fill: parent }
@@ -97,14 +97,14 @@ PanelWindow {
             Text {
                 anchors.horizontalCenter: parent.horizontalCenter
                 text: root.request?.icon ?? "⚠️"
-                color:          Theme.text
+                color:          Theme.color.text
                 font.pixelSize: 32
             }
 
             Text {
                 anchors.horizontalCenter: parent.horizontalCenter
                 text:           root.request?.title ?? ""
-                color:          Theme.text
+                color:          Theme.color.text
                 font.pixelSize: 15
                 font.bold:      true
             }
@@ -129,7 +129,7 @@ PanelWindow {
 
                     width:  130
                     height: 38
-                    radius: Theme.cornerRadius
+                    radius: Theme.radius.card
                     color:  highlighted ? Qt.rgba(1, 1, 1, 0.15) : Qt.rgba(1, 1, 1, 0.05)
                     border.width: isSel ? 1 : 0
                     border.color: Qt.rgba(1, 1, 1, 0.4)
@@ -138,7 +138,7 @@ PanelWindow {
                     Text {
                         anchors.centerIn: parent
                         text:           "Cancel"
-                        color:          Theme.text
+                        color:          Theme.color.text
                         font.pixelSize: 13
                     }
 
@@ -157,7 +157,7 @@ PanelWindow {
 
                     width:  130
                     height: 38
-                    radius: Theme.cornerRadius
+                    radius: Theme.radius.card
                     color:  highlighted ? "#cc3a3a" : "#993030"
                     border.width: isSel ? 1 : 0
                     border.color: "white"
@@ -188,8 +188,8 @@ PanelWindow {
         anchors.centerIn: parent
         width:  300
         height: processingCol.implicitHeight + 56
-        radius: Theme.notchRadius
-        color:  Theme.background
+        radius: Theme.radius.notch
+        color:  Theme.color.background
         visible: root.running
 
         MouseArea { anchors.fill: parent }
@@ -246,7 +246,7 @@ PanelWindow {
             Text {
                 anchors.horizontalCenter: parent.horizontalCenter
                 text:           "Applying Changes"
-                color:          Theme.text
+                color:          Theme.color.text
                 font.pixelSize: 15
                 font.bold:      true
             }

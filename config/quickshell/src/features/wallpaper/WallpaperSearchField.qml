@@ -33,7 +33,7 @@ Rectangle {
     radius:             8
     color: filterBoxMA.containsMouse ? Qt.rgba(1,1,1,0.08) : Qt.rgba(1,1,1,0.06)
     border.color: (searchInput.activeFocus || dirInput.activeFocus)
-        ? Qt.rgba(Theme.active.r, Theme.active.g, Theme.active.b, 0.5)
+        ? Qt.rgba(Theme.color.accent.r, Theme.color.accent.g, Theme.color.accent.b, 0.5)
         : (filterBoxMA.containsMouse ? Qt.rgba(1,1,1,0.15) : Qt.rgba(1,1,1,0.1))
     border.width: 1
     Behavior on color { ColorAnimation { duration: 100 } }
@@ -55,7 +55,7 @@ Rectangle {
         Text {
             anchors.verticalCenter: parent.verticalCenter
             text: "Search wallpapers…"
-            color: (searchInput.activeFocus || filterBoxMA.containsMouse) ? Qt.rgba(Theme.active.r, Theme.active.g, Theme.active.b, 0.7) : Qt.rgba(1,1,1,0.28)
+            color: (searchInput.activeFocus || filterBoxMA.containsMouse) ? Qt.rgba(Theme.color.accent.r, Theme.color.accent.g, Theme.color.accent.b, 0.7) : Qt.rgba(1,1,1,0.28)
             font.pixelSize: 12; visible: searchInput.text === ""
         }
 
@@ -63,9 +63,9 @@ Rectangle {
             id: searchInput
             anchors.fill:      parent
             verticalAlignment: TextInput.AlignVCenter
-            color:             Theme.text
+            color:             Theme.color.text
             font.pixelSize:    12
-            selectionColor:    Qt.rgba(Theme.active.r, Theme.active.g, Theme.active.b, 0.35)
+            selectionColor:    Qt.rgba(Theme.color.accent.r, Theme.color.accent.g, Theme.color.accent.b, 0.35)
             clip:              true
 
             Keys.onReturnPressed: filterBox.applyRequested()
@@ -86,7 +86,7 @@ Rectangle {
             anchors.left:           parent.left
             anchors.verticalCenter: parent.verticalCenter
             text:                   "Path: "
-            color:                  (dirInput.activeFocus || filterBoxMA.containsMouse) ? Theme.active : Qt.rgba(Theme.active.r, Theme.active.g, Theme.active.b, 0.7)
+            color:                  (dirInput.activeFocus || filterBoxMA.containsMouse) ? Theme.color.accent : Qt.rgba(Theme.color.accent.r, Theme.color.accent.g, Theme.color.accent.b, 0.7)
             font.pixelSize:         11
         }
 
@@ -97,10 +97,10 @@ Rectangle {
             anchors.top:       parent.top
             anchors.bottom:    parent.bottom
             verticalAlignment: TextInput.AlignVCenter
-            color:             Theme.text
+            color:             Theme.color.text
             font.pixelSize:    12
             font.family:       "JetBrainsMono Nerd Font"
-            selectionColor:    Qt.rgba(Theme.active.r, Theme.active.g, Theme.active.b, 0.35)
+            selectionColor:    Qt.rgba(Theme.color.accent.r, Theme.color.accent.g, Theme.color.accent.b, 0.35)
             clip:              true
             Keys.onReturnPressed: filterBox.folderCommitted(dirInput.text)
             Keys.onEscapePressed: filterBox.folderCancelled()

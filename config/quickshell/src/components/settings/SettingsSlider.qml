@@ -58,7 +58,7 @@ SettingsRow {
                     width:  parent.width * root._ratio
                     height: parent.height
                     radius: parent.radius
-                    color:  Qt.rgba(Theme.active.r, Theme.active.g, Theme.active.b, 0.70)
+                    color:  Qt.rgba(Theme.color.accent.r, Theme.color.accent.g, Theme.color.accent.b, 0.70)
                 }
             }
 
@@ -68,7 +68,7 @@ SettingsRow {
                 radius: 7
                 anchors.verticalCenter: parent.verticalCenter
                 x:      (track.width - width) * root._ratio
-                color:  Theme.active
+                color:  Theme.color.accent
                 scale:  drag.pressed || drag.containsMouse ? 1.15 : 1.0
                 Behavior on scale { NumberAnimation { duration: 110 } }
             }
@@ -93,7 +93,7 @@ SettingsRow {
             text:           root._value.toFixed(root.decimals) + root.unit
             font.pixelSize: 11
             font.family:    "monospace"
-            color:          Qt.rgba(Theme.text.r, Theme.text.g, Theme.text.b, 0.70)
+            color:          Qt.rgba(Theme.color.text.r, Theme.color.text.g, Theme.color.text.b, 0.70)
         }
     }
 }

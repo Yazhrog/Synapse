@@ -30,7 +30,7 @@ Item {
                 text: root._hStr
                 font.pixelSize: 72; font.weight: Font.Bold
                 font.family: "JetBrainsMono Nerd Font"; font.letterSpacing: -4
-                color: Theme.text
+                color: Theme.color.text
             }
             Text {
                 id: mmText
@@ -41,7 +41,7 @@ Item {
                 text: ClockService.zp(ClockService.minutes)
                 font.pixelSize: 72; font.weight: Font.Bold
                 font.family: "JetBrainsMono Nerd Font"; font.letterSpacing: -4
-                color: Theme.active
+                color: Theme.color.accent
             }
         }
 
@@ -53,14 +53,14 @@ Item {
                 text: ClockService.zp(ClockService.seconds)
                 font.pixelSize: 22; font.weight: Font.Medium
                 font.family: "JetBrainsMono Nerd Font"
-                color: Qt.rgba(Theme.text.r, Theme.text.g, Theme.text.b, 0.45)
+                color: Qt.rgba(Theme.color.text.r, Theme.color.text.g, Theme.color.text.b, 0.45)
             }
             Text {
                 visible: root._ampm !== ""
                 text: root._ampm
                 font.pixelSize: 13; font.weight: Font.Bold
                 font.family: "JetBrainsMono Nerd Font"
-                color: Qt.rgba(Theme.active.r, Theme.active.g, Theme.active.b, 0.70)
+                color: Qt.rgba(Theme.color.accent.r, Theme.color.accent.g, Theme.color.accent.b, 0.70)
             }
         }
     }

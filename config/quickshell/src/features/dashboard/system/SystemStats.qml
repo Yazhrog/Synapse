@@ -31,7 +31,7 @@ Item {
                 // Subtle alternating background
                 Rectangle {
                     anchors.fill: parent
-                    radius:       Theme.cornerRadius
+                    radius:       Theme.radius.card
                     color:        index % 2 === 0
                                       ? Qt.rgba(1, 1, 1, 0.04)
                                       : "transparent"
@@ -46,7 +46,7 @@ Item {
                         verticalCenter: parent.verticalCenter
                     }
                     text:            modelData.key
-                    color:           Theme.active
+                    color:           Theme.color.accent
                     font.pixelSize:  12
                     font.bold:       true
                     width:           90
@@ -75,7 +75,7 @@ Item {
                         verticalCenter: parent.verticalCenter
                     }
                     text:            modelData.value
-                    color:           Theme.text
+                    color:           Theme.color.text
                     font.pixelSize:  12
                     elide:           Text.ElideRight
                 }

@@ -129,8 +129,8 @@ Item {
         // Keyboard selection ring
         Rectangle {
             anchors.fill: parent; radius: parent.radius
-            color: Qt.rgba(Theme.active.r, Theme.active.g, Theme.active.b, card.selected ? 0.06 : 0)
-            border.color: Theme.active; border.width: 1.5
+            color: Qt.rgba(Theme.color.accent.r, Theme.color.accent.g, Theme.color.accent.b, card.selected ? 0.06 : 0)
+            border.color: Theme.color.accent; border.width: 1.5
             opacity: card.selected ? 1 : 0
             Behavior on opacity { NumberAnimation { duration: 100 } }
         }
@@ -144,9 +144,9 @@ Item {
             TextInput {
                 width: parent.width
                 text:           card.taskData.title
-                color:          Theme.text; font.pixelSize: 12; font.weight: Font.Medium
+                color:          Theme.color.text; font.pixelSize: 12; font.weight: Font.Medium
                 wrapMode:       TextInput.WordWrap
-                selectionColor: Qt.rgba(Theme.active.r, Theme.active.g, Theme.active.b, 0.35)
+                selectionColor: Qt.rgba(Theme.color.accent.r, Theme.color.accent.g, Theme.color.accent.b, 0.35)
                 onEditingFinished: { var t = text.trim(); if (t !== "") TaskService.patchTask(card.taskData.id, "title", t) }
                 // Editing selects the card; Enter / Esc hand the keyboard back to the board.
                 onActiveFocusChanged: if (activeFocus) card.board.selectedId = card.taskData.id
@@ -215,14 +215,14 @@ Item {
                         anchors.verticalCenter: parent.verticalCenter
                         width:  dueLbl.implicitWidth + 20; height: 20; radius: 10
                         color: dueBH.hovered
-                            ? Qt.rgba(Theme.active.r, Theme.active.g, Theme.active.b, 0.15)
+                            ? Qt.rgba(Theme.color.accent.r, Theme.color.accent.g, Theme.color.accent.b, 0.15)
                             : Qt.rgba(1,1,1,0.07)
                         border.color: Qt.rgba(1,1,1,0.12); border.width: 1
                         Behavior on color { ColorAnimation { duration: 80 } }
                         Text {
                             id: dueLbl; anchors.centerIn: parent; font.pixelSize: 9
                             text:  (card.taskData.dueDate || "") !== "" ? TaskService.formatDue(card.taskData.dueDate) : "Set due date"
-                            color: (card.taskData.dueDate || "") !== "" ? Theme.active : Qt.rgba(1,1,1,0.40)
+                            color: (card.taskData.dueDate || "") !== "" ? Theme.color.accent : Qt.rgba(1,1,1,0.40)
                             Behavior on color { ColorAnimation { duration: 80 } }
                         }
                         HoverHandler { id: dueBH; cursorShape: Qt.PointingHandCursor }

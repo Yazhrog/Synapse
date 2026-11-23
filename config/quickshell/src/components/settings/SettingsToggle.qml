@@ -31,10 +31,10 @@ SettingsRow {
         height: 24
         radius: height / 2
         color: root.checked
-            ? Qt.rgba(Theme.active.r, Theme.active.g, Theme.active.b, 0.35)
+            ? Qt.rgba(Theme.color.accent.r, Theme.color.accent.g, Theme.color.accent.b, 0.35)
             : Qt.rgba(1, 1, 1, 0.07)
         border.color: root.checked
-            ? Qt.rgba(Theme.active.r, Theme.active.g, Theme.active.b, 0.55)
+            ? Qt.rgba(Theme.color.accent.r, Theme.color.accent.g, Theme.color.accent.b, 0.55)
             : Qt.rgba(1, 1, 1, 0.12)
         border.width: 1
         Behavior on color { ColorAnimation { duration: 140 } }
@@ -45,7 +45,7 @@ SettingsRow {
             radius: 9
             anchors.verticalCenter: parent.verticalCenter
             x:     root.checked ? parent.width - width - 3 : 3
-            color: root.checked ? Theme.active : Qt.rgba(1, 1, 1, 0.35)
+            color: root.checked ? Theme.color.accent : Qt.rgba(1, 1, 1, 0.35)
             Behavior on x     { NumberAnimation { duration: 140; easing.type: Easing.OutCubic } }
             Behavior on color { ColorAnimation { duration: 140 } }
         }

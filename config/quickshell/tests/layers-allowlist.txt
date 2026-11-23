@@ -1,2 +1,1 @@
 # Known layer violations (tests/layers.py --update). #111 empties this file.
-io	theme/ColorLoader.qml

@@ -20,12 +20,12 @@ Item {
     height: baseRow.height + expandArea.height
 
     Rectangle {
-        anchors.fill: parent; radius: Theme.cornerRadius
+        anchors.fill: parent; radius: Theme.radius.card
         color: netRow.isCurrent
-            ? Qt.rgba(Theme.active.r, Theme.active.g, Theme.active.b, 0.07)
+            ? Qt.rgba(Theme.color.accent.r, Theme.color.accent.g, Theme.color.accent.b, 0.07)
             : rHov.hovered ? Qt.rgba(1,1,1,0.04) : "transparent"
         border.color: netRow.isCurrent
-            ? Qt.rgba(Theme.active.r, Theme.active.g, Theme.active.b, 0.18)
+            ? Qt.rgba(Theme.color.accent.r, Theme.color.accent.g, Theme.color.accent.b, 0.18)
             : netRow.needsPassword
                 ? Qt.rgba(245/255,196/255,122/255,0.30)
                 : Qt.rgba(1,1,1,0.06)
@@ -45,7 +45,7 @@ Item {
             Text {
                 text: netRow.net.ssid; font.pixelSize: 13
                 font.weight: netRow.isCurrent ? Font.Medium : Font.Normal
-                color: netRow.isCurrent ? Theme.text : Qt.rgba(1,1,1,0.7)
+                color: netRow.isCurrent ? Theme.color.text : Qt.rgba(1,1,1,0.7)
                 width: 170; elide: Text.ElideRight
             }
             Text {
@@ -53,7 +53,7 @@ Item {
                 text: "Password required"; font.pixelSize: 10
                 color: Qt.rgba(245/255,196/255,122/255,0.80)
             }
-            Text { visible: netRow.isCurrent; text: "Connected"; font.pixelSize: 10; color: Theme.active }
+            Text { visible: netRow.isCurrent; text: "Connected"; font.pixelSize: 10; color: Theme.color.accent }
         }
 
         Row {
@@ -72,7 +72,7 @@ Item {
             Item {
                 visible: netRow.isConnecting; width: 20; height: 20; anchors.verticalCenter: parent.verticalCenter
                 Text {
-                    anchors.centerIn: parent; text: "○"; font.pixelSize: 14; color: Theme.active
+                    anchors.centerIn: parent; text: "○"; font.pixelSize: 14; color: Theme.color.accent
                     SequentialAnimation on opacity {
                         running: netRow.isConnecting; loops: Animation.Infinite
                         NumberAnimation { to: 0.2; duration: 500 }
@@ -105,10 +105,10 @@ Item {
                 visible: !netRow.isCurrent && !netRow.isConnecting
                 anchors.verticalCenter: parent.verticalCenter
                 width: connectLbl.implicitWidth + 20; height: 28; radius: 8
-                color: conH.hovered ? Qt.rgba(Theme.active.r, Theme.active.g, Theme.active.b, 0.22) : Qt.rgba(Theme.active.r, Theme.active.g, Theme.active.b, 0.09)
-                border.color: Qt.rgba(Theme.active.r, Theme.active.g, Theme.active.b, 0.35); border.width: 1
+                color: conH.hovered ? Qt.rgba(Theme.color.accent.r, Theme.color.accent.g, Theme.color.accent.b, 0.22) : Qt.rgba(Theme.color.accent.r, Theme.color.accent.g, Theme.color.accent.b, 0.09)
+                border.color: Qt.rgba(Theme.color.accent.r, Theme.color.accent.g, Theme.color.accent.b, 0.35); border.width: 1
                 Behavior on color { ColorAnimation { duration: 100 } }
-                Text { id: connectLbl; anchors.centerIn: parent; text: netRow.isExpanded ? "Retry" : "Connect"; font.pixelSize: 11; font.weight: Font.Medium; color: Theme.active }
+                Text { id: connectLbl; anchors.centerIn: parent; text: netRow.isExpanded ? "Retry" : "Connect"; font.pixelSize: 11; font.weight: Font.Medium; color: Theme.color.accent }
                 HoverHandler { id: conH; cursorShape: Qt.PointingHandCursor }
                 MouseArea {
                     anchors.fill: parent
@@ -177,7 +177,7 @@ Item {
                 Rectangle {
                     width: parent.width - parent.spacing; height: 32; radius: 8
                     color: Qt.rgba(1,1,1,0.06)
-                    border.color: passInput.activeFocus ? Qt.rgba(Theme.active.r, Theme.active.g, Theme.active.b, 0.55) : Qt.rgba(1,1,1,0.12)
+                    border.color: passInput.activeFocus ? Qt.rgba(Theme.color.accent.r, Theme.color.accent.g, Theme.color.accent.b, 0.55) : Qt.rgba(1,1,1,0.12)
                     border.width: 1; Behavior on border.color { ColorAnimation { duration: 120 } }
                     Text { anchors { left: parent.left; leftMargin: 10; verticalCenter: parent.verticalCenter }
                     text: "Password…"; font.pixelSize: 12; color: Qt.rgba(1,1,1,0.22); visible: passInput.text === "" }
@@ -185,10 +185,10 @@ Item {
                         id: passInput
                         // Updated anchors to make room for the eye button
                         anchors { left: parent.left; leftMargin: 10; right: eyeBtn.left; rightMargin: 6; top: parent.top; bottom: parent.bottom }
-                        verticalAlignment: TextInput.AlignVCenter; color: Theme.text; font.pixelSize: 12
+                        verticalAlignment: TextInput.AlignVCenter; color: Theme.color.text; font.pixelSize: 12
                         // Toggle echoMode based on state
                         echoMode: netRow._showPass ? TextInput.Normal : TextInput.Password
-                        selectionColor: Qt.rgba(Theme.active.r, Theme.active.g, Theme.active.b, 0.35); clip: true
+                        selectionColor: Qt.rgba(Theme.color.accent.r, Theme.color.accent.g, Theme.color.accent.b, 0.35); clip: true
                         Keys.onReturnPressed: { if (text.length > 0) WifiService.connectWithPassword(netRow.net.ssid, text) }
                     }
 
@@ -202,7 +202,7 @@ Item {
                             anchors.centerIn: parent
                             text: netRow._showPass ? "" : ""
                             font.pixelSize: 13
-                            color: netRow._showPass ? Theme.active : Qt.rgba(1,1,1,0.28) 
+                            color: netRow._showPass ? Theme.color.accent : Qt.rgba(1,1,1,0.28) 
                         }
                         HoverHandler { id: eyeH; cursorShape: Qt.PointingHandCursor }
                         MouseArea { anchors.fill: parent; onClicked: netRow._showPass = !netRow._showPass }

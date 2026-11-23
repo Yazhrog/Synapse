@@ -16,13 +16,13 @@ Item {
     signal toggled()
     signal reset()
 
-    readonly property int fw: Theme.notchRadius
+    readonly property int fw: Theme.radius.notch
 
     Text {
         anchors { left: parent.left; leftMargin: root.fw; verticalCenter: parent.verticalCenter }
         text:           root.glyph
         font.pixelSize: 16
-        color:          root.urgent ? "#ff5555" : Theme.active
+        color:          root.urgent ? "#ff5555" : Theme.color.accent
         Behavior on color { ColorAnimation { duration: 200 } }
     }
 
@@ -34,7 +34,7 @@ Item {
         font.weight:    Font.Bold
         font.family:    "JetBrainsMono Nerd Font"
         horizontalAlignment: Text.AlignHCenter
-        color:          root.urgent ? "#ff5555" : Theme.text
+        color:          root.urgent ? "#ff5555" : Theme.color.text
         Behavior on color { ColorAnimation { duration: 200 } }
 
         // Blink while urgent — 1 → 0.25 → 1
