@@ -32,7 +32,7 @@ Singleton {
     Exec { id: nlCheck
         command: ["bash", "-c", "sunsetr status 2>&1 | grep -q ERROR && echo off || echo on"]
         onSucceeded: out => root.nightLightOn = out.trim() === "on" }
-    Exec { id: nlRun; command: ["sunsetr", "-b"] }
+    Exec { id: nlRun; command: ["sunsetr", "-b"]; discardOutput: true }
     Exec { id: nlKill; command: ["sunsetr", "stop"]; onFinished: root.nightLightOn = false }
 
     // ── Caffeine (inhibits the Wayland idle protocol, so hypridle stops firing)
@@ -52,7 +52,7 @@ Singleton {
     Exec { id: caffeineCheck
         command: ["pgrep", "-f", "wayland-idle-inhibitor.py"]
         onFinished: root.caffeineOn = lastOutput.trim() !== "" }
-    Exec { id: caffeineRun
+    Exec { id: caffeineRun; discardOutput: true
         command: ["python3", Paths.shellDir + "/src/scripts/wayland-idle-inhibitor.py"] }
     Exec { id: caffeineKill
         command: ["pkill", "-f", "wayland-idle-inhibitor.py"]

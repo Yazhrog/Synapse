@@ -204,7 +204,7 @@ Singleton {
 
     Exec { id: powerProc; onFinished: root.refresh() }
 
-    Exec { id: bluemanProc; command: ["blueman-manager"] }
+    Exec { id: bluemanProc; command: ["blueman-manager"]; discardOutput: true }
 
     // ── Polling ─────────────────────────────────────────────────────────────
     Poller { interval: 5000; running: true; onTick: if (!root.scanning) root.refresh() }

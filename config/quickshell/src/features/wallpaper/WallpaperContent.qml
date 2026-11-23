@@ -245,8 +245,7 @@ Item {
                         wallGrid.positionViewAtIndex(idx, ListView.Center)
                     }
                     onFolderCommitted: function(path) {
-                        WallpaperService.wallpaperDir = path
-                        WallpaperService.refresh()
+                        WallpaperService.setFolder(path)
                         content.folderMode = false
                         searchField.focusSearch()
                     }

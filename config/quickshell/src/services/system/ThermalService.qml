@@ -29,8 +29,12 @@ Singleton {
     Exec {
         id: sensors
         command: ["sensors"]
-        parse: SysInfo.parseSensors
-        onSucceeded: s => {
+        // sensors exits 1 when one subfeature can't be read but still prints
+        // everything else: use the output whatever the exit code.
+        onFinished: {
+            if (lastOutput.trim() === "") return
+            let s
+            try { s = SysInfo.parseSensors(lastOutput) } catch (e) { return }
             if (s.cpuTemp >= 0) {
                 root.cpuTemp    = s.cpuTemp
                 root.cpuTempStr = s.cpuTemp.toFixed(0) + "°C"

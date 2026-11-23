@@ -44,8 +44,18 @@ Singleton {
     signal applyFinished(bool ok)
 
     // ── File listing ──────────────────────────────────────────────────────────
+    // Lists the folder again; a listing still running (of another folder,
+    // say) is restarted, so the result always matches wallpaperDir.
     function refresh() {
-        if (!listProc.busy) listProc.run()
+        listProc.run()
+    }
+
+    // Switches the wallpaper folder (the panel's folder field): saved right
+    // away, not only with the next applied wallpaper.
+    function setFolder(path) {
+        root.wallpaperDir = path
+        if (_cfg.ready) saveConfig()
+        refresh()
     }
 
     property Exec listProc: Exec {

@@ -198,7 +198,9 @@ Singleton {
     property Exec _notifyProc: Exec {}
 
     // ── wf-recorder process ───────────────────────────────────────────────────
+    // Runs for the whole recording and logs all along: its output isn't kept.
     property Exec _recProc: Exec {
+        discardOutput: true
         onFinished: {
             var savedFile = root._currentFile   // capture before it is cleared
 

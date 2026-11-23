@@ -88,7 +88,8 @@ Singleton {
 
     // ── Helpers ─────────────────────────────────────────────────────────────
     // Downs every active WireGuard connection, then brings up "$1".
-    readonly property string _connectCmd: _downAllCmd + "; nmcli con up \"$1\" 2>&1"
+    // nmcli's error stays on stderr: the "VPN Failed" notification shows it.
+    readonly property string _connectCmd: _downAllCmd + "; nmcli con up \"$1\""
     readonly property string _downAllCmd:
         "nmcli -g NAME,TYPE connection show --active" +
         " | awk -F: '$2==\"wireguard\" {print $1}'" +
