@@ -14,10 +14,10 @@ import qs.src.services.data
 Singleton {
     id: root
 
-    readonly property bool blur: PrefsService.ready && PrefsService.backgroundBlur
+    readonly property bool blur: Prefs.ready && Prefs.data.backgroundBlur
 
     function applyBlur() {
-        if (!PrefsService.ready || Hypr.provider !== "lua") return
+        if (!Prefs.ready || Hypr.provider !== "lua") return
         Hypr.evalLua("if SynapseFrameBlur then SynapseFrameBlur:set_enabled(" + (root.blur ? "true" : "false") + ") end")
     }
 

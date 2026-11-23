@@ -5,7 +5,7 @@ import qs.src.features.bar.left
 import qs.src.features.bar.right
 // BarWidgets — every widget of the bar, by zone (ARCHITECTURE.md §10.3).
 // The surface lays each zone out in `defaultOrder`, or in
-// PrefsService.barLayout's order when it lists the zone.
+// Prefs.data.barLayout's order when it lists the zone.
 QtObject {
     readonly property list<BarWidgetSpec> widgets: [
         BarWidgetSpec { key: "power";      zone: "left"; defaultOrder: 10; label: "Power menu"; component: Component { PowerButton {} } },

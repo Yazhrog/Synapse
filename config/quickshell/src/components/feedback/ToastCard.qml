@@ -1,15 +1,19 @@
 import QtQuick
 import Quickshell.Services.Notifications
-import qs.src.state
 import qs.src.theme
 // ToastCard — the content of a notification toast: app icon and name, close
 // button, summary, body, action buttons and the urgency-coloured countdown
-// bar. Reads ToastState; the host window or notch draws the background.
+// bar. Presentational: the host passes `notification`, `showing` and
+// `duration` (the toast queue's) and handles dismissRequested(); it also
+// draws the background.
 // Height follows the content (implicitHeight).
 Item {
     id: root
 
-    readonly property var notification: ToastState.current
+    property var  notification: null
+    property bool showing:      false
+    property int  duration:     5000      // ms the countdown bar runs
+    signal dismissRequested()
     // Width of the countdown bar when full.
     property real barWidth: width
 
@@ -39,14 +43,14 @@ Item {
         width: running ? 0 : root.barWidth
         Behavior on width {
             enabled: progressBar.running
-            NumberAnimation { duration: ToastState.duration; easing.type: Easing.Linear }
+            NumberAnimation { duration: root.duration; easing.type: Easing.Linear }
         }
 
         Connections {
-            target: ToastState
+            target: root
             function onShowingChanged() {
                 progressBar.running = false
-                if (ToastState.showing) progressTick.restart()
+                if (root.showing) progressTick.restart()
             }
         }
 
@@ -129,7 +133,7 @@ Item {
                     font.pixelSize:   9
                 }
                 HoverHandler { id: xHover }
-                TapHandler   { onTapped: ToastState.dismiss() }
+                TapHandler   { onTapped: root.dismissRequested() }
             }
         }
 
@@ -185,7 +189,7 @@ Item {
                     TapHandler {
                         onTapped: {
                             modelData?.invoke()
-                            ToastState.dismiss()
+                            root.dismissRequested()
                         }
                     }
                 }

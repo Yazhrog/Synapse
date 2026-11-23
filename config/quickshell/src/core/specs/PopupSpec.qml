@@ -37,7 +37,7 @@ QtObject {
     property var afterClose: null       // function(item)
 
     // Popups with pages: their PageSpec registry, the Popups property
-    // holding the page, and the PrefsService key of the page to open on
+    // holding the page, and the Prefs key of the page to open on
     // ("last" = keep the page).
     property var    pages:           []
 

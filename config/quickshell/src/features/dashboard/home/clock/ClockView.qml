@@ -7,7 +7,7 @@ import qs.src.theme
 Item {
     id: root
 
-    readonly property bool   _h24: PrefsService.use24HourClock
+    readonly property bool   _h24: Prefs.data.use24HourClock
     readonly property string _hStr: ClockService.zp(_h24 ? ClockService.hours : (ClockService.hours % 12 || 12))
     readonly property string _ampm: _h24 ? "" : (ClockService.hours < 12 ? "AM" : "PM")
 

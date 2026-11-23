@@ -21,7 +21,7 @@ Singleton {
 
     // ── Preferences ──────────────────────────────────────────────────────────
     function resetPrefs() {
-        PrefsService.resetAll()
+        Prefs.resetAll()
         root.finished("prefs", true)
     }
 
@@ -47,7 +47,7 @@ Singleton {
     }
 
     function resetAvatar() {
-        PrefsService.reset("avatarPath")
+        Prefs.reset("avatarPath")
         root.finished("avatar", true)
     }
 

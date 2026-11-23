@@ -103,7 +103,7 @@ ShellRoot {
             if (!r || !(r.width > 0) || !(r.height > 0)) fail("popup '" + k + "' place() is not a rect")
             if (p.pageProp !== "" && typeof Popups[p.pageProp] !== "string")
                 fail("popup '" + k + "' pageProp '" + p.pageProp + "' is not a Popups property")
-            if (p.defaultPagePref !== "" && !(p.defaultPagePref in PrefsService.defaults))
+            if (p.defaultPagePref !== "" && !(p.defaultPagePref in Prefs.defaults))
                 fail("popup '" + k + "' defaultPagePref '" + p.defaultPagePref + "' is not a pref")
             if (p.pageProp !== "" && (p.pages ?? []).length === 0) fail("popup '" + k + "' has a pageProp but no pages")
         }

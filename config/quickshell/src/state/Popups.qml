@@ -65,7 +65,7 @@ Singleton {
     function _applyDefaultPage(content) {
         const spec = SurfaceState.specOf(content)
         if (!spec || spec.defaultPagePref === "") return
-        const page = PrefsService[spec.defaultPagePref]
+        const page = Prefs.data[spec.defaultPagePref]
         if (page && page !== "last") root[spec.pageProp] = page
     }
 

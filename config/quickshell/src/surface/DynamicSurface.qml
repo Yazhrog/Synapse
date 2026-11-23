@@ -219,6 +219,10 @@ PanelWindow {
     // ── Toast, inside the grown right notch ──────────────────────────────────
     ToastCard {
         id: toastCard
+        notification: ToastState.current
+        showing:      ToastState.showing
+        duration:     ToastState.duration
+        onDismissRequested: ToastState.dismiss()
         x:        root.width - root.rWidth + root.px(14)
         y:        root.notchHeight + root.px(4)
         width:    root.toastWidth - root.px(14) - root.borderWidth - root.notchPadding

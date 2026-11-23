@@ -46,6 +46,7 @@ QtObject {
     signal saved()
     signal failed(string message)
     signal cleared()
+    signal created()       // the file was missing; the defaults were written
 
     // Applies `fn(doc)` to a copy of the document, keeps the copy and saves
     // it. Returns what `fn` returns. Ignored (returns undefined) before the
@@ -184,8 +185,10 @@ QtObject {
                 root._error = ""
                 const first = !root._ready
                 root._ready = true
-                if (root.createIfMissing && !root.readOnly) root._write(root._data)
+                const create = root.createIfMissing && !root.readOnly
+                if (create) root._write(root._data)
                 if (first) root.loaded()
+                if (create) root.created()
             } else {
                 root._error = "read failed: " + FileViewError.toString(err)
                 console.warn("JsonStore: " + root.path + ": " + root._error)

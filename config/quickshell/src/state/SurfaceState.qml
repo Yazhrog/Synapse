@@ -118,14 +118,14 @@ Singleton {
 
     // ── Resolution scaling ──────────────────────────────────────────────────
     // Surface sizes are designed for a 1080 px tall screen. The factor comes
-    // from PrefsService.surfaceScale: "off" → 1, "auto" → screen height / 1080
+    // from Prefs.data.surfaceScale: "off" → 1, "auto" → screen height / 1080
     // clamped to [0.75, 1.5] (on top of Hyprland's own monitor scale), or a
     // fixed number. SYNAPSE_SURFACE_SCALE overrides it for testing.
     readonly property real _forcedScale: Number(Quickshell.env("SYNAPSE_SURFACE_SCALE") ?? 0) || 0
 
     function scaleFor(screen): real {
         if (root._forcedScale > 0) return root._forcedScale
-        const mode = PrefsService.surfaceScale
+        const mode = Prefs.data.surfaceScale
         if (mode === "auto") {
             if (!screen || !screen.height) return 1.0
             return Math.max(0.75, Math.min(1.5, screen.height / 1080))
