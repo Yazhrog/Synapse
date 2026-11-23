@@ -13,7 +13,7 @@ QtObject {
 
     function enqueue(argv: var, callback: var) {
         _queue = _queue.concat([{ argv: argv, callback: callback ?? null }])
-        if (!_exec.busy) _next()
+        if (!_exec.busy && _current === null) _next()
     }
 
     function clear() { _queue = []; _exec.cancel(); _current = null }
@@ -29,10 +29,20 @@ QtObject {
         _exec.run(_current.argv)
     }
 
+    // The command has ended (Exec is idle again). The callback may enqueue
+    // more: that starts right away (FIFO, the queue is empty or it is behind
+    // the others), so the next one only starts here if nothing did. A
+    // throwing callback can't stall the queue.
     function _done(ok, result, code, err) {
         const c = _current
-        if (c && c.callback) c.callback(ok, result, code, err)
-        _next()
+        _current = null
+        try {
+            if (c && c.callback) c.callback(ok, result, code, err)
+        } catch (e) {
+            console.warn("ExecQueue: callback failed: " + e)
+        } finally {
+            if (!_exec.busy) _next()
+        }
     }
 
     property Exec _exec: Exec {

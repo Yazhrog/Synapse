@@ -85,6 +85,22 @@ ShellRoot {
                 check("execqueue runs in order", JSON.stringify(results) === '["1","2","x1"]', JSON.stringify(results))
             })
         },
+        // A callback that queues more (Hypr.setOptions(…, () => Hypr.reload())),
+        // and one that throws: every command still runs, once, in order.
+        () => {
+            const results = []
+            queue.enqueue(["echo", "a"], (ok, r) => {
+                results.push(r.trim())
+                queue.enqueue(["echo", "c"], (ok2, r2) => {
+                    results.push(r2.trim())
+                    check("execqueue runs what a callback queues, after a throwing callback",
+                          JSON.stringify(results) === '["a","b","c"]', JSON.stringify(results))
+                })
+            })
+            queue.enqueue(["echo", "b"], (ok, r) => { results.push(r.trim()); throw new Error("boom") })
+        },
+        () => exec({ discardOutput: true }, ["sh", "-c", "echo out; echo err >&2; exit 2"], ev =>
+            check("exec discardOutput reads neither stream", JSON.stringify(ev) === '[["fail",2,""]]', JSON.stringify(ev))),
 
         // ── JsonStore ───────────────────────────────────────────────────────
         // (defaults declared in QML, as services do: passed through
@@ -122,6 +138,24 @@ ShellRoot {
                     check("store clear writes the defaults, then resets data",
                           clearedSeen && text === '{"tasks":[]}' && JSON.stringify(s.data) === '{"tasks":[]}', clearedSeen + " / " + text)))
             })),
+        () => writeFile(dir + "/clear2.json", '{"tasks":[1,2]}', () =>
+            store({ path: dir + "/clear2.json", defaults: ({ tasks: [] }) }, s => {
+                s.clear()
+                s.update(d => d.tasks.push(9))      // while the clear is being written
+                settle(() => readFile(dir + "/clear2.json", text =>
+                    check("store keeps a change made during clear",
+                          text === '{"tasks":[9]}' && JSON.stringify(s.data) === '{"tasks":[9]}', text + " / " + JSON.stringify(s.data))))
+            })),
+        // A path that can't be read (a directory): never loaded, so clear() must not write.
+        () => exec({}, ["mkdir", "-p", dir + "/isdir.json"], () => {
+            const s = storeComp.createObject(t, { path: dir + "/isdir.json", defaults: ({ a: 0 }) })
+            settle(() => {
+                s.clear()
+                settle(() => exec({}, ["sh", "-c", '[ -d "$1" ] && echo dir', "--", dir + "/isdir.json"], ev =>
+                    check("store clear before the first load writes nothing",
+                          !s.ready && ev[0][1].trim() === "dir", s.ready + " / " + JSON.stringify(ev))))
+            })
+        }),
         () => writeFile(dir + "/mig.json", '{"a":1}', () =>
             store({ path: dir + "/mig.json", defaults: ({ a: 0 }), version: 2,
                     migrate: (d, from) => { d.b = from; return d } }, s =>

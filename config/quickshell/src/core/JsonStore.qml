@@ -55,8 +55,11 @@ QtObject {
             console.warn("JsonStore: update ignored (" + (readOnly ? "read-only" : "not loaded yet") + "): " + path)
             return undefined
         }
-        const copy = _clone(_data)
+        // While clear() is writing, a change applies to the cleared document
+        // and is saved once the clear has landed.
+        const copy = _clone(_clearing ? (_afterClear ?? defaults) : _data)
         const result = fn(copy)
+        if (_clearing) { _afterClear = copy; return result }
         _data = copy
         _scheduleSave()
         return result
@@ -65,16 +68,23 @@ QtObject {
     // Replaces the whole document.
     function set(doc) {
         if (!_ready || readOnly) return
-        _data = _withDefaults(_clone(doc))
+        const next = _withDefaults(_clone(doc))
+        if (_clearing) { _afterClear = next; return }
+        _data = next
         _scheduleSave()
     }
 
     // Writes `defaults` to disk first, and only once that worked resets
     // `data` and emits cleared(); a failed write emits failed() and keeps the
     // data, so a broken disk can't leave an empty list that later saves over
-    // the file.
+    // the file. Ignored before the first load (the file was never read, so
+    // there is nothing safe to overwrite).
     function clear() {
         if (readOnly) return
+        if (!_ready) {
+            console.warn("JsonStore: clear ignored (not loaded yet): " + path)
+            return
+        }
         _saveTimer.stop()
         _clearing = true
         _write(_clone(defaults))
@@ -91,6 +101,7 @@ QtObject {
     property string _error:       ""
     property bool   _dirty:       false
     property bool   _clearing:    false
+    property var    _afterClear:  null    // changes made while a clear is being written
     property string _lastWritten: ""
     property string _brokenText:  ""      // unparsable content to back up before the first write
 
@@ -182,13 +193,19 @@ QtObject {
         onSaved: {
             if (root._clearing) {
                 root._clearing = false
-                root._data = root._clone(root.defaults)
+                const after = root._afterClear
+                root._afterClear = null
+                root._data = after ?? root._clone(root.defaults)
                 root.cleared()
+                if (after) root._scheduleSave()
             }
             root.saved()
         }
         onSaveFailed: function(err) {
+            if (root._clearing && root._afterClear)
+                console.warn("JsonStore: " + root.path + ": the changes made during the failed clear are dropped")
             root._clearing = false
+            root._afterClear = null
             root._dirty = true
             const msg = "write failed: " + FileViewError.toString(err)
             console.warn("JsonStore: " + root.path + ": " + msg)

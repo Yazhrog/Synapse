@@ -24,7 +24,10 @@ import Quickshell.Io
 //   finished(ok)        after either, for "whatever happened" handlers
 // With `stream: true`, every stdout line is emitted as line(text) while the
 // command runs, and succeeded() gets "" (for long-running commands: cava,
-// nmcli monitor, wf-recorder).
+// nmcli monitor). With `discardOutput: true`, stdout and stderr aren't read
+// at all and succeeded()/failed() get "": for a command that runs for hours
+// and logs (a recorder, an idle inhibitor, a launched app), whose output
+// would otherwise pile up in memory until it exits.
 QtObject {
     id: root
 
@@ -34,6 +37,7 @@ QtObject {
     property var    parse:       null    // function(stdout) → result
     property int    timeout:     0       // ms, 0 = none
     property bool   stream:      false
+    property bool   discardOutput: false
 
     readonly property bool busy: _current !== null
     property string lastError:  ""       // stderr (or reason) of the last failed run
@@ -51,7 +55,8 @@ QtObject {
             console.warn("Exec: empty command")
             return
         }
-        const run = (stream ? _streamComp : _collectComp).createObject(root, {
+        const comp = discardOutput ? _discardComp : stream ? _streamComp : _collectComp
+        const run = comp.createObject(root, {
             command: argv,
             environment: environment,
             stdinEnabled: stdinText !== ""
@@ -139,8 +144,6 @@ QtObject {
             Qt.callLater(proc.destroy)
         }
 
-        stderr: StdioCollector { onStreamFinished: { proc._err = text; proc._errDone = true; proc._maybeEnd() } }
-
         property Timer killTimer: Timer {
             onTriggered: { proc._code = 124; proc._err = "timed out"; proc.running = false }
         }
@@ -155,13 +158,21 @@ QtObject {
         Run {
             id: run
             stdout: StdioCollector { onStreamFinished: { run._out = text; run._outDone = true; run._maybeEnd() } }
+            stderr: StdioCollector { onStreamFinished: { run._err = text; run._errDone = true; run._maybeEnd() } }
         }
     }
 
     property Component _streamComp: Component {
         Run {
+            id: run
             _outDone: true
             stdout: SplitParser { onRead: data => root.line(data) }
+            stderr: StdioCollector { onStreamFinished: { run._err = text; run._errDone = true; run._maybeEnd() } }
         }
+    }
+
+    // Neither stream is read (no collector: the output goes nowhere).
+    property Component _discardComp: Component {
+        Run { _outDone: true; _errDone: true }
     }
 }
