@@ -15,7 +15,7 @@ There is no build step. These checks run in CI (`.github/workflows/quickshell.ym
 - `config/quickshell/tests/unit.sh` — node unit tests of the pure JS modules (`tests/unit/*.test.mjs`: the surface frame path, the hyprctl builder, the nmcli / cliphist / sysinfo parsers, the keybind generator, the screen-recording and update scripts, the player labels).
 - `config/quickshell/tests/smoke.sh` — offscreen against throwaway data, fails on any QML error: the singletons and shared components (`tests/smoke.qml`), every popup through `app/PopupManifest.qml`'s imports only (`tests/smoke-imports.qml`), **every scene** of `tests/lib/SceneList.qml` on its own (`tests/smoke-registries.qml`: the popups, the bar zones, and every entry of the registries — dashboard pages, config tabs, network tabs, audio pages, bar widgets, notch items — generated from them), the contracts (`tests/contracts.qml`: `keybind-defaults.json` keys = action keys, and the shape of every registry: unique keys, components, zones, regions…), the behaviour of the core toolkit (`tests/core.qml`), of the popup lifecycle and `Dialogs` (`tests/lifecycle.qml`), of `Prefs` (`tests/prefs.qml`) and of the design tokens and colour source (`tests/theme.qml`). Layer-shell windows (the surface itself, `ConfirmDialog`, `BatteryCriticalDialog`, `UpdatePopup`) can't be created offscreen and still need a live session. A registry entry gets its scene automatically; any other new view goes into `SceneList.qml`.
 - `config/quickshell/tests/golden.sh diff [<base-ref>]` — **proves "no visible change"**: captures every scene offscreen for the base commit and the working tree and compares them pixel by pixel. CI runs it on every PR (label a PR `visual-change` when the look changes on purpose). Scenes showing the time are only compared with libfaketime installed (`pacman -S libfaketime`).
-- `config/quickshell/tests/layers.py` — the layer rules of `ARCHITECTURE.md` (report only until #117); known violations are in `tests/layers-allowlist.txt`, refreshed with `--update` when a PR removes some.
+- `config/quickshell/tests/layers.py` — the dependency rules of `ARCHITECTURE.md` §11 and the size budgets of §9, **enforced in CI** (exit 1 on any violation; files over their view/service budget are warnings, over 500 lines a violation). There is no allowlist. `--report` never fails, `--self-test` plants one violation per rule in a copy of `src/` and checks each is caught (CI runs it too).
 - **Imports: `import qs.src.<folder>` only** (e.g. `import qs.src.services.home`), one line per folder whose types or singletons the file uses; files in the same folder need no import. There is no `qmldir`: a file with `pragma Singleton` (root `Singleton {}`) is a singleton automatically. Relative imports are only for a `.js` file next to the file (`import "keynames.js" as KeyNames`); `tests/layers.py` flags any `import "../…"`. This also removed the old folder-scanning trap (folders listed only in a `qmldir` weren't scanned).
 
 Everything else is the installer and manual verification on a running Hyprland+Quickshell session:
@@ -50,42 +50,172 @@ Runtime state lives under `~/.config/Synapse/` (never symlinked): `src/user_data
 
 ### Quickshell shell (`config/quickshell/`)
 
-Entry point `shell.qml` only creates `src/app/App.qml`, the composition root: it force-instantiates the singletons that need startup side effects (`KeybindService`, `UpdateService`, `IpcBridge`, `BatteryWarningService`, …), hands the manifests to the framework (`PopupManifest` → `SurfaceState` and the surface, `ActionManifest` → `Actions`, `BarWidgets` → the bar) and creates `surface/ShellHost.qml`, the **Dynamic Surface** root (#37). Per screen (`Variants` over `Quickshell.screens`) it creates:
+The shell is built in layers, and **`ARCHITECTURE.md` is the reference**: layers §4, patterns §5, final tree §6, contracts of the core types §8, conventions and size budgets §9, recipes §10, tests §11. `tests/layers.py` enforces the dependency rules in CI (no allowlist: a violation fails the PR).
 
-- `surface/DynamicSurface.qml` — one fullscreen transparent layer surface (layer `Overlay`, namespace `synapse-frame`) that draws the whole frame as a single `surface/shape/SurfaceShape.qml` path and hosts the bar, every popup (each grows a *region* of the frame: `top`, `right`, `leftCenter`, `rightCenter`, `bottomCenter`, `bottomRight`), the passive toast and OSD, the click shield and the border triggers. Over a fullscreen window the frame hides unless it shows something. Its input mask covers only the visible frame, so clicks elsewhere reach apps. It gets the popups from `app/PopupManifest.qml` (`manifest`, handed down by `App` → `ShellHost`) and never imports a popup's feature; its self-contained parts are next to it in `surface/`: `Regions` (each region's target size, the collision rules, the animated frame geometry and `rect(region)`), `SurfaceBar` (the notch contents), `SurfacePopupHost` (the popup loaders, their focus and `afterClose`), `SurfaceTriggers` (the border triggers), `SurfaceClickShield` and `SurfaceInputMask`. Each takes the surface as `surface`.
-- `surface/StrutWindow.qml` — an invisible window that only reserves space (exclusive zone) along one edge: the bar's at the top; at the default border width the sides and bottom reserve nothing and `gaps_out` keeps windows clear of the borders, a wider border (Config → Appearance) reserves the extra width there.
-- The centered modals (`dialogs/`: `ConfirmDialog`, `BatteryCriticalDialog`, `UpdatePopup`) stay separate windows.
+#### Layers
 
-The old window stack (`TopBar`, `Border`, `PopupLayer`, per-popup windows) was removed in #43; the last release with it is v0.3.0. To run the dev checkout: `qs -p <checkout>/config/quickshell` — keybinds (`qs ipc call …`) only reach the default config, so with `-p` use `qs ipc -p <checkout>/config/quickshell call <target> toggle`.
+A file imports only its own layer and the layers below it.
 
-**Core toolkit (`src/core/`, `import qs.src.core`) — new and reworked services use it** (`ARCHITECTURE.md` §5.3–5.5, §8; #111 moves every service onto it):
+| Layer | Folder | Holds | Never |
+|---|---|---|---|
+| Root | `shell.qml`, `app/` | `App.qml` (eager services, the manifests, `ShellHost`), `PopupManifest.qml` (every `PopupSpec`), `ActionManifest.qml` | logic of its own |
+| Hosts | `surface/`, `dialogs/` | the per-screen frame engine and the modal windows | import a `features/` folder (they get features through the manifests) |
+| Views | `features/<feature>/` | containers that bind to services and state, plus feature-local parts | run a command or read a file (`Process`, `FileView`, `Socket`) |
+| Commands | `actions/` | `Actions` registry, `IpcBridge` | views |
+| UI state | `state/` | `SurfaceState`, `Popups`, `PopupLifecycle`, `Dialogs`, `ToastState`, `ShellModes` | views |
+| Pure UI | `components/{base,inputs,feedback,settings}` | presentational widgets: inputs as properties, outputs as signals | any singleton but `Theme` and `core/`; any import but `theme/` and `core/` |
+| Domain | `services/<domain>/` (`system`, `network`, `media`, `desktop`, `data`, `notifications`, `time`) | non-visual singletons, one per external system or data set; pure parsers as `.js` next to them | import `state/`, `actions/`, `features/`, `surface/`, `dialogs/`; name `Popups` or `SurfaceState`; have a visual root |
+| Foundation | `theme/`, `core/` | design tokens and the colour source; `Exec`, `JsonStore`, `Poller`/`Lease`, `Hypr`, `Paths`, `Log`, the spec types (`core/specs/`) | depend on anything above |
 
-- `Exec` runs one command: `command` is an **argument list**, data is always its own element (a script that needs a shell takes it as `"$1"`: `["bash", "-c", 'nmcli con up "$1"', "--", name]`), never pasted into the string. `run()` (restarts if busy), `cancel()`, `busy`, optional pure `parse(stdout)`, `timeout`, `stdinText`, `stream` (one `line(text)` per stdout line); ends with `succeeded(result)` or `failed(code, stderr)` (-2 = couldn't start, 124 = timeout, -1 = parse error), then `finished(ok)`. `ExecQueue` runs commands one at a time.
-- `JsonStore` owns one JSON file: `data`, `update(fn)`, `set()`, `clear()` (writes first, then resets), `flush()`, `defaults` merged into what's read, atomic writes, nothing written before the first load, an unreadable file kept as `<path>.broken`, `version` + `migrate()`, `watch`, `readOnly`.
-- `Poller` (a Timer that also fires on start), `LeaseCount` + `Lease`: a service that should only work while something shows its data embeds a `LeaseCount` (`watched`, `acquire()`, `release()`) and views hold `Lease { service: X; active: … }` — services never read `Popups`.
-- `Hypr` runs hyprctl changes with the right syntax for the Lua or conf provider (`setOptions`, `submap`, `evalLua`, `reload`; commands built by the unit-tested `hypr.js`). `Log` prefixes messages.
-- Output parsers are pure `.js` next to their service (`services/network/nmcli.js`) with node tests in `tests/unit/`.
+Everywhere: no `import "../…"`, and no `"-c"` command element with a value concatenated into the script.
 
-Global singletons are files with `pragma Singleton` and a `Singleton {}` root, and are the backbone of shared state — a file reaches them by importing their folder (`import qs.src.state`, `import qs.src.services.data`, …), then can reference `Theme`, `Popups`, `ShellModes`, `Actions`, `ClockService`, `ScreenRecService`, `CavaService`, `ClipboardService`, `KeybindService`, `UpdateService` and the others directly:
+#### Boot and the Dynamic Surface
 
-- **`core/Paths.qml`** — every directory the shell uses: `configDir`, `userDataDir` (with `Paths.userData("file.json")`), `wallpaperDir`, `shellDir`, `repoDir`, `cacheDir`. Never hardcode `~/.config/Synapse` in QML. Setting `SYNAPSE_CONFIG_DIR` points `configDir` somewhere else, so the dev checkout can run against throwaway data: `SYNAPSE_CONFIG_DIR=/tmp/synapse-test qs -p <checkout>/config/quickshell`. `matugen.toml` and the installer can't read it and keep their own paths. It lives in `core/`, so `import qs.src.core`.
-- **`services/data/Prefs.qml` + `PrefSchema.qml`** — shell preferences (how the shell behaves), in `shell_prefs.json` through a `JsonStore`. `PrefSchema.keys` holds every pref: `{ default, type, options | min/max, label, description }`; `Prefs` validates every value against it on read and write (wrong type → default, numbers clamped, `strict` options such as `barStyle`). Read `Prefs.data.<key>` (bindable), write `Prefs.set(key, v)`; `reset(key)`, `resetAll()`, `isDefault(key)`, `defaults`. Saving is debounced, hand edits are picked up live, keys the schema doesn't know are kept. Wait for `Prefs.ready` (or its `loaded` signal) before acting on a pref at startup. **Adding a pref = one `PrefSchema` entry + one `Pref*` control** (`ARCHITECTURE.md` §10.5). User data (tasks, pins, wallpaper, keybinds) keeps its own files.
-- **Appearance prefs** — `borderWidth`, `cornerRadius` and `backgroundOpacity` are prefs that the tokens read, so `Theme.frame.borderWidth`, `Theme.radius.card` and `Theme.frame.opacity` follow them (and `Theme.radius.notch`, in proportion to the corner radius); the frame is filled with `Theme.color.surface` (background × opacity). `barStyle` picks the frame's look: `frame` (notches + borders), `bar` (full-width top bar, no borders) or `pills` (floating capsules and cards, `Theme.frame.pillGap` from the edges); `surfacePath.js` builds all three, and `DynamicSurface.borderWidth` is 0 in bar and the gap in pills, so the region rects and placements work unchanged. Background blur is the `SynapseFrameBlur` layer rule in `config/hypr/modules/rules.lua` (enabled from `shell_prefs.json` at load), flipped live by `services/desktop/AppearanceService.qml` through `hyprctl eval`.
-- **`services/data/DataService.qml`** — the actions of Config → Data & Storage (reset prefs / wallpaper / avatar, export or clear tasks, wipe the clipboard, clear the cache, factory reset). Each ends with `finished(action, ok)`; the factory reset deletes `user_data/` (keeping the installer's `config_Provider.json`) from a detached shell after quickshell has exited, then relaunches it.
-- **`state/SurfaceState.qml`** — which interactive popup is open (`activeContent`), in which surface region (`activeRegion`) and on which screen (`activeScreen`, the focused monitor by default). One popup at a time globally; the keys and regions come from the manifest (`popups`, set by `App`; `regionOf`, `specOf(key)`). It is also the popup **lifecycle**: per popup and screen `closed → opening → open → closing → closed`, with signals `opening`/`opened`/`closing`/`closed(key, screen)` and `phaseOf(key, screen)`; views react with `state/PopupLifecycle.qml` (`PopupLifecycle { popup: "network"; onOpening: … }`) instead of watching `Popups.xxxOpen`. It also gives the per-screen `scaleFor(screen)` factor from `Prefs.data.surfaceScale` (`off` = 1 by default, `auto` = screen height / 1080 clamped to 0.75–1.5, or a fixed factor; set in Config → Misc; `SYNAPSE_SURFACE_SCALE` overrides it). Only the frame and region sizes scale; popup contents don't yet.
-- **`state/Popups.qml`** — the API the rest of the code uses: `Popups.open("dashboard")`, `close("dashboard")` (no-op if another popup replaced it), `toggle(...)`, `togglePage("dashboard", "stats")`, `closeAll()`. `Popups.dashboardOpen` etc. are **read-only** views of `SurfaceState`; never assign them. Per-page state (`dashboardPage`, `audioPage`, `networkPage`) stays here; which popup uses which page property and default-page pref comes from its spec (`pageProp`, `defaultPagePref`). The passive OSD and notification toast are separate flags (`showQuick()`/`hideQuick()`, `showToast()`/`hideToast()`) so they never close a popup.
-- **`state/ToastState.qml`** — the notification toast queue (one toast at a time, 5 s each, shown on the monitor focused when it arrived). The surface renders it with `components/feedback/ToastCard.qml` in the grown right notch; the Quick Controls OSD sliders live in `features/osd/QuickControlContent.qml`, in the right-center region.
-- **`state/ShellModes.qml`** — read-only mirrors of the mode flags for the surface and the bar: `focusMode` (`FocusModeService.active`), `dnd` (`NotificationService.dnd`), `screenRecord` (`ScreenRecService.setupOpen`), `airplane` (`QuickToggleService.airplaneOn`) — change them through their service. The Hyprland config provider is `Hypr.provider`; the pass-through submap used while capturing a new keybind is `KeybindService.setCapturing()`.
-- **Network and quick-toggle services** — `services/network/WifiService.qml`, `BluetoothService.qml` and `VpnService.qml` own the nmcli / bluetoothctl state and actions; the bar's `NetworkIndicator.qml`, the Quick Settings tiles and the network popup tabs all read them. `services/network/HotspotService`, `services/system/BrightnessService`, `services/media/ScreenFilterService` and `services/desktop/QuickToggleService` (Night Light, Caffeine, Airplane) do the same for the rest of Quick Settings. All are singletons started from `app/App.qml`.
-- **Actions** (`actions/Actions.qml`, `import qs.src.actions`) — every user-triggerable command as `{ key, label, group, run }`; `Actions.run(key)` is what IPC, keybinds and buttons call. The list is `app/ActionManifest.qml`: one toggle action per popup with an `action` and per page with a `PageSpec.action` (generated from the popup manifest), plus its own `Action` entries (focus mode, screen recording). **`actions/IpcBridge.qml`** creates one `IpcHandler { target: key; toggle() }` per action from the registry (a singleton, so with one surface per screen only one handler reacts), plus `quickcontrols-show reveal` for the volume/brightness OSD.
-- **Registries** (`ARCHITECTURE.md` §5.7, §10) — plain `QtObject` lists of spec objects (`core/specs/`), instantiated where they are read: `features/dashboard/DashboardPages.qml`, `features/audio/AudioPages.qml`, `features/network/NetworkTabs.qml` (`PageSpec`: tab bar, `components/base/PageStack.qml`, popup width, toggle action, Config → General's default-page options through the popup's spec), `features/dashboard/config/ConfigTabs.qml` (`TabSpec`), `features/dashboard/home/QuickTiles.qml` (`TileSpec`: the Quick Settings grid), `features/bar/BarWidgets.qml` (`BarWidgetSpec` per zone, laid out by `surface/BarZone.qml` in `Prefs.data.barLayout`'s order or `defaultOrder`), `features/bar/center/NotchItems.qml` (`NotchItemSpec`: the center carousel's items, `active`, `priority`, `autoScroll`). They are not singletons on purpose: a component declared in a singleton outlives its context at shutdown. A registry must not instantiate a type that instantiates it back (QML can't load a type cycle): Config → General reads the page lists through `SurfaceState.specOf(popup).pages` for that reason.
-- **`theme/Theme.qml`** — the facade over the design tokens (`ARCHITECTURE.md` §5.12), the one theme import a view needs: `Theme.color` (roles `background`, `surface` = the frame fill, `surfaceRaised`, `accent`, `text`, `textMuted`, `border`, `danger`, `warning`, `success`; state layers `hairline`, `fillSubtle`, `fillHover`, `fillPressed` made from the foreground, `scrim` (fixed black, dims in any palette); `alpha(c, a)`; the workspace `ws*` colours), `Theme.font` (families `ui`/`mono`/`icon`, sizes `caption` 9 … `display` 32, weights), `Theme.space` (`xxs` 2 … `xxl` 24), `Theme.radius` (`sm`/`md`/`lg`, `card` = corner pref, `notch`), `Theme.motion` (`instant` 80, `fast` 150, `normal` 200, `slow` 320 = the frame animation; curves `standard`, `emphasized`, `overshoot`) and `Theme.frame` (every frame/notch/region size, `borderWidth`, `opacity`, `barStyle`). The groups are `theme/tokens/*Tokens.qml`; animate with `theme/Anim.qml` and `Fade.qml`. Colours come from a `theme/sources/ColorSource` — `MatugenSource` reads `~/.config/Synapse/src/user_data/colors.json` through a watched read-only `JsonStore` and only replaces the colours present, so a broken file keeps the palette. Views still hold ~1 400 literal colours, sizes and durations: they move to tokens in v0.8.0's per-area passes (decision D1, mapping table in §5.12); new code uses the tokens.
-- **`services/<domain>/`** (`system`, `network`, `media`, `desktop`, `data`, `notifications`, `time`) — non-visual singletons, one per external integration or data set, all on the core toolkit (`Exec`, `JsonStore`, `Poller`/`Lease`, `Hypr`; `Prefs` included). A service never reads UI state (`Popups`, `SurfaceState`, `ShellModes`): what it needs from the UI comes as a lease (the System page leases the stats services, the network popup `VpnService`, the clipboard popup `ClipboardService`), a call, or a signal that `app/App.qml` wires (`BatteryWarningService.critical` → the battery dialog). Output parsers are pure JS next to the service with node tests.
-- **Screen recording** — `services/media/ScreenRecService.qml` runs the recorder through a `RecorderBackend` (`services/media/recorders/`; `WfRecorder` today, F14 adds others): `command({ file, geometry, audioDevice })` and `stopCommand`; the audio routing script and cava parsing are `screenrec.js`.
-- **Views never run a command** (layer rule `io`): what a view used to do with a `Process` is a service intent — `PowerService` (power menu), `GpuModeService` (GPU mode and its pkexec switch), `AppsService` (launcher list and launching), `KeyboardLayoutService` (bar layout indicator), `ProfileService` (profile card), `SystemInfoService` (fastfetch summary), `AudioService` (Pipewire sink/source/devices), `MediaService` (MPRIS players and the selected one), `ClipboardService.decodePreview()` (image previews). Modal requests go through **`state/Dialogs.qml`**: `Dialogs.confirm({ title, message, label, icon, onAccept })` and `Dialogs.alert({ title, message, label })` (queued, one at a time; showing one closes the dashboard); `ConfirmDialog` and `BatteryCriticalDialog` only render the current request and report the choice, and the callback runs the service intent.
-- **Settings widgets** (`components/settings/Settings*.qml`) — presentational: `SettingsGroup` (titled card), `SettingsRow` (label, description, a control slot, a reset button while `value` differs from `defaultValue`, emitting `resetRequested()`), `SettingsToggle`, `SettingsSlider`, `SettingsDropdown`, `SettingsTextField` (commits on Enter / focus loss), `SettingsButton` (`destructive` asks for confirmation) and `SettingsDivider`; a control shows `value` and reports `edited(v)`, it never writes anything. Config pages use the containers in `features/dashboard/config/controls/`: `PrefToggle { key: "myPref" }`, `PrefSlider`, `PrefDropdown`, `PrefTextField` take label, description, range, options and default from `PrefSchema` and write through `Prefs` (a page can override `description` or `options`). `GeneralPage.qml` and `AppearancePage.qml` are the reference usage.
-- **The UI layer** — `features/<feature>/` holds the views, one folder per feature (`bar/{left,center,right}`, `dashboard/{home,system,tasks,apps,config}`, `network`, `audio`, `notifications`, `clipboard`, `wallpaper`, `power`, `osd`, `screenrec`); `components/{base,inputs,feedback,settings}` the shared widgets; `surface/` the frame engine and `dialogs/` the modal windows (`ARCHITECTURE.md` §6 is the target tree). A popup's UI lives in a content component (`DashboardContent`, `NetworkContent`, `WallpaperContent`, `PowerMenu`, `AudioControl`, `NotificationList`, `HistoryTab`…); a new popup is **one `PopupSpec` file** in its feature folder (`features/<feature>/<Feature>Popup.qml`: `key`, `region`, `size(s, item)`, `place(s, w, h)`, optional `focus(item)` / `afterClose(item)` / `pageProp` / `defaultPagePref`, `component`; see `core/specs/PopupSpec.qml`) plus **one line in `app/PopupManifest.qml`**; sizes are named in `theme/tokens/FrameTokens.qml` (`Theme.frame`, "Dynamic Surface regions"). The frame path itself is built by `surface/shape/surfacePath.js` (pure JS, non-zero fill, one path for every region) — run `config/quickshell/tests/unit.sh` after touching it.
-- **Keyboard focus** — decided by the #38 spike: `DynamicSurface` sets `WlrKeyboardFocus.Exclusive` only while an interactive popup (or the screen-recording setup) is open on its screen, and `None` otherwise; the surface is never unmapped, so the "freshly-mapped layer surface" focus problem doesn't apply. Each popup's spec `focus(item)` picks the item to focus once it is opening (without one the popup host keeps the keyboard); Escape is handled by the surface's focus scope. Passive content (OSD, toast) never takes the keyboard. The separate modal windows use `dialogs/PopupFocusGrab.qml` (a delayed `HyprlandFocusGrab`): bind `active` to the open flag, `forceActiveFocus()` the target in `onFocused`, close in `onDismissed`. The grab must whitelist **only** the dialog window — Hyprland gives the keyboard to an arbitrary whitelisted surface — and while it's live, outside clicks and Escape only reach the dialog, so it handles Escape itself.
+`shell.qml` only creates `src/app/App.qml`, the composition root. It force-instantiates the singletons that need startup side effects (`KeybindService`, `UpdateService`, `IpcBridge`, `BatteryWarningService`, …) and hands the manifests to the framework: `PopupManifest` → `SurfaceState` and the surface, `ActionManifest` → `Actions`, `BarWidgets` → the bar. It also creates `surface/ShellHost.qml`, the **Dynamic Surface** root (#37). Per screen (`Variants` over `Quickshell.screens`) that creates:
+
+- **`surface/DynamicSurface.qml`** — one fullscreen transparent layer surface (layer `Overlay`, namespace `synapse-frame`).
+  - It draws the whole frame as a single `surface/shape/SurfaceShape.qml` path, built by `surfacePath.js` (pure JS, non-zero fill, one path for every region; run `tests/unit.sh` after touching it).
+  - It hosts the bar, every popup, the passive toast and OSD, the click shield and the border triggers. Each popup grows a *region* of the frame: `top`, `right`, `leftCenter`, `rightCenter`, `bottomCenter` or `bottomRight`.
+  - It never imports a popup's feature: it reads the manifest that `App` → `ShellHost` hand it.
+  - Its parts sit next to it, each taking the surface as `surface`:
+    - `Regions`: target sizes, collision rules, the animated geometry and `rect(region)`.
+    - `SurfaceBar`: the notch contents, laid out per zone by `BarZone`.
+    - `SurfacePopupHost`: the popup loaders, their focus and `afterClose`.
+    - `SurfaceTriggers`, `SurfaceClickShield`, `SurfaceInputMask`.
+    - `SurfaceFullscreen`: over a real fullscreen window the frame hides unless it shows something.
+  - The input mask covers only the visible frame, so clicks elsewhere reach apps.
+- **`surface/StrutWindow.qml`** — an invisible window that only reserves space along one edge. The bar's is at the top. At the default border width the sides and bottom reserve nothing and `gaps_out` keeps windows clear of the borders; a wider border (Config → Appearance) reserves the extra width there.
+- **The modal windows** in `dialogs/` (`ConfirmDialog`, `BatteryCriticalDialog`, `UpdatePopup`) stay separate windows.
+
+**Keyboard focus** (decided by the #38 spike):
+- `DynamicSurface` sets `WlrKeyboardFocus.Exclusive` only while an interactive popup (or the screen-recording setup) is open on its screen, and `None` otherwise. The surface is never unmapped, so the "freshly-mapped layer surface" focus problem doesn't apply.
+- A spec's `focus(item)` picks the item to focus once the popup is opening. Escape is handled by the surface's focus scope. Passive content (OSD, toast) never takes the keyboard.
+- The modal windows use `dialogs/PopupFocusGrab.qml`, a delayed `HyprlandFocusGrab`:
+  - Bind `active` to the open flag, `forceActiveFocus()` the target in `onFocused`, close in `onDismissed`.
+  - The grab must whitelist **only** the dialog window, because Hyprland gives the keyboard to an arbitrary whitelisted surface.
+  - While it's live, outside clicks and Escape only reach the dialog, so the dialog handles Escape itself.
+
+The old window stack (`TopBar`, `Border`, `PopupLayer`, per-popup windows) was removed in #43; the last release with it is v0.3.0.
+
+To run the dev checkout: `qs -p <checkout>/config/quickshell`. Keybinds (`qs ipc call …`) only reach the default config, so with `-p` use `qs ipc -p <checkout>/config/quickshell call <target> toggle`.
+
+#### Patterns and where they live
+
+- **Gateways** (`core/`, `import qs.src.core`):
+  - `Exec` runs one command:
+    - `command` is an **argument list**, and data is always its own element. A script that needs a shell takes it as `"$1"`: `["bash", "-c", 'nmcli con up "$1"', "--", name]`.
+    - `run()` (restarts if busy), `cancel()`, `busy`, an optional pure `parse(stdout)`, `timeout`, `stdinText`, `stream` (one `line(text)` per stdout line).
+    - It ends with `succeeded(result)` or `failed(code, stderr)` (-2 = couldn't start, 124 = timeout, -1 = parse error), then `finished(ok)`.
+    - `ExecQueue` runs commands one at a time.
+  - `JsonStore` owns one JSON file:
+    - `data`, `update(fn)`, `set()`, `clear()` (writes first, then resets), `flush()`, `defaults` merged into what's read.
+    - Atomic writes, and nothing written before the first load. An unreadable file is kept as `<path>.broken`.
+    - Also `version` + `migrate()`, `watch` and `readOnly`.
+  - `Hypr` runs hyprctl changes with the right syntax for the Lua or conf provider (`setOptions`, `submap`, `evalLua`, `reload`; the commands are built by the unit-tested `hypr.js`). `Hypr.provider` says which is in use.
+  - `Log` prefixes messages.
+- **`core/Paths.qml`** — every directory the shell uses: `configDir`, `userDataDir` (with `Paths.userData("file.json")`), `wallpaperDir`, `shellDir`, `repoDir`, `cacheDir`.
+  - Never hardcode `~/.config/Synapse` in QML.
+  - `SYNAPSE_CONFIG_DIR` points `configDir` somewhere else, so the dev checkout can run against throwaway data: `SYNAPSE_CONFIG_DIR=/tmp/synapse-test qs -p <checkout>/config/quickshell`.
+  - `matugen.toml` and the installer can't read it and keep their own paths.
+- **Services as models** — state as `readonly` properties, intents as functions, events as signals, all on the gateways.
+  - A service never reads UI state. What it needs from the UI comes as:
+    - a **lease** (`LeaseCount` + `Poller` in the service, `Lease { service: X; active: … }` in the view; e.g. the System page leases the stats services);
+    - a call;
+    - or a signal that `app/App.qml` wires (`BatteryWarningService.critical` → the battery dialog).
+  - **Views never run a command.** What a view needs done is a service intent: `PowerService`, `GpuModeService` (with its pkexec switch), `AppsService`, `KeyboardLayoutService`, `ProfileService`, `SystemInfoService`, `AudioService` (Pipewire), `MediaService` (MPRIS), `ClipboardService.decodePreview()`, …
+  - Output parsers and other pure logic are `.js` files next to their service (`nmcli.js`, `cliphist.js`, `sysinfo.js`, `profile.js`, `keybindLua.js`, `screenrec.js`, `update.js`), each with node tests in `tests/unit/`.
+  - The network and Quick Settings services (`WifiService`, `BluetoothService`, `VpnService`, `HotspotService`, `BrightnessService`, `ScreenFilterService`, `QuickToggleService` for Night Light, Caffeine and Airplane) feed the bar indicators, the tiles and the network tabs alike.
+- **Popup state machine + facade** (`state/`):
+  - `SurfaceState` knows which popup is open (`activeContent`), in which region (`activeRegion`) and on which screen (`activeScreen`, the focused monitor by default). There is one popup at a time globally, and the keys and regions come from the manifest (`popups`, `regionOf`, `specOf(key)`).
+  - It is also the popup **lifecycle**: per popup and screen `closed → opening → open → closing → closed`, with signals `opening` / `opened` / `closing` / `closed(key, screen)` and `phaseOf(key, screen)`. Views react with `PopupLifecycle { popup: "network"; onOpening: … }`.
+  - It gives the per-screen `scaleFor(screen)` from `Prefs.data.surfaceScale`:
+    - `off` = 1, the default;
+    - `auto` = screen height / 1080, clamped to 0.75–1.5;
+    - or a fixed factor.
+    It's set in Config → Misc, and `SYNAPSE_SURFACE_SCALE` overrides it. Only frame and region sizes scale.
+  - `Popups` is the API the rest of the code uses: `open("dashboard")`, `close(...)` (a no-op if another popup replaced it), `toggle(...)`, `togglePage("dashboard", "stats")`, `closeAll()`.
+    - `Popups.dashboardOpen` etc. are **read-only** views of `SurfaceState`; never assign them.
+    - Per-page state (`dashboardPage`, `audioPage`, `networkPage`) lives here, wired through the spec's `pageProp` / `defaultPagePref`.
+    - The OSD and the toast are separate flags (`showQuick()` / `hideQuick()`, `showToast()` / `hideToast()`), so they never close a popup.
+  - `ToastState` is the notification toast queue: one toast at a time, 5 s each, on the monitor focused when it arrived. It's rendered by `components/feedback/ToastCard.qml` in the grown right notch.
+  - `ShellModes` holds read-only mirrors for the surface and bar: `focusMode`, `dnd`, `screenRecord`, `airplane`. Change them through their service. The pass-through submap used while capturing a keybind is `KeybindService.setCapturing()`.
+- **Command registry** (`actions/`):
+  - `Actions` holds every user-triggerable command as `{ key, label, group, run }`. `Actions.run(key)` is what IPC, keybinds and buttons call.
+  - The list is `app/ActionManifest.qml`: one toggle per popup with an `action`, and one per page with a `PageSpec.action`, generated from the manifest, plus its own entries (focus mode, screen recording).
+  - `IpcBridge` creates one `IpcHandler { target: key; toggle() }` per action, plus `quickcontrols-show reveal` for the volume/brightness OSD.
+- **Registries** (extension points, spec types in `core/specs/`) are plain `QtObject` lists, instantiated where they're read:
+
+  | Registry | Spec | Feeds |
+  |---|---|---|
+  | `features/dashboard/DashboardPages.qml` | `PageSpec` | dashboard tab bar, `components/base/PageStack.qml`, popup width, toggle action, Config → General's default-page options |
+  | `features/audio/AudioPages.qml` | `PageSpec` | same, for the audio popup |
+  | `features/network/NetworkTabs.qml` | `PageSpec` | same, for the network popup |
+  | `features/dashboard/config/ConfigTabs.qml` | `TabSpec` | Config tabs |
+  | `features/dashboard/home/QuickTiles.qml` | `TileSpec` | Quick Settings grid |
+  | `features/bar/BarWidgets.qml` | `BarWidgetSpec` | each bar zone, in `Prefs.data.barLayout`'s order or `defaultOrder` |
+  | `features/bar/center/NotchItems.qml` | `NotchItemSpec` | center carousel (`active`, `priority`, `autoScroll`) |
+
+  - They aren't singletons on purpose: a component declared in a singleton outlives its context at shutdown.
+  - A registry must not instantiate a type that instantiates it back (QML can't load a type cycle). That's why Config → General reads the page lists through `SurfaceState.specOf(popup).pages`.
+- **Mediator for modals** — `state/Dialogs.qml`:
+  - `Dialogs.confirm({ title, message, label, icon, onAccept })` and `Dialogs.alert({ title, message, label })`. Requests are queued and shown one at a time; showing one closes the dashboard.
+  - `ConfirmDialog` and `BatteryCriticalDialog` only render the request and report the choice; the callback runs the service intent.
+- **Strategies:**
+
+  | What varies | Where | Implementations |
+  |---|---|---|
+  | Frame style (`barStyle`) | `surfacePath.js` | `frame`, `bar`, `pills` |
+  | Hyprland config provider | `Hypr` | Lua, conf |
+  | Colour source | `theme/sources/ColorSource` | `MatugenSource` |
+  | Screen recorder | `services/media/recorders/RecorderBackend` (`command({ file, geometry, audioDevice })`, `stopCommand`) | `WfRecorder` |
+
+- **Design tokens** (`theme/`, `import qs.src.theme`) — `Theme` is the only theme import a view needs:
+  - `Theme.color`:
+    - roles `background`, `surface` (the frame fill), `surfaceRaised`, `accent`, `text`, `textMuted`, `border`, `danger`, `warning`, `success`;
+    - state layers `hairline`, `fillSubtle`, `fillHover`, `fillPressed`, made from the foreground;
+    - `scrim` (fixed black), `alpha(c, a)` and the workspace `ws*` colours.
+  - `Theme.font` (families `ui` / `mono` / `icon`, sizes `caption` 9 … `display` 32, weights), `Theme.space` (`xxs` 2 … `xxl` 24), `Theme.radius` (`sm` / `md` / `lg`, `card` = the corner pref, `notch`).
+  - `Theme.motion`: `instant` 80, `fast` 150, `normal` 200, `slow` 320 (the frame animation); curves `standard`, `emphasized`, `overshoot`. Animate with `theme/Anim.qml` and `Fade.qml`.
+  - `Theme.frame`: every frame / notch / region size, `borderWidth`, `opacity`, `barStyle`.
+  - The groups are `theme/tokens/*Tokens.qml`.
+  - Colours come from `MatugenSource`, which reads `user_data/colors.json` through a watched read-only `JsonStore` and only replaces the colours present.
+  - Views still hold ~1 400 literal colours, sizes and durations. They move to tokens in v0.8.0's per-area passes (decision D1, mapping table in `ARCHITECTURE.md` §5.12); new code uses the tokens.
+- **Preferences** — `services/data/Prefs.qml` + `PrefSchema.qml`, stored in `shell_prefs.json` through a `JsonStore`:
+  - `PrefSchema.keys` holds every pref as `{ default, type, options | min/max, label, description }`.
+  - Values are validated on read and write: a wrong type gets the default, numbers are clamped, and `strict` options such as `barStyle` reject anything else.
+  - Read `Prefs.data.<key>` (bindable), write `Prefs.set(key, v)`. Also `reset(key)`, `resetAll()`, `isDefault(key)`, `defaults`.
+  - Saving is debounced, hand edits are picked up live, and unknown keys are kept. Wait for `Prefs.ready` (or `loaded`) before acting on a pref at startup.
+  - User data (tasks, pins, wallpaper, keybinds) keeps its own files.
+  - **Appearance prefs:**
+    - `borderWidth`, `cornerRadius` and `backgroundOpacity` feed `Theme.frame.borderWidth`, `Theme.radius.card` (and `notch`, in proportion) and `Theme.frame.opacity`. The frame is filled with `Theme.color.surface` (background × opacity).
+    - `barStyle` is `frame` (notches + borders), `bar` (full-width top bar, no borders) or `pills` (floating capsules, `Theme.frame.pillGap` from the edges). `DynamicSurface.borderWidth` is 0 in bar and the gap in pills, so the region rects work unchanged in all three.
+    - Background blur is the `SynapseFrameBlur` layer rule in `config/hypr/modules/rules.lua`, enabled from `shell_prefs.json` at load and flipped live by `services/desktop/AppearanceService.qml` through `hyprctl eval`.
+  - `services/data/DataService.qml` runs Config → Data & Storage's actions, each ending with `finished(action, ok)`:
+    - reset prefs, wallpaper or avatar;
+    - export or clear tasks;
+    - wipe the clipboard, clear the cache;
+    - factory reset: deletes `user_data/` (keeping the installer's `config_Provider.json`) from a detached shell after quickshell exits, then relaunches it.
+- **Containers and presentational controls:**
+  - `components/settings/Settings*.qml` only show `value` and report `edited(v)` (`SettingsRow` adds a reset button while `value` differs from `defaultValue`, emitting `resetRequested()`).
+  - Config pages use the containers in `features/dashboard/config/controls/`: `PrefToggle { key: "myPref" }`, `PrefSlider`, `PrefDropdown`, `PrefTextField`. These take their label, range, options and default from `PrefSchema` and write through `Prefs`. `GeneralPage` and `AppearancePage` are the reference usage.
+  - The same split holds for `ToastCard`, `BrightnessSlider`, `PillButton`, `AppTile`, … : inputs as properties, outputs as signals.
+
+#### Recipes
+
+Each one is detailed in `ARCHITECTURE.md` §10.
+
+| To add | Do |
+|---|---|
+| A popup | `features/<feature>/<Feature>Content.qml` + `<Feature>Popup.qml` (a `PopupSpec`: `key`, `region`, `size(s, item)`, `place(s, w, h)`, optional `focus` / `afterClose` / `pageProp` / `defaultPagePref` / `action`) + one line in `app/PopupManifest.qml`. Sizes go in `theme/tokens/FrameTokens.qml`. Region, click-outside, Escape, focus, lifecycle and toggle action come with it. |
+| A dashboard page, audio page or network tab | Its view + one `PageSpec` in the registry, and its action in `keybind-defaults.json` (empty `mods` / `key` for no default bind). |
+| A bar widget, notch item or Quick Settings tile | Its view + one `BarWidgetSpec` / `NotchItemSpec` / `TileSpec` in the registry. |
+| A preference | One `PrefSchema` entry + one `Pref*` control on a config page. |
+| A service around a CLI tool | `services/<domain>/<Name>Service.qml` on `Exec` (argument lists), a `Poller` gated by its `LeaseCount` if it polls, parsers in a `.js` next to it + `tests/unit/<tool>.test.mjs` with real output. If it must start at boot, add it to `App.qml`'s eager list. |
+| An action and its keybind | One `Action` in `app/ActionManifest.qml` (or an `action` on a spec) + one line in `config/keybind-defaults.json`. The contract test checks the two key sets. |
+| A persisted data file | A `JsonStore` inside the owning service, plus Config → Data & Storage if the user should be able to reset it, and `DEPLOY-MAP.md`'s runtime tree. |
+| A new view outside a registry | A scene in `tests/lib/SceneList.qml`, so smoke and golden cover it. Registry entries get their scene automatically. |
+
+Files stay within budget: views 300 lines, services, state and pure `.js` modules 350, any file 500 (that one fails CI).
 
 ### Theming pipeline (Material You via matugen)
 

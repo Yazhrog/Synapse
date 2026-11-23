@@ -21,8 +21,13 @@ jobs:
       - name: Offscreen smoke, scene and contract tests
         run: config/quickshell/tests/smoke.sh
 
-      - name: Layer rules (report only until #117)
+      # ARCHITECTURE.md §11: any violation fails; files over their size budget
+      # are annotated as warnings. The self-test proves every rule still bites.
+      - name: Layer rules
         run: config/quickshell/tests/layers.py
+
+      - name: Layer rules self-test
+        run: config/quickshell/tests/layers.py --self-test
 
   # Captures every scene of tests/lib/SceneList.qml on the base commit and on
   # this one, and fails when a pixel changed. A PR that changes the look on

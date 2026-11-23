@@ -1,14 +1,15 @@
 #!/usr/bin/env python3
 """Layer rules of the shell (ARCHITECTURE.md §4 and §11).
 
-Checks config/quickshell/src against the dependency rules of the target
-architecture. Violations listed in tests/layers-allowlist.txt are known debt
-that #111 removes step by step; anything else is new.
+Checks config/quickshell/src against the dependency rules of the
+architecture. Enforced in CI: there is no allowlist, a violation is fixed
+(or the rule is changed here, with a reason) before the PR merges.
 
 Usage:
-  tests/layers.py              report; exit 0 (warn mode, until #117)
-  tests/layers.py --strict     exit 1 on a violation that isn't allowlisted
-  tests/layers.py --update     rewrite the allowlist from the current tree
+  tests/layers.py              check; exit 1 on any violation
+  tests/layers.py --report     print the same, always exit 0
+  tests/layers.py --self-test  plant one violation per rule in a copy of src/
+                               and check that each rule catches its own
 
 Rules:
   io          no Process / FileView / Socket / SplitParser / StdioCollector
@@ -27,13 +28,15 @@ Rules:
   size        files over budget: views 300 lines, services/state and pure
               .js modules 350 (warning), any file over 500 (violation)
 """
+import os
 import re
+import shutil
 import sys
+import tempfile
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
 SRC = HERE.parent / "src"
-ALLOWLIST = HERE / "layers-allowlist.txt"
 
 IO_TYPES = re.compile(r"\b(Process|FileView|Socket|SplitParser|StdioCollector)\s*\{")
 VISUAL_ROOT = re.compile(r"^(Item|Rectangle|Text|Column|Row|Grid|Flow|Flickable|ListView|GridView|"
@@ -158,37 +161,79 @@ def size_warnings() -> list:
     return out
 
 
+# One planted violation per rule: (rule, path under src/, content). The
+# self-test copies src/, adds these and expects each rule on its own file.
+PLANTED = [
+    ("io",         "features/zz/IoBad.qml",
+     "import QtQuick\nimport Quickshell.Io\nItem { Process { command: [\"true\"] } }\n"),
+    ("visual",     "services/zz/VisualBad.qml",
+     "import QtQuick\nItem {}\n"),
+    ("service-ui", "services/zz/ServiceUiBad.qml",
+     "import QtQuick\nimport qs.src.state\nQtObject { function f() { Popups.close(\"x\") } }\n"),
+    ("component",  "components/zz/ComponentBad.qml",
+     "import QtQuick\nimport qs.src.services.data\nItem { opacity: Prefs.data.backgroundOpacity / 100 }\n"),
+    ("host",       "surface/HostBad.qml",
+     "import QtQuick\nimport qs.src.features.power\nItem { PowerMenu {} }\n"),
+    ("relative",   "features/zz/RelativeBad.qml",
+     "import QtQuick\nimport \"../power\"\nItem {}\n"),
+    ("shell-c",    "services/zz/ShellBad.qml",
+     "import QtQuick\nQtObject { function cmd(n) { return [\"bash\", \"-c\", \"echo \" + n] } }\n"),
+    ("size",       "features/zz/HugeBad.qml",
+     "import QtQuick\nItem {\n" + "    // filler\n" * 500 + "}\n"),
+]
+BUDGET_PLANT = ("features/zz/LongView.qml", "import QtQuick\nItem {\n" + "    // filler\n" * 300 + "}\n")
+
+
+def self_test() -> int:
+    global SRC
+    failures = []
+    with tempfile.TemporaryDirectory() as tmp:
+        src = Path(tmp) / "src"
+        shutil.copytree(SRC, src)
+        SRC = src
+        if check():
+            failures.append("the tree itself has violations")
+        for rule, path, text in PLANTED + [("budget",) + BUDGET_PLANT]:
+            (src / path).parent.mkdir(parents=True, exist_ok=True)
+            (src / path).write_text(text)
+        found = set(check())
+        for rule, path, _ in PLANTED:
+            got = sorted(r for r, p in found if p == path)
+            ok = got == [rule]
+            print(f"  {'PASS' if ok else 'FAIL'}  {rule:10} {path}" + ("" if ok else f" (got {got or 'nothing'})"))
+            if not ok:
+                failures.append(rule)
+        extra = sorted(v for v in found if v[1] not in {p for _, p, _ in PLANTED})
+        if extra:
+            failures.append(f"unexpected {extra}")
+        warned = any(w.startswith(BUDGET_PLANT[0] + " ") for w in size_warnings())
+        print(f"  {'PASS' if warned else 'FAIL'}  {'budget':10} {BUDGET_PLANT[0]} (warning)")
+        if not warned:
+            failures.append("budget")
+    print("layers self-test: " + ("every rule catches its violation" if not failures
+                                  else "FAILED: " + ", ".join(map(str, failures))))
+    return 1 if failures else 0
+
+
 def main() -> int:
     args = set(sys.argv[1:])
+    if "--self-test" in args:
+        return self_test()
     found = check()
-    if "--update" in args:
-        ALLOWLIST.write_text("# Known layer violations (tests/layers.py --update). #111 empties this file.\n"
-                             + "".join(f"{rule}\t{path}\n" for rule, path in found))
-        print(f"layers: allowlist rewritten ({len(found)} entries)")
-        return 0
-
-    allowed = set()
-    if ALLOWLIST.exists():
-        for line in ALLOWLIST.read_text().splitlines():
-            if line and not line.startswith("#"):
-                rule, path = line.split("\t")
-                allowed.add((rule, path))
-
-    new = [v for v in found if v not in allowed]
-    stale = sorted(allowed - set(found))
     counts = {}
     for rule, _ in found:
         counts[rule] = counts.get(rule, 0) + 1
-
     print("layers: " + (", ".join(f"{k} {v}" for k, v in sorted(counts.items())) or "no violation"))
-    for rule, path in new:
-        print(f"  NEW      {rule:10} {path}")
-    for rule, path in stale:
-        print(f"  FIXED    {rule:10} {path} (remove it from the allowlist: tests/layers.py --update)")
-    warnings = size_warnings()
-    if warnings:
-        print(f"  {len(warnings)} file(s) over their size budget (warning): " + ", ".join(warnings))
-    return 1 if ("--strict" in args and new) else 0
+    ci = os.environ.get("GITHUB_ACTIONS") == "true"
+    for rule, path in found:
+        print(f"  {rule:10} {path}")
+        if ci:
+            print(f"::error file=config/quickshell/src/{path}::layer rule '{rule}' (tests/layers.py, ARCHITECTURE.md §11)")
+    for w in size_warnings():
+        print(f"  over budget (warning): {w}")
+        if ci:
+            print(f"::warning file=config/quickshell/src/{w.split(' ')[0]}::over its size budget {w.split(' ', 1)[1]} (ARCHITECTURE.md §9)")
+    return 1 if (found and "--report" not in args) else 0
 
 
 if __name__ == "__main__":

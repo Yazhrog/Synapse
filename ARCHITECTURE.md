@@ -1,8 +1,8 @@
 # Synapse shell architecture
 
-_Target architecture of the Quickshell shell (`config/quickshell/`) and the plan to reach it in **v0.7.0**. Written 2026-11-13 against `dev` after v0.6.1 (Quickshell 0.3.2). It replaces the plan in #111 (sub-issues #112–#117)._
+_Architecture of the Quickshell shell (`config/quickshell/`), reached in **v0.7.0** (#111). Written 2026-11-13 as the plan against `dev` after v0.6.1 (Quickshell 0.3.2); turned into the reference once the last step landed (#117, 2026-11-23)._
 
-**Status:** plan, tracked in #111 (sub-issues #141, #112, #142, #113, #115, #143–#147, #116, #117). Nothing in this document is implemented yet, except where a section says "today". Decisions D1–D7 (§14) were taken as recommended.
+**Status:** reference. The shell is built as described here; `tests/layers.py` enforces §4's dependency rules and §9's size budgets in CI (§11). Where the build differs from the original plan, the "Done in" notes of §7 say how, and §6 shows the final tree. §2 and §7 keep the starting point and the moves for history; §12 is the record of the migration. Decisions D1–D7 (§14) were taken as recommended; D1 (literals → tokens) is v0.8.0's work.
 
 ---
 
@@ -13,13 +13,13 @@ _Target architecture of the Quickshell shell (`config/quickshell/`) and the plan
 3. [Principles](#3-principles)
 4. [Layers and the dependency rule](#4-layers-and-the-dependency-rule)
 5. [Design patterns](#5-design-patterns)
-6. [Target tree](#6-target-tree)
-7. [File map: today → target](#7-file-map-today--target)
+6. [Tree](#6-tree)
+7. [File map: v0.6.1 → v0.7.0](#7-file-map-v061--v070)
 8. [Contracts of the core types](#8-contracts-of-the-core-types)
 9. [Conventions](#9-conventions)
 10. [Recipes: adding a feature](#10-recipes-adding-a-feature)
 11. [Tests and CI](#11-tests-and-ci)
-12. [Migration plan for v0.7.0](#12-migration-plan-for-v070)
+12. [Migration record (v0.7.0)](#12-migration-record-v070)
 13. [How the roadmap plugs in](#13-how-the-roadmap-plugs-in)
 14. [Decisions to confirm](#14-decisions-to-confirm)
 15. [Findings to fix outside v0.7.0](#15-findings-to-fix-outside-v070)
@@ -484,44 +484,47 @@ Everything that wires features into the framework is in `app/`, so a reader find
 
 ---
 
-## 6. Target tree
+## 6. Tree
 
 ```
 config/quickshell/
 ├── shell.qml                         composition root entry: App {}
 ├── src/
 │   ├── app/                          composition root
-│   │   ├── App.qml                   eager services, ShellHost, registries
-│   │   ├── PopupManifest.qml         every PopupSpec (imports the features)
+│   │   ├── App.qml                   eager services, ShellHost, the manifests
+│   │   ├── PopupManifest.qml         every PopupSpec (imports the features), OSD,
+│   │   │                             recording options
 │   │   └── ActionManifest.qml        actions not derived from a registry
 │   ├── core/                         foundation, no domain, no UI
-│   │   ├── Paths.qml  (S)
+│   │   ├── Paths.qml  Log.qml (S)
 │   │   ├── Exec.qml  ExecQueue.qml
 │   │   ├── JsonStore.qml
-│   │   ├── Poller.qml  Lease.qml
-│   │   ├── Hypr.qml  (S)             hyprctl gateway + provider strategy
-│   │   ├── Log.qml  (S)
-│   │   ├── specs/                    PopupSpec, PageSpec, TabSpec, BarWidgetSpec,
-│   │   │                             TileSpec, NotchItemSpec, Action
-│   │   └── js/                       format.js (durations, sizes), shell.js
+│   │   ├── Poller.qml  LeaseCount.qml  Lease.qml
+│   │   ├── Hypr.qml (S)  hypr.js        hyprctl gateway + provider strategy
+│   │   └── specs/                    PopupSpec, PageSpec, TabSpec, BarWidgetSpec,
+│   │                                 TileSpec, NotchItemSpec, Action
 │   ├── theme/
-│   │   ├── Theme.qml  (S)            facade: color, font, space, radius, motion, frame
+│   │   ├── Theme.qml (S)             facade: color, font, space, radius, motion, frame
+│   │   ├── Anim.qml  Fade.qml        motion components
 │   │   ├── tokens/                   ColorTokens, FontTokens, SpaceTokens, RadiusTokens,
-│   │   │                             MotionTokens, FrameTokens (today's Metrics)
-│   │   └── sources/                  ColorSource, MatugenSource (today's ColorLoader)
-│   ├── services/                     non-visual singletons only
-│   │   ├── system/                   Cpu, CpuFreq, Memory, Gpu, GpuMode, Disk, Thermal,
-│   │   │                             Fan, NetStats, Battery, BatteryWarning, Brightness,
-│   │   │                             Power, Update, SystemInfo (+ *.js parsers)
-│   │   ├── network/                  Wifi, Bluetooth, Vpn, Hotspot (+ nmcli.js, bluetoothctl.js)
-│   │   ├── media/                    Audio, Media (MPRIS, F6), Cava, ScreenRec,
-│   │   │                             ScreenFilter, recorders/
-│   │   ├── desktop/                  ActiveWindow, Workspaces, KeyboardLayout, FocusMode,
-│   │   │                             Appearance, Keybind, QuickToggle, Apps (launcher list),
-│   │   │                             AppPins, Wallpaper, Profile
-│   │   ├── data/                     Prefs, PrefSchema, Tasks, Clipboard, DataActions
-│   │   ├── notifications/            Notifications (server)
-│   │   └── time/                     Clock (today's ClockState engine)
+│   │   │                             MotionTokens, FrameTokens
+│   │   └── sources/                  ColorSource, MatugenSource
+│   ├── services/                     non-visual singletons only (+ pure .js)
+│   │   ├── system/                   Cpu, CpuFreq, Mem, Gpu, GpuMode, Disk, Thermal,
+│   │   │                             FanControl, Net, Battery, BatteryWarning,
+│   │   │                             Brightness, Power, Update, SystemInfo;
+│   │   │                             sysinfo.js, update.js
+│   │   ├── network/                  Wifi, Bluetooth, Vpn, Hotspot; nmcli.js
+│   │   ├── media/                    Audio, Media (MPRIS), Cava, ScreenRec,
+│   │   │                             ScreenFilter; screenrec.js;
+│   │   │                             recorders/ (RecorderBackend, WfRecorder)
+│   │   ├── desktop/                  ActiveWindow, KeyboardLayout, FocusMode,
+│   │   │                             Appearance, Keybind, QuickToggle, Apps, AppPin,
+│   │   │                             Wallpaper, Profile; keybindLua.js, profile.js
+│   │   ├── data/                     Prefs, PrefSchema, Task, Clipboard, Data;
+│   │   │                             cliphist.js
+│   │   ├── notifications/            Notification (server)
+│   │   └── time/                     Clock
 │   ├── state/                        UI state, no side effects
 │   │   ├── SurfaceState.qml (S)      popup state machine
 │   │   ├── Popups.qml (S)            facade + page state
@@ -533,10 +536,11 @@ config/quickshell/
 │   │   ├── Actions.qml (S)           registry + run(key)
 │   │   └── IpcBridge.qml (S)         IpcHandlers from the registry
 │   ├── components/                   presentational only
-│   │   ├── base/                     IconButton, ActionButton, Card (StatCard), StatRow,
-│   │   │                             TabSwitcher, PopupPage, Speedometer, DiskBar
-│   │   ├── inputs/                   IconSlider, TimeInput, SearchField
-│   │   ├── feedback/                 ConfirmOverlay, Toast (ToastCard), Spinner
+│   │   ├── base/                     IconBtn, ActionBtn, PillButton, StatCard, StatRow,
+│   │   │                             TabSwitcher, PageStack, PopupPage, ProfileButton,
+│   │   │                             QuickToggleTile, Speedometer, DiskBar
+│   │   ├── inputs/                   BrightnessSlider, TimeInput
+│   │   ├── feedback/                 ConfirmOverlay, ToastCard
 │   │   └── settings/                 SettingsGroup, SettingsRow, SettingsToggle,
 │   │                                 SettingsSlider, SettingsDropdown, SettingsTextField,
 │   │                                 SettingsButton, SettingsDivider
@@ -544,59 +548,65 @@ config/quickshell/
 │   │   ├── bar/
 │   │   │   ├── BarWidgets.qml        registry manifest
 │   │   │   ├── left/                 PowerButton, Workspaces, LayoutIndicator
-│   │   │   ├── center/               CenterContent, NotchItems.qml, items/, CavaBars
+│   │   │   ├── center/               CenterContent, NotchItems.qml, Notch*Item,
+│   │   │   │                         Notch*Button, CavaBars
 │   │   │   └── right/                NetworkIndicator, AudioIndicator, BatteryIndicator,
-│   │   │                             Clock, SysTray, NotificationsButton
+│   │   │                             BatteryStatus, Clock, SysTray, NotificationsButton
 │   │   ├── dashboard/
 │   │   │   ├── DashboardPopup.qml    PopupSpec
 │   │   │   ├── DashboardContent.qml
 │   │   │   ├── DashboardPages.qml    registry manifest
 │   │   │   ├── home/                 HomePage, ProfileCard, CalendarCard, ClockCard,
-│   │   │   │                         clock/, PlayerCard (+ parts), QuickSettings,
+│   │   │   │                         clock/, PlayerCard (+ PlayerArt, PlayerProgress,
+│   │   │   │                         PlayerSourcePicker, player.js), QuickSettings,
 │   │   │   │                         QuickTiles.qml, QuickFilterPicker
-│   │   │   ├── system/               SystemPage, panels/ (Disk, Fan, NetStats, Power,
-│   │   │   │                         Temp), GpuModeSwitch
-│   │   │   ├── tasks/                TaskBoard, TaskColumn, TaskCard, TaskDatePicker
-│   │   │   ├── apps/                 AppLauncher (+ parts)
+│   │   │   ├── system/               SystemPage, SystemStats, Disk/Fan/NetStats/
+│   │   │   │                         Power/Temp panels
+│   │   │   ├── tasks/                TaskBoard, TaskColumn, TaskCard, TaskExtraFields,
+│   │   │   │                         TaskKeyHints, TaskDatePicker, TaskCalendar,
+│   │   │   │                         TimeSpinner
+│   │   │   ├── apps/                 AppLauncher, AppTile, AppSearchBar
 │   │   │   └── config/               ShellConfig, ConfigTabs.qml, pages/, controls/
 │   │   ├── network/                  NetworkPopup, NetworkContent, NetworkTabs.qml,
-│   │   │                             wifi/, bluetooth/, vpn/, hotspot/
-│   │   ├── audio/                    AudioPopup, AudioContent, AudioPages.qml,
-│   │   │                             OutputPage, InputPage, MixerPage
+│   │   │                             Wifi/Bluetooth/VPN/Hotspot tabs and rows (flat)
+│   │   ├── audio/                    AudioPopup, AudioControl, AudioPages.qml,
+│   │   │                             OutputPage, InputPage, MixerPage (+ parts)
 │   │   ├── notifications/            NotificationsPopup, NotificationList, NotificationCard
-│   │   ├── clipboard/                ClipboardPopup, ClipboardView (+ parts)
+│   │   ├── clipboard/                ClipboardPopup, HistoryTab, ClipRow
 │   │   ├── wallpaper/                WallpaperPopup, WallpaperContent (+ parts)
 │   │   ├── power/                    PowerPopup, PowerMenu
-│   │   ├── osd/                      QuickControls (OSD content)
+│   │   ├── osd/                      QuickControlContent
 │   │   └── screenrec/                ScreenRecOptions
 │   ├── surface/                      frame engine, feature-agnostic
 │   │   ├── ShellHost.qml  DynamicSurface.qml  StrutWindow.qml
-│   │   ├── SurfaceBar.qml  SurfacePopupHost.qml  SurfaceTriggers.qml
-│   │   ├── SurfaceClickShield.qml  SurfaceInputMask.qml
-│   │   ├── Regions.qml               region geometry (from DynamicSurface)
+│   │   ├── Regions.qml  BarZone.qml  SurfaceBar.qml  SurfacePopupHost.qml
+│   │   ├── SurfaceTriggers.qml  SurfaceClickShield.qml  SurfaceInputMask.qml
+│   │   ├── SurfaceFullscreen.qml
 │   │   └── shape/                    SurfaceShape.qml, surfacePath.js
-│   ├── dialogs/                      DialogHost, ConfirmDialog, AlertDialog
-│   │                                 (battery), UpdatePopup (+ parts)
-│   ├── config/                       unchanged: matugen.toml, templates/, shaders/,
-│   │                                 keybind-defaults.json
-│   └── scripts/                      unchanged helper scripts
+│   ├── dialogs/                      ConfirmDialog, BatteryCriticalDialog, UpdatePopup
+│   │                                 (+ UpdateHeader, UpdateCommitList), PopupFocusGrab
+│   ├── config/                       matugen.toml, templates/, keybind-defaults.json
+│   ├── assets/                       default wallpapers
+│   └── scripts/                      helper scripts
 └── tests/
+    ├── unit.sh  unit/                *.test.mjs for every pure JS module
     ├── smoke.sh  smoke.qml  smoke-imports.qml  smoke-registries.qml
-    ├── lib/SceneList.qml             every scene (smoke + golden)
+    ├── core.qml  lifecycle.qml  prefs.qml  theme.qml   behaviour tests
     ├── contracts.qml                 registry ↔ keybind-defaults ↔ IPC checks
-    ├── layers.py  layers-allowlist.txt   dependency rules (§11)
+    ├── lib/SceneList.qml             every scene (smoke + golden)
     ├── golden.sh                     base vs head screenshots (§11)
-    ├── unit.sh
-    └── unit/                         *.test.mjs for every pure JS module
+    └── layers.py                     dependency rules and size budgets (§11)
 ```
 
 Every directory is imported as `import qs.src.<path>` _(verified on 0.3.2: no `qmldir` needed, `pragma Singleton` files are singletons automatically)_. All three `qmldir` files are deleted, which also removes the folder-scanning trap: a file always imports exactly the folders it uses.
 
 ---
 
-## 7. File map: today → target
+## 7. File map: v0.6.1 → v0.7.0
 
-Paths relative to `config/quickshell/src/`. "split" means the file is cut into the parts listed; "→" alone is a move (and rename where the name changes).
+Paths relative to `config/quickshell/src/`. This is the plan's map from the v0.6.1 tree, kept as the record of the moves: "Today" is v0.6.1, "Target" the plan. "split" means the file is cut into the parts listed; "→" alone is a move (and rename where the name changes). The "Done in" notes say where the build differs; §6 is the final tree.
+
+**Done in #117 (S12)** — `tests/layers.py` enforced in CI (exit 1 on any violation, no allowlist: `layers-allowlist.txt` deleted), size budgets as CI warnings (GitHub annotations) and failures over 500 lines, `layers.py --self-test` (one planted violation per rule, run in CI). `CLAUDE.md`'s shell section rewritten around the layers, patterns and recipes; this document turned from plan to reference.
 
 **Done in #116 (S11)** — no file over its budget (`tests/layers.py`: views ≤ 300, services, state and pure `.js` modules ≤ 350). Services: `KeybindService` + `services/desktop/keybindLua.js` (merge, conflicts, the generated `.lua` / `.conf`, byte-identical to before), `ScreenRecService` + `services/media/recorders/` (`RecorderBackend` strategy, `WfRecorder` only) + `screenrec.js` (audio routing script, cava frames), `UpdateService` + `services/system/update.js` (the apply script and the reading of its output); each `.js` has node tests. Views: `UpdatePopup` → `UpdateHeader`, `UpdateCommitList` and the shared `components/base/PillButton`; `HistoryTab` → `ClipRow`; `AppLauncher` → `AppTile`, `AppSearchBar`; `PlayerCard` → `PlayerArt`, `PlayerProgress`, `PlayerSourcePicker`, `player.js`; `TaskDatePicker` → `TaskCalendar`, `TimeSpinner`; `TaskBoard` → `TaskKeyHints`; `TaskCard` → `TaskExtraFields`; `KeybindRow` → `KeybindPill`, `KeybindIconBtn`; `NotificationList` → `NotificationCard`; `DynamicSurface` → `SurfaceFullscreen`. `ConfirmDialog` and `AudioControl` were already under budget. New golden scenes for parts that only show with data: `player-card`, `task-date-picker`, `app-tile`, `clip-row`, `update-header`.
 
@@ -907,9 +917,9 @@ One `Action` in `app/ActionManifest.qml` (or generated by a registry) + one line
 | `tests/smoke-registries.qml` | instantiates **every** registry entry: each popup content, page, tab, tile, bar widget, notch item, dialog | S1 (hand list), S8 (from registries) |
 | `tests/contracts.qml` | `keybind-defaults.json` keys = `Actions` keys = IPC targets; every `PopupSpec.region` exists; every `PageSpec.action` unique; every pref used by a control exists in the schema | S1 (keybinds ↔ IPC), S8 (all) |
 | `tests/golden.sh` | offscreen screenshots (`grabToImage`) of every scene of `tests/lib/SceneList.qml` (popup contents, pages, tabs, bar parts, the frame shape in the three styles), captured for the **base commit and the PR** on the same machine and compared pixel by pixel (1 % fuzz). No reference images are committed, so fonts and renderer never drift. Deterministic: only `bash`/`sh` on `PATH`, no D-Bus/Pipewire/Hyprland, empty user data, fixed temp path and locale, and libfaketime (2026-01-01 12:00) for the scenes showing the time | S1 (CI job `golden`; a `visual-change` label makes it advisory) |
-| `tests/layers.py` | the dependency rules below | S1 warn-only, S12 enforced |
+| `tests/layers.py` | the dependency rules below and the size budgets; `--self-test` proves each rule catches a planted violation | S1 warn-only, S12 enforced (CI fails) |
 
-**Layer rules** (`layers.py`, grep-based, each with an allowlist file that must shrink to empty by S12):
+**Layer rules** (`layers.py`, grep-based; any violation fails CI, there is no allowlist):
 
 1. No `Process`, `FileView`, `Socket`, `SplitParser`, `StdioCollector` outside `core/` (services use `Exec`/`JsonStore`).
 2. No visual item (`Item`, `Rectangle`, `Text`, …) as the root of a file in `services/`, `state/`, `actions/`, `core/` (except `core/specs`).
@@ -920,11 +930,11 @@ One `Action` in `app/ActionManifest.qml` (or generated by a registry) + one line
 7. No `"-c"` command element followed by string concatenation in the same array (best-effort check for F-1 class bugs).
 8. File size budgets (§9): warn above the view/service budget, fail above 500.
 
-Golden images use Qt's software renderer offscreen, which differs from the live `Shape.CurveRenderer`; they compare **before vs after on the same renderer**, which is exactly what "no visible change" needs. Shape changes still get a live look. Layer-shell windows (`ConfirmDialog`, `BatteryCriticalDialog`, `UpdatePopup`) can't be created offscreen; their content joins the scenes once #144 makes it a plain component.
+Golden images use Qt's software renderer offscreen, which differs from the live `Shape.CurveRenderer`; they compare **before vs after on the same renderer**, which is exactly what "no visible change" needs. Shape changes still get a live look. Layer-shell windows (`ConfirmDialog`, `BatteryCriticalDialog`, `UpdatePopup`) can't be created offscreen; their parts join the scenes as plain components (`update-header`), and the rest is a live check.
 
 ---
 
-## 12. Migration plan for v0.7.0
+## 12. Migration record (v0.7.0)
 
 **Workflow:** a native GitHub stack (`gh stack`, see `CLAUDE.md` "Project workflow") on `dev`: one branch and PR per step, each based on the step below, #141 at the bottom. Layers merge bottom-first with `gh stack merge`, whole or in part, only when asked. Every file moves, so no other stack is open meanwhile; `gh stack sync` after each release. Each PR: smoke + contracts + golden images green, live check on the install (§`CLAUDE.md` live testing), `CLAUDE.md` paths updated in the same PR.
 
@@ -954,6 +964,8 @@ The sub-issues of #111 were rewritten on 2026-11-13 to match these steps: #112, 
 - S10 late: renaming `Theme.*` after the moves avoids touching each file twice; it must land before v0.8.0 starts.
 
 **Estimated effort:** about 3–4 weeks of focused work; S4, S5 and S8 are the large ones.
+
+**Outcome:** all twelve steps were built as one native stack (#148 → #171), each with smoke, contracts and golden images green and a live check on the install; the "Done in" notes of §7 record each step.
 
 ---
 
