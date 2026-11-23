@@ -5,8 +5,14 @@
 import Quickshell
 import QtQuick
 import qs.src.actions
+import qs.src.components.base
 import qs.src.components.feedback
 import qs.src.core
+import qs.src.dialogs
+import qs.src.features.clipboard
+import qs.src.features.dashboard.apps
+import qs.src.features.dashboard.tasks
+import qs.src.features.notifications
 import qs.src.features.audio
 import qs.src.features.bar.center
 import qs.src.features.bar.right
@@ -61,6 +67,16 @@ ShellRoot {
             Row { Clock {} BatteryIndicator {} AudioIndicator {} }
             CenterContent       {}
             SystemStats         { width: 400; height: 300 }
+            // Parts only shown with data (apps, clipboard entries, tasks,
+            // notifications) or in a layer-shell window (UpdatePopup)
+            AppTile             { width: 400; app: ({ id: "a", name: "App", icon: "", exec: "", pinned: true }) }
+            AppSearchBar        { width: 400; hint: "Ctrl+P pin" }
+            ClipRow             { width: 400; previewText: "text"; isPinned: true }
+            TaskExtraFields     { width: 300 }
+            NotificationCard    { width: 360; notification: null }
+            UpdateHeader        {}
+            UpdateCommitList    { width: 300 }
+            PillButton          { width: 80; label: "OK" }
         }
     }
 

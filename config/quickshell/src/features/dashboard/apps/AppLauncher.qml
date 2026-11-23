@@ -1,14 +1,13 @@
 import QtQuick
 import QtQuick.Controls
 import Quickshell
-import qs.src.components.base
 import qs.src.services.desktop
 import qs.src.state
 import qs.src.theme
 // AppLauncher — scrollable app list + bottom search bar.
 // Lives inside DashboardContent on the "launcher" page.
 // The surface gets the keyboard while the dashboard is open, but that doesn't
-// imply any particular item has Qt-level active focus — searchInput takes it below,
+// imply any particular item has Qt-level active focus — the search field takes it below,
 // and takes it again whenever the window becomes active, so it doesn't matter
 // whether the compositor's focus lands before or after the timer.
 
@@ -72,7 +71,7 @@ Item {
         if (!visible) return
         root.query     = ""
         root.selIndex  = -1
-        searchInput.text = ""
+        searchBar.text = ""
         AppsService.refresh()
         focusTimer.restart()
     }
@@ -80,14 +79,14 @@ Item {
     Timer {
         id: focusTimer
         interval: 60
-        onTriggered: searchInput.forceActiveFocus()
+        onTriggered: searchBar.focusInput()
     }
 
     Connections {
         target: root.Window.window
         function onActiveChanged() {
             if (root.visible && root.Window.window && root.Window.window.active)
-                searchInput.forceActiveFocus()
+                searchBar.focusInput()
         }
     }
 
@@ -221,224 +220,46 @@ Item {
                         color:              Qt.rgba(1,1,1,0.35)
                     }
 
-                    Rectangle {
+                    AppTile {
                         id: card
                         anchors.bottom: parent.bottom
-                        width:  parent.width
-                        height: 46
-                        radius: 9
-
-                        color: isSel
-                               ? Qt.rgba(Theme.color.accent.r, Theme.color.accent.g, Theme.color.accent.b, 0.14)
-                               : modelData.pinned
-                                 ? Qt.rgba(Theme.color.accent.r, Theme.color.accent.g, Theme.color.accent.b, rowH.hovered ? 0.10 : 0.055)
-                                 : rowH.hovered ? Qt.rgba(1,1,1,0.06) : "transparent"
-                        border.color: isSel
-                                      ? Qt.rgba(Theme.color.accent.r, Theme.color.accent.g, Theme.color.accent.b, 0.28)
-                                      : modelData.pinned
-                                        ? Qt.rgba(Theme.color.accent.r, Theme.color.accent.g, Theme.color.accent.b, rowH.hovered ? 0.30 : 0.18)
-                                        : rowH.hovered ? Qt.rgba(1,1,1,0.08) : "transparent"
-                        border.width: 1
-
-                        Behavior on color        { ColorAnimation { duration: 100 } }
-                        Behavior on border.color { ColorAnimation { duration: 100 } }
-
-                        HoverHandler { id: rowH; cursorShape: Qt.PointingHandCursor }
-
-                        // Declared before the Row so the pin button stacks above it
-                        MouseArea {
-                            anchors.fill: parent
-                            hoverEnabled: true
-                            acceptedButtons: Qt.LeftButton | Qt.RightButton
-                            onEntered: {
-                                if (Date.now() - root._reorderedAt > 250)
-                                    root.selIndex = index
-                            }
-                            onClicked: function(mouse) {
-                                if (mouse.button === Qt.RightButton) root.togglePin(modelData.id)
-                                else                                 root.launch(modelData.exec)
-                            }
-                        }
-
-                        Row {
-                            anchors {
-                                left:   parent.left;  leftMargin:  12
-                                right:  parent.right; rightMargin: 10
-                                verticalCenter: parent.verticalCenter
-                            }
-                            spacing: 12
-
-                            // App icon
-                            Item {
-                                width: 28; height: 28
-                                anchors.verticalCenter: parent.verticalCenter
-
-                                Image {
-                                    id: ico
-                                    anchors.fill: parent
-                                    source: {
-                                        var s = modelData.icon
-                                        if (!s || s === "")    return ""
-                                        if (s.startsWith("/")) return "file://" + s
-                                        return "image://icon/" + s
-                                    }
-                                    fillMode:          Image.PreserveAspectFit
-                                    smooth:            true
-                                    sourceSize.width:  28
-                                    sourceSize.height: 28
-                                }
-
-                                // Letter fallback
-                                Rectangle {
-                                    anchors.fill: parent
-                                    radius:       7
-                                    color: Qt.rgba(Theme.color.accent.r, Theme.color.accent.g, Theme.color.accent.b, 0.18)
-                                    visible: ico.status !== Image.Ready || modelData.icon === ""
-                                    Text {
-                                        anchors.centerIn: parent
-                                        text:           modelData.name.charAt(0).toUpperCase()
-                                        font.pixelSize: 13; font.bold: true
-                                        color:          Theme.color.accent
-                                    }
-                                }
-                            }
-
-                            // App name
-                            Text {
-                                width: parent.width - 28 - pinBtn.width - parent.spacing * 2
-                                anchors.verticalCenter: parent.verticalCenter
-                                text:           modelData.name
-                                font.pixelSize: 13
-                                color:          isSel ? Theme.color.accent : Theme.color.text
-                                elide:          Text.ElideRight
-                                Behavior on color { ColorAnimation { duration: 100 } }
-                            }
-
-                            // Pin toggle — always shown on pinned rows (doubles as
-                            // the pinned indicator), on hover/selection otherwise
-                            ActionBtn {
-                                id: pinBtn
-                                anchors.verticalCenter: parent.verticalCenter
-                                icon:    modelData.pinned && rowH.hovered ? "󰐄" : "󰐃"
-                                active:  modelData.pinned
-                                opacity: modelData.pinned || isSel || rowH.hovered ? 1 : 0
-                                Behavior on opacity { NumberAnimation { duration: 160 } }
-                                onClicked: root.togglePin(modelData.id)
-                            }
-                        }
+                        width:    parent.width
+                        app:      modelData
+                        selected: isSel
+                        onHoverEntered: if (Date.now() - root._reorderedAt > 250) root.selIndex = index
+                        onLaunched:     root.launch(modelData.exec)
+                        onPinToggled:   root.togglePin(modelData.id)
                     }
                 }
             }
         }
 
         // Search bar
-        Rectangle {
+        AppSearchBar {
             id: searchBar
-            width: parent.width; height: 44; radius: 12
-            color: Qt.rgba(1,1,1,0.06)
-            border.color: searchInput.activeFocus
-                          ? Qt.rgba(Theme.color.accent.r, Theme.color.accent.g, Theme.color.accent.b, 0.50)
-                          : Qt.rgba(1,1,1,0.12)
-            border.width: 1
-            Behavior on border.color { ColorAnimation { duration: 120 } }
-
-            Row {
-                anchors { fill: parent; leftMargin: 14; rightMargin: 14 }
-                spacing: 10
-
-                Text {
-                    anchors.verticalCenter: parent.verticalCenter
-                    text: "󰍉"; font.pixelSize: 16
-                    color: searchInput.activeFocus
-                           ? Qt.rgba(Theme.color.accent.r, Theme.color.accent.g, Theme.color.accent.b, 0.7)
-                           : Qt.rgba(1,1,1,0.35)
-                    Behavior on color { ColorAnimation { duration: 120 } }
-                }
-
-                Item {
-                    width: parent.width - 26 - parent.spacing
-                    height: parent.height
-                    anchors.verticalCenter: parent.verticalCenter
-
-                    Text {
-                        anchors.verticalCenter: parent.verticalCenter
-                        text:    "Search apps…"
-                        color:   Qt.rgba(1,1,1,0.22)
-                        font.pixelSize: 13
-                        visible: searchInput.text === ""
-                    }
-
-                    // Pin shortcut hint, for whichever row is selected
-                    Text {
-                        anchors { right: parent.right; verticalCenter: parent.verticalCenter }
-                        text: root.selApp && root.selApp.pinned
-                              ? "Ctrl+P unpin · Ctrl+Shift+↑↓ reorder"
-                              : "Ctrl+P pin"
-                        color:   Qt.rgba(1,1,1,0.22)
-                        font.pixelSize: 11
-                        visible: searchInput.text === "" && root.selApp !== null
-                    }
-
-                    TextInput {
-                        id: searchInput
-                        anchors { fill: parent; topMargin: 2; bottomMargin: 2 }
-                        verticalAlignment: TextInput.AlignVCenter
-                        color:          Theme.color.text
-                        font.pixelSize: 13
-                        selectionColor: Qt.rgba(Theme.color.accent.r, Theme.color.accent.g, Theme.color.accent.b, 0.35)
-                        clip: true
-
-                        onTextChanged: {
-                            root.query    = text
-                            root.selIndex = root.filtered.length > 0 ? 0 : -1
-                            if (root.filtered.length > 0)
-                                appList.positionViewAtIndex(0, ListView.Beginning)
-                        }
-
-                        Keys.onPressed: function(event) {
-                            if (event.key === Qt.Key_P && (event.modifiers & Qt.ControlModifier)) {
-                                if (root.selApp) root.togglePin(root.selApp.id)
-                                event.accepted = true
-                            }
-                        }
-
-                        Keys.onUpPressed: function(event) {
-                            if ((event.modifiers & Qt.ControlModifier) && (event.modifiers & Qt.ShiftModifier)) {
-                                root.movePin(-1)
-                                return
-                            }
-                            if (root.selIndex > 0) {
-                                root.selIndex--
-                                appList.positionViewAtIndex(root.selIndex, ListView.Contain)
-                            }
-                        }
-
-                        Keys.onDownPressed: function(event) {
-                            if ((event.modifiers & Qt.ControlModifier) && (event.modifiers & Qt.ShiftModifier)) {
-                                root.movePin(1)
-                                return
-                            }
-                            if (root.selIndex < root.filtered.length - 1) {
-                                root.selIndex++
-                                appList.positionViewAtIndex(root.selIndex, ListView.Contain)
-                            }
-                        }
-
-                        Keys.onReturnPressed: {
-                            if (root.selIndex >= 0 && root.selIndex < root.filtered.length)
-                                root.launch(root.filtered[root.selIndex].exec)
-                        }
-
-                        Keys.onEscapePressed: {
-                            if (text !== "") {
-                                text = ""
-                            } else {
-                                Popups.close("dashboard")
-                            }
-                        }
-                    }
-                }
+            width: parent.width
+            hint: !root.selApp ? ""
+                : root.selApp.pinned ? "Ctrl+P unpin · Ctrl+Shift+↑↓ reorder"
+                : "Ctrl+P pin"
+            onEdited: text => {
+                root.query    = text
+                root.selIndex = root.filtered.length > 0 ? 0 : -1
+                if (root.filtered.length > 0)
+                    appList.positionViewAtIndex(0, ListView.Beginning)
             }
+            onMoved: delta => {
+                const i = root.selIndex + delta
+                if (i < 0 || i >= root.filtered.length) return
+                root.selIndex = i
+                appList.positionViewAtIndex(root.selIndex, ListView.Contain)
+            }
+            onPinMoved:   delta => root.movePin(delta)
+            onPinToggled: if (root.selApp) root.togglePin(root.selApp.id)
+            onAccepted: {
+                if (root.selIndex >= 0 && root.selIndex < root.filtered.length)
+                    root.launch(root.filtered[root.selIndex].exec)
+            }
+            onCloseRequested: Popups.close("dashboard")
         }
     }
 }

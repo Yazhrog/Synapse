@@ -2,6 +2,13 @@ pragma Singleton
 import QtQuick
 import Quickshell
 import qs.src.core
+import "keybindLua.js" as KeybindLua
+
+// KeybindService — Synapse's own shell keybinds: the defaults
+// (src/config/keybind-defaults.json) merged with the user's overrides
+// (user_data/keybinds.json), conflict checks for Config → Keybinds, and the
+// generated SynapseKeybinds.lua / .conf that Hyprland loads. The pure parts
+// (merge, conflicts, generators) are keybindLua.js.
 Singleton {
     id: root
 
@@ -15,7 +22,7 @@ Singleton {
     // `source = ~/.config/Synapse/SynapseKeybinds.conf` to their own config.
     readonly property string _confPath: _configDir + "/SynapseKeybinds.conf"
     readonly property string _jsonPath: Paths.userData("keybinds.json")
-    
+
     readonly property string configProvider: Hypr.provider
 
     // ── Capture gate ──────────────────────────────────────────────────────────
@@ -62,52 +69,14 @@ Singleton {
 
     function loadHyprBinds() { _hyprBindsProc.run() }
 
-    // Converts "SUPER + SHIFT" → Hyprland modmask integer
-    function _modsToMask(modsStr) {
-        var mask = 0
-        var parts = modsStr.toUpperCase().split("+")
-        for (var i = 0; i < parts.length; i++) {
-            var p = parts[i].trim()
-            if      (p === "SUPER") mask |= 64
-            else if (p === "SHIFT") mask |= 1
-            else if (p === "CTRL")  mask |= 4
-            else if (p === "ALT")   mask |= 8
-        }
-        return mask
-    }
-
     // Returns a short description of the conflicting Hyprland bind, or "".
     // Own shell binds (arg contains "qs ipc") are filtered out.
     function wouldConflictHypr(action, mods, key) {
-        var mask = _modsToMask(mods)
-        var k    = key.toLowerCase()
-        for (var i = 0; i < root._hyprBinds.length; i++) {
-            var b = root._hyprBinds[i]
-            if (b.submap !== "")                        continue  // ignore submaps
-            if (b.mouse)                                continue  // ignore mouse binds
-            if (b.arg && b.arg.indexOf("qs ipc") >= 0) continue  // our own shell binds
-            if (b.modmask === mask && (b.key || "").toLowerCase() === k) {
-                var desc = b.dispatcher || ""
-                if (b.arg) desc += ": " + b.arg.substring(0, 36)
-                return desc || "Hyprland bind"
-            }
-        }
-        return ""
+        return KeybindLua.hyprConflict(root._hyprBinds, mods, key)
     }
 
     // ── Internal duplicate detection ──────────────────────────────────────────
-    readonly property var _comboMap: {
-        var m = {}
-        var ks = Object.keys(root.keybinds)
-        for (var i = 0; i < ks.length; i++) {
-            var b = root.keybinds[ks[i]]
-            if (!b || !b.mods || !b.key) continue
-            var combo = b.mods + "+" + b.key
-            if (!m[combo]) m[combo] = [ks[i]]
-            else           m[combo] = m[combo].concat([ks[i]])
-        }
-        return m
-    }
+    readonly property var _comboMap: KeybindLua.comboMap(root.keybinds)
 
     function isDuplicate(action) {
         var b = root.keybinds[action]
@@ -131,15 +100,7 @@ Singleton {
     }
 
     function wouldConflict(action, mods, key) {
-        var combo = mods + "+" + key
-        var ks    = Object.keys(root.keybinds)
-        for (var i = 0; i < ks.length; i++) {
-            if (ks[i] === action) continue
-            var b = root.keybinds[ks[i]]
-            if (b && b.mods + "+" + b.key === combo)
-                return b.label || ks[i]
-        }
-        return ""
+        return KeybindLua.shellConflict(root.keybinds, action, mods, key)
     }
 
     // ── Load ──────────────────────────────────────────────────────────────────
@@ -156,38 +117,13 @@ Singleton {
     // both files are read.
     function _merge() {
         if (!_defaultsStore.ready || !_overrides.ready) return
-        var merged = {}
-        var defs   = root._defaults
-        var dkeys  = Object.keys(defs)
-        for (var i = 0; i < dkeys.length; i++) {
-            var dk = dkeys[i]
-            merged[dk] = { mods: defs[dk].mods, key: defs[dk].key,
-                           label: defs[dk].label, group: defs[dk].group }
-        }
-        var saved = _overrides.data
-        var sk = Object.keys(saved)
-        for (var j = 0; j < sk.length; j++) {
-            var s = sk[j]
-            if (!merged[s] || !saved[s]) continue
-            if (saved[s].mods !== undefined) merged[s].mods = saved[s].mods
-            if (saved[s].key  !== undefined) merged[s].key  = saved[s].key
-        }
-        root.keybinds = merged
+        root.keybinds = KeybindLua.merge(root._defaults, _overrides.data)
         root._writeFiles()
     }
 
     // ── Save / Reload ─────────────────────────────────────────────────────────
     function save() {
-        var out  = {}
-        var defs = root._defaults
-        var ks   = Object.keys(root.keybinds)
-        for (var i = 0; i < ks.length; i++) {
-            var k = ks[i]
-            if (!defs[k]) continue
-            if (root.keybinds[k].mods !== defs[k].mods || root.keybinds[k].key !== defs[k].key)
-                out[k] = { mods: root.keybinds[k].mods, key: root.keybinds[k].key }
-        }
-        _overrides.set(out)
+        _overrides.set(KeybindLua.overridesOf(root.keybinds, root._defaults))
         root._writeFiles()
     }
 
@@ -230,15 +166,15 @@ Singleton {
         saveAndReload()
     }
 
-	// Allows the UI to explicitly unbind an action (or preserve installer unbinds)
+    // Allows the UI to explicitly unbind an action (or preserve installer unbinds)
     function unbindBinding(action) {
         var old = root.keybinds[action]
         if (!old) return
-        
+    
         var copy = Object.assign({}, root.keybinds)
         copy[action] = { mods: "", key: "", label: old.label, group: old.group }
         root.keybinds = copy
-        
+    
         saveAndReload()
     }
 
@@ -268,100 +204,8 @@ Singleton {
             'printf "%s" "$4" > "$2" && ' +
             '{ cmp -s "$1.tmp" "$1" || echo CHANGED; } && ' +
             'mv "$1.tmp" "$1"',
-            "--", root._luaPath, root._confPath, _genLua(), _genConf()])
-    }
-
-    function _grouped() {
-        var groups = {}; var order = []
-        var ks = Object.keys(root.keybinds)
-        for (var i = 0; i < ks.length; i++) {
-            var k = ks[i]; var b = root.keybinds[k]
-            if (!b || !b.mods || !b.key) continue
-            var g = b.group || "Other"
-            if (!groups[g]) { groups[g] = []; order.push(g) }
-            groups[g].push({ k: k, mods: b.mods, key: b.key, label: b.label })
-        }
-        return { groups: groups, order: order }
-    }
-
-    function _genLua() {
-        var data = _grouped()
-
-        var lines = [
-            "-- ==============================================================================",
-            "-- Synapse Keybinds",
-            "-- Auto-generated by Quickshell. Do not edit manually.",
-            "-- ==============================================================================",
-            "",
-            "-- ==============================================================================",
-            "-- Synapse Capture Submap (Disables all normal binds during recording)",
-            "-- ==============================================================================",
-            "hl.define_submap(\"Synapse_clean\", function()",
-            "    -- Emergency exit in case the shell crashes during capture",
-            "    hl.bind(\"CTRL + ESCAPE\", function()",
-            "        hl.dispatch(hl.dsp.exec_cmd(\"notify-send 'Synapse' 'Emergency Exit: Keybinds re-enabled.'\"))",
-            "        hl.dispatch(hl.dsp.submap(\"reset\"))",
-            "    end, { description = \"Emergency return to global submap\" })",
-            "end)",
-            "",
-            "-- ==============================================================================",
-            "-- User Defined Bindings",
-            "-- ==============================================================================",
-            ""
-        ]
-        
-        for (var gi = 0; gi < data.order.length; gi++) {
-            var g = data.order[gi]
-            lines.push("-- " + g)
-            var entries = data.groups[g]
-            for (var ei = 0; ei < entries.length; ei++) {
-                var e = entries[ei]
-                // No -c: ~/.config/quickshell is a symlink to the repo, so Synapse
-                // is quickshell's "default" config and `qs ipc` finds it on its own.
-                lines.push("hl.bind(\"" + e.mods + " + " + e.key + "\", hl.dsp.exec_cmd(\"qs ipc call " + e.k + " toggle\"))")
-            }
-            lines.push("")
-        }
-        return lines.join("\n")
-    }
-
-    function _genConf() {
-        var data = _grouped()
-        
-        var lines = [
-            "# ==============================================================================",
-            "# Synapse Keybinds",
-            "# Auto-generated by Quickshell. Do not edit manually.",
-            "# ==============================================================================",
-            "",
-            "# ==============================================================================",
-            "# Synapse Capture Submap (Disables all normal binds during recording)",
-            "# ==============================================================================",
-            "submap = Synapse_clean",
-            "bind = CTRL, ESCAPE, exec, notify-send 'Synapse' 'Emergency Exit: Keybinds re-enabled.'",
-            "bind = CTRL, ESCAPE, submap, reset",
-            "submap = reset",
-            "",
-            "# ==============================================================================",
-            "# User Defined Bindings",
-            "# ==============================================================================",
-            ""
-        ]
-        
-        for (var gi = 0; gi < data.order.length; gi++) {
-            var g = data.order[gi]
-            lines.push("# " + g)
-            var entries = data.groups[g]
-            for (var ei = 0; ei < entries.length; ei++) {
-                var e = entries[ei]
-                // Hyprland .conf format drops the '+' symbol between modifiers
-                var confMods = e.mods.replace(/\s*\+\s*/g, " ")
-                var cmd = "qs ipc call " + e.k + " toggle"
-                lines.push("bind = " + confMods + ", " + e.key + ", exec, " + cmd)
-            }
-            lines.push("")
-        }
-        return lines.join("\n")
+            "--", root._luaPath, root._confPath,
+            KeybindLua.genLua(root.keybinds), KeybindLua.genConf(root.keybinds)])
     }
 
     // _merge() runs when the second of the two stores (defaults, overrides)
