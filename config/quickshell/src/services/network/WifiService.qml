@@ -87,7 +87,7 @@ Singleton {
         // The SSID comes from the scan (anyone nearby picks it): it is passed
         // as an argument ($1), never pasted into the script.
         connectExec.run(["bash", "-c",
-            "nmcli con up id \"$1\" 2>&1 || nmcli dev wifi connect \"$1\" 2>&1",
+            "nmcli con up id \"$1\" || nmcli dev wifi connect \"$1\"",
             "--", ssid])
     }
 
@@ -150,7 +150,7 @@ Singleton {
 
     Exec { id: radioExec; onFinished: root.poll() }
 
-    Exec { id: nmtuiExec; command: ["kitty", "--title", "nmtui", "nmtui"] }
+    Exec { id: nmtuiExec; command: ["kitty", "--title", "nmtui", "nmtui"]; discardOutput: true }
 
     // ── List commands ───────────────────────────────────────────────────────
     Exec {

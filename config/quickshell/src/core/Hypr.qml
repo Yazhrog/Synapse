@@ -8,6 +8,7 @@ import "hypr.js" as HyprCmd
 //   Hypr.setOptions("general", { gaps_in: { top: 5, right: 5, bottom: 5, left: 5 } })
 //   Hypr.submap("Synapse_clean");  Hypr.submap("reset")
 //   Hypr.evalLua("if SynapseFrameBlur then … end")   // Lua provider only
+//   Hypr.dispatch('hl.dsp.dpms({ action = "disable" })', ["dpms", "off"])
 //
 // `provider` ("lua" or "conf") comes from user_data/config_Provider.json,
 // written by the installer; each call builds the right syntax for it
@@ -25,6 +26,8 @@ Singleton {
     }
     function submap(name: string, done: var) { _runAll([HyprCmd.submap(provider, name)], done) }
     function reload(done: var)               { _runAll([HyprCmd.reload()], done) }
+    // A dispatcher in each provider's form, e.g. dispatch('hl.dsp.dpms({ action = "disable" })', ["dpms", "off"]).
+    function dispatch(lua: string, conf: var, done: var) { _runAll([HyprCmd.dispatch(provider, lua, conf)], done) }
     function evalLua(lua: string, done: var) {
         const argv = HyprCmd.evalLua(provider, lua)
         if (argv) _runAll([argv], done)

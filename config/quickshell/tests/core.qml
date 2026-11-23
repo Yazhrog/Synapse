@@ -50,6 +50,8 @@ ShellRoot {
         // ── Exec ────────────────────────────────────────────────────────────
         () => exec({ parse: out => out.split("\n") }, ["sh", "-c", "printf 'a\\nb'"], ev =>
             check("exec parses stdout", JSON.stringify(ev) === '[["ok",["a","b"]]]', JSON.stringify(ev))),
+        () => exec({}, ["sh", "-c", "echo partial; exit 1"], (ev, e) =>
+            check("exec keeps stdout of a failed run in lastOutput", ev[0][0] === "fail" && e.lastOutput === "partial\n", e.lastOutput)),
         () => exec({}, ["sh", "-c", "echo err >&2; exit 3"], ev =>
             check("exec reports exit code and stderr", JSON.stringify(ev) === '[["fail",3,"err\\n"]]', JSON.stringify(ev))),
         () => exec({}, ["sh", "-c", 'printf %s "$1"', "--", '$(echo hacked); "x'], ev =>
@@ -161,6 +163,12 @@ ShellRoot {
                 settle(() => readFile(dir + "/mig.json", text =>
                     check("store migrates once and records _version",
                           text === '{"a":1,"b":0,"_version":2}', text))))),
+        () => writeFile(dir + "/arr.json", '["a","b"]', () =>
+            store({ path: dir + "/arr.json", defaults: [] }, s => {
+                s.update(d => d.push("c"))
+                settle(() => readFile(dir + "/arr.json", text =>
+                    check("store keeps an array document", text === '["a","b","c"]', text)))
+            })),
         () => writeFile(dir + "/ro.json", '{"a":1}', () =>
             store({ path: dir + "/ro.json", defaults: ({ a: 0 }), readOnly: true }, s => {
                 s.update(d => d.a = 2)

@@ -61,4 +61,11 @@ function evalLua(provider, lua) {
 
 function reload() { return ["hyprctl", "reload"] }
 
-if (typeof module !== "undefined") module.exports = { luaValue, confValue, setOptions, submap, evalLua, reload }
+// A dispatcher, each provider's own form: `lua` is the hl.dsp expression
+// (Lua), `conf` the plain dispatcher and its arguments.
+// dispatch("lua", 'hl.dsp.dpms({ action = "disable" })', ["dpms", "off"])
+function dispatch(provider, lua, conf) {
+    return provider === "conf" ? ["hyprctl", "dispatch"].concat(conf) : ["hyprctl", "dispatch", lua]
+}
+
+if (typeof module !== "undefined") module.exports = { luaValue, confValue, setOptions, submap, evalLua, reload, dispatch }

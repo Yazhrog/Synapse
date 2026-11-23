@@ -1,44 +1,24 @@
+pragma Singleton
 import QtQuick
-import Quickshell.Io
-
-// Controls fans via nbfc-linux.
-// Default mode assumes "auto" — set by hyprland exec-once at startup.
-//
-// Modes:
-//   "quiet" → nbfc set -s 0
-//   "auto"  → nbfc set -a
-//   "max"   → nbfc set -s 100
-//
-// Commands wrapped in `timeout 5` to prevent hanging on unavailable sensors.
-//
-// Exposes:
-//   string mode         — "quiet" | "auto" | "max"
-//   bool   busy         — true while a command is in flight
-//   function setMode(m)
-
-QtObject {
+import Quickshell
+import qs.src.core
+// FanControl — fan mode through nbfc-linux. The mode is assumed "auto" at
+// start (set by Hyprland's exec-once). Each command is wrapped in
+// `timeout 5`, as nbfc can hang on unavailable sensors.
+//   "quiet" → nbfc set -s 30    "auto" → nbfc set -a    "max" → nbfc set -s 100
+Singleton {
     id: root
 
     property string mode: "auto"
-    property bool   busy: false
-    
-
-    property var _proc: Process {
-        command: []
-        running: false
-        onRunningChanged: if (!running) root.busy = false
-    }
+    readonly property bool busy: _set.busy
 
     function setMode(m) {
-        if (root.busy) return
-        root.mode = m
-        root.busy = true
-
-        if      (m === "quiet") _proc.command = ["sh", "-c", "timeout 5 nbfc set -s 30"]
-        else if (m === "max")   _proc.command = ["sh", "-c", "timeout 5 nbfc set -s 100"]
-        else                    _proc.command = ["sh", "-c", "timeout 5 nbfc set -a"]
-
-        _proc.running = false
-        _proc.running = true
+        if (busy) return
+        mode = m
+        _set.run(m === "quiet" ? ["timeout", "5", "nbfc", "set", "-s", "30"]
+               : m === "max"   ? ["timeout", "5", "nbfc", "set", "-s", "100"]
+               :                 ["timeout", "5", "nbfc", "set", "-a"])
     }
+
+    property Exec _set: Exec {}
 }

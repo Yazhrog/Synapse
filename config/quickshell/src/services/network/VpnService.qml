@@ -62,7 +62,7 @@ Singleton {
 
         connectExec._name = name
         // The name is passed as an argument ($1), never pasted into the script.
-        connectExec.run(["bash", "-c", _downAllCmd + "; nmcli con up \"$1\" 2>&1", "--", name])
+        connectExec.run(["bash", "-c", _connectCmd, "--", name])
     }
 
     function disconnect(name) {
@@ -87,6 +87,9 @@ Singleton {
     }
 
     // ── Helpers ─────────────────────────────────────────────────────────────
+    // Downs every active WireGuard connection, then brings up "$1".
+    // nmcli's error stays on stderr: the "VPN Failed" notification shows it.
+    readonly property string _connectCmd: _downAllCmd + "; nmcli con up \"$1\""
     readonly property string _downAllCmd:
         "nmcli -g NAME,TYPE connection show --active" +
         " | awk -F: '$2==\"wireguard\" {print $1}'" +

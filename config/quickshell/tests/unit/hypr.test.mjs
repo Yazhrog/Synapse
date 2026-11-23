@@ -46,3 +46,9 @@ test("evalLua only on lua", () => {
     assert.deepEqual(H.evalLua("lua", "x()"), ["hyprctl", "eval", "x()"])
     assert.equal(H.evalLua("conf", "x()"), null)
 })
+
+test("dispatch per provider", () => {
+    assert.deepEqual(H.dispatch("lua", 'hl.dsp.dpms({ action = "disable" })', ["dpms", "off"]),
+                     ["hyprctl", "dispatch", 'hl.dsp.dpms({ action = "disable" })'])
+    assert.deepEqual(H.dispatch("conf", "x", ["dpms", "off"]), ["hyprctl", "dispatch", "dpms", "off"])
+})

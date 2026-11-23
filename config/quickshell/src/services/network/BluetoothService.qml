@@ -1,7 +1,7 @@
 pragma Singleton
 import QtQuick
 import Quickshell
-import Quickshell.Io
+import qs.src.core
 // ============================================================
 // BluetoothService — the adapter and devices through bluetoothctl, shared by
 // the bar icon, the Quick Settings tile and the network popup's Bluetooth tab.
@@ -9,7 +9,8 @@ import Quickshell.Io
 // Power, paired / connected / known devices are read at startup and every
 // 5 s. Devices found by a scan (8 s, from the tab) join the list until they
 // are paired or the adapter is turned off.
-// Device: { mac, name, paired, connected, iconType }.
+// Device: { mac, name, paired, connected, iconType }. Commands run through
+// Exec; addresses and PINs go in as arguments.
 // ============================================================
 
 Singleton {
@@ -29,15 +30,13 @@ Singleton {
 
     // ── Actions ─────────────────────────────────────────────────────────────
     function refresh() {
-        if (listProc.running) return
-        listProc.running = true
+        if (!listProc.busy) listProc.run()
     }
 
     function setPower(on) {
         powered = on
         if (!on) devices = []
-        powerProc.command = ["bluetoothctl", "power", on ? "on" : "off"]
-        powerProc.running = false; powerProc.running = true
+        powerProc.run(["bluetoothctl", "power", on ? "on" : "off"])
     }
 
     function togglePower() { setPower(!powered) }
@@ -47,13 +46,13 @@ Singleton {
         if (!powered) return
         if (scanning) {
             scanning = false
-            scanProc.running = false
+            scanProc.cancel()
             scanPollTimer.stop()
             refresh()
             return
         }
         scanning = true
-        scanProc.running = false; scanProc.running = true
+        scanProc.run()
         scanPollTimer.restart()
     }
 
@@ -62,14 +61,12 @@ Singleton {
 
     function connect(mac) {
         actionMac = mac
-        actionProc.command = ["bluetoothctl", "connect", mac]
-        actionProc.running = false; actionProc.running = true
+        actionProc.run(["bluetoothctl", "connect", mac])
     }
 
     function disconnect(mac) {
         actionMac = mac
-        actionProc.command = ["bluetoothctl", "disconnect", mac]
-        actionProc.running = false; actionProc.running = true
+        actionProc.run(["bluetoothctl", "disconnect", mac])
     }
 
     // Trusts and pairs; `pin` answers a legacy PIN prompt ("" = confirm "yes").
@@ -78,24 +75,22 @@ Singleton {
         actionMac = mac
         var answer = pin !== "" ? pin : "yes"
         // MAC and PIN as arguments ($1, $2), never pasted into the script
-        actionProc.command = ["bash", "-c",
+        actionProc.run(["bash", "-c",
             "(echo 'default-agent'; echo \"trust $1\"; echo \"pair $1\"; sleep 1; echo \"$2\"; sleep 4) | timeout 12 bluetoothctl 2>/dev/null",
-            "--", mac, answer]
-        actionProc.running = false; actionProc.running = true
+            "--", mac, answer])
     }
 
     function remove(mac) {
         if (!_validMac(mac)) return
         removingMac = mac
-        removeProc.command = ["bash", "-c",
+        removeProc.run(["bash", "-c",
             "bluetoothctl untrust \"$1\" 2>/dev/null; " +
             "bluetoothctl disconnect \"$1\" 2>/dev/null; " +
             "bluetoothctl remove \"$1\" 2>/dev/null",
-            "--", mac]
-        removeProc.running = false; removeProc.running = true
+            "--", mac])
     }
 
-    function openSettings() { bluemanProc.running = false; bluemanProc.running = true }
+    function openSettings() { bluemanProc.run() }
 
     // ── Device icons ────────────────────────────────────────────────────────
     function iconFromName(name) {
@@ -167,8 +162,8 @@ Singleton {
         root.devices = root.powered ? devs : []
     }
 
-    // ── Processes ───────────────────────────────────────────────────────────
-    Process {
+    // ── Commands ────────────────────────────────────────────────────────────
+    Exec {
         id: listProc
         command: ["bash", "-c",
             "echo 'POWERED:'; " +
@@ -179,46 +174,38 @@ Singleton {
             "bluetoothctl devices Connected 2>/dev/null | awk '{print $2}'; " +
             "echo 'ALL:'; " +
             "bluetoothctl devices           2>/dev/null"]
-        running: false
-        stdout: StdioCollector { onStreamFinished: root._parse(text) }
+        onSucceeded: out => root._parse(out)
     }
 
     // Scan — commands piped into an interactive bluetoothctl
-    Process {
+    Exec {
         id: scanProc
+        stream: true
         command: ["bash", "-c",
             "trap 'echo scan off | bluetoothctl 2>/dev/null' EXIT; " +
             "(echo 'power on'; echo 'scan on'; sleep 8) | timeout 9 bluetoothctl 2>/dev/null"]
-        running: false
-        stdout: SplitParser {
-            onRead: function(line) {
-                var m = line.match(/\[NEW\]\s+Device\s+([0-9A-Fa-f:]{17})\s+(.+)/)
-                if (!m) return
-                var mac = m[1]; var name = m[2].trim()
-                var devs = root.devices.slice()
-                for (var i = 0; i < devs.length; i++) if (devs[i].mac === mac) return
-                devs.push({ mac: mac, name: name, paired: false, connected: false, iconType: root.iconFromName(name) })
-                root.devices = devs
-            }
+        onLine: line => {
+            var m = line.match(/\[NEW\]\s+Device\s+([0-9A-Fa-f:]{17})\s+(.+)/)
+            if (!m) return
+            var mac = m[1]; var name = m[2].trim()
+            var devs = root.devices.slice()
+            for (var i = 0; i < devs.length; i++) if (devs[i].mac === mac) return
+            devs.push({ mac: mac, name: name, paired: false, connected: false, iconType: root.iconFromName(name) })
+            root.devices = devs
         }
-        onRunningChanged: if (!running) { root.scanning = false; scanPollTimer.stop(); root.refresh() }
+        onFinished: { root.scanning = false; scanPollTimer.stop(); root.refresh() }
     }
 
     Timer { id: scanPollTimer; interval: 2000; repeat: true; running: false; onTriggered: root.refresh() }
 
-    Process { id: actionProc; command: []; running: false
-        onRunningChanged: if (!running) { root.actionMac = ""; root.refresh() } }
+    Exec { id: actionProc; onFinished: { root.actionMac = ""; root.refresh() } }
 
-    Process { id: removeProc; command: []; running: false
-        onRunningChanged: if (!running) { root.removingMac = ""; root.refresh() } }
+    Exec { id: removeProc; onFinished: { root.removingMac = ""; root.refresh() } }
 
-    Process { id: powerProc; command: []; running: false
-        onRunningChanged: if (!running) root.refresh() }
+    Exec { id: powerProc; onFinished: root.refresh() }
 
-    Process { id: bluemanProc; command: ["blueman-manager"]; running: false }
+    Exec { id: bluemanProc; command: ["blueman-manager"]; discardOutput: true }
 
     // ── Polling ─────────────────────────────────────────────────────────────
-    Timer { interval: 5000; repeat: true; running: true; onTriggered: if (!root.scanning) root.refresh() }
-
-    Component.onCompleted: refresh()
+    Poller { interval: 5000; running: true; onTick: if (!root.scanning) root.refresh() }
 }

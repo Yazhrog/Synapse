@@ -1,11 +1,11 @@
 pragma Singleton
 import QtQuick
 import Quickshell
-import Quickshell.Io
 import qs.src.core
 import qs.src.services.data
 // UpdateService — startup update checker (30s delay).
-// The autoUpdate preference lives in PrefsService.
+// The autoUpdate preference lives in PrefsService. Every git command gets the
+// repo path as an argument ($1 in the scripts), never pasted into a string.
 Singleton {
     id: root
 
@@ -40,22 +40,20 @@ Singleton {
         onTriggered: root._pingCheck()
     }
     
-    property var _pingProc: Process {
+    property Exec _pingProc: Exec {
         command: ["ping", "-c", "1", "-W", "3", "1.1.1.1"]
-        running: false
-        onExited: function(code) {
-            if (code === 0) {
-                root._pingAttempts = 0
-                root.check()
+        onSucceeded: {
+            root._pingAttempts = 0
+            root.check()
+        }
+        onFailed: {
+            root._pingAttempts++
+            console.log("Ping attempt " + root._pingAttempts + " failed, retrying...")
+            if (root._pingAttempts < root._pingMaxAttempts) {
+                root._pingRetryTimer.restart()
             } else {
-                root._pingAttempts++
-                console.log("Ping attempt " + root._pingAttempts + " failed, retrying...")
-                if (root._pingAttempts < root._pingMaxAttempts) {
-                    root._pingRetryTimer.restart()
-                } else {
-                    root._pingAttempts = 0  // silent cancel
-                    console.log("Max ping attempts reached. Update check aborted.")
-                }
+                root._pingAttempts = 0  // silent cancel
+                console.log("Max ping attempts reached. Update check aborted.")
             }
         }
     }
@@ -66,10 +64,7 @@ Singleton {
         console.log("Started connectivity check for updates.")
     }
     
-    function _pingCheck() {
-        root._pingProc.running = false
-        root._pingProc.running = true
-    }
+    function _pingCheck() { root._pingProc.run() }
 
     // Popup is only shown when autoUpdate is enabled
     readonly property bool showPopup:
@@ -116,85 +111,67 @@ Singleton {
     // working repo. Only offer updates for a clean-cut case: a real git repo,
     // with an origin, sitting on main. Anything else stays silent rather than
     // nagging a developer on a feature branch.
-    property var _preflightProc: Process {
+    property Exec _preflightProc: Exec {
         command: ["bash", "-c",
-            "d='" + root._dir + "';" +
+            "d=\"$1\";" +
             "git -C \"$d\" rev-parse --git-dir >/dev/null 2>&1 || { echo notrepo; exit 0; };" +
             "git -C \"$d\" remote get-url origin >/dev/null 2>&1 || { echo noremote; exit 0; };" +
             "b=$(git -C \"$d\" rev-parse --abbrev-ref HEAD 2>/dev/null);" +
             "[ \"$b\" = main ] || { echo \"branch $b\"; exit 0; };" +
-            "echo ok"]
-        running: false
-        stdout: StdioCollector {
-            onStreamFinished: {
-                var r = text.trim()
-                if (r === "ok") {
-                    _fetchProc.running = false
-                    _fetchProc.running = true
-                    return
-                }
-                // Not an error the user needs a popup about.
-                root.checking = false
-                if (r === "notrepo")       console.log("UpdateService: " + root._dir + " is not a git repo — skipping.")
-                else if (r === "noremote") console.log("UpdateService: no origin remote — skipping.")
-                else                       console.log("UpdateService: not on main (" + r + ") — skipping.")
+            "echo ok",
+            "--", root._dir]
+        onFinished: {
+            var r = lastOutput.trim()
+            if (r === "ok") {
+                _fetchProc.run()
+                return
             }
+            // Not an error the user needs a popup about.
+            root.checking = false
+            if (r === "notrepo")       console.log("UpdateService: " + root._dir + " is not a git repo — skipping.")
+            else if (r === "noremote") console.log("UpdateService: no origin remote — skipping.")
+            else                       console.log("UpdateService: not on main (" + r + ") — skipping.")
         }
     }
 
     // ── Step 1: fetch origin/main ──────────────────────────────────────────
-    property var _fetchProc: Process {
+    property Exec _fetchProc: Exec {
         command: ["git", "-C", root._dir, "fetch", "origin", "main", "--quiet"]
-        running: false
-        onExited: function(code) {
-            if (code !== 0) {
-                console.log("UpdateService: git fetch failed with code " + code)
-                root.checking  = false
-                root.lastError = "Could not reach remote. Check your connection."
-                return
-            }
+        onFailed: code => {
+            console.log("UpdateService: git fetch failed with code " + code)
+            root.checking  = false
+            root.lastError = "Could not reach remote. Check your connection."
+        }
+        onSucceeded: {
             console.log("UpdateService: git fetch successful.")
-            _countProc.running = false
-            _countProc.running = true
+            _countProc.run()
         }
     }
 
     // ── Step 2: count commits behind ──────────────────────────────────────
-    property var _countProc: Process {
-        command: ["bash", "-c",
-            "git -C '" + root._dir + "' rev-list --count HEAD..origin/main 2>/dev/null"]
-        running: false
-        stdout: StdioCollector {
-            onStreamFinished: {
-                var n = parseInt(text.trim())
-                root.commitsBehind = isNaN(n) ? 0 : n
-                console.log("UpdateService: Commits behind origin/main: " + root.commitsBehind)
-                if (root.commitsBehind > 0) {
-                    _logProc.running = false
-                    _logProc.running = true
-                } else {
-                    root.checking = false
-                    console.log("UpdateService: Up to date.")
-                }
+    property Exec _countProc: Exec {
+        command: ["git", "-C", root._dir, "rev-list", "--count", "HEAD..origin/main"]
+        // A failed read counts as "up to date", as the old 2>/dev/null did.
+        onFinished: {
+            var n = parseInt(lastOutput.trim())
+            root.commitsBehind = isNaN(n) ? 0 : n
+            console.log("UpdateService: Commits behind origin/main: " + root.commitsBehind)
+            if (root.commitsBehind > 0) {
+                _logProc.run()
+            } else {
+                root.checking = false
+                console.log("UpdateService: Up to date.")
             }
         }
     }
 
     // ── Step 3: read commit log ────────────────────────────────────────────
-    property var _logProc: Process {
-        command: ["bash", "-c",
-            "git -C '" + root._dir +
-            "' log HEAD..origin/main --oneline --no-decorate 2>/dev/null"]
-        running: false
-        stdout: StdioCollector {
-            onStreamFinished: {
-                var lines = text.trim()
-                    .split("\n")
-                    .filter(function(l) { return l.trim() !== "" })
-                root.commitMessages  = lines
-                root.checking        = false
-                root.updateAvailable = true
-            }
+    property Exec _logProc: Exec {
+        command: ["git", "-C", root._dir, "log", "HEAD..origin/main", "--oneline", "--no-decorate"]
+        onFinished: {
+            root.commitMessages  = lastOutput.trim().split("\n").filter(l => l.trim() !== "")
+            root.checking        = false
+            root.updateAvailable = true
         }
     }
 
@@ -206,8 +183,10 @@ Singleton {
     //   PULL_FAILED (+ git's own output)  ·  LINK_FAILED  ·  NEEDS_INSTALL  ·
     //   NEW_PKGS:a,b  ·  REMOVED_PKGS:c  ·  OK
     function _applyScript(withStash) {
-        var d = "'" + root._dir + "'"
-        return (withStash
+        // The repo path is $1 (passed by _apply()), never pasted in; copied to
+        // $repo first because _pkgs() below has its own $1.
+        var d = "\"$repo\""
+        return "repo=\"$1\";\n" + (withStash
                 // || true so an already-clean worktree doesn't abort the chain
                 ? "git -C " + d + " stash push -m 'synapse-pre-update' >/dev/null 2>&1 || true;\n"
                 : "") +
@@ -300,23 +279,18 @@ Singleton {
         console.log("UpdateService: update applied. needsFullInstall=" + root.needsFullInstall)
     }
 
-    property var _applyProc: Process {
-        command: []
-        running: false
-        stdout: StdioCollector {
-            onStreamFinished: root._handleApplyResult(text)
-        }
+    property Exec _applyProc: Exec {
+        onFinished: root._handleApplyResult(lastOutput)
     }
 
     // ── Reload ─────────────────────────────────────────────────────────────
     // Reloads Hyprland, then replaces quickshell. The restart runs in its own
     // session (setsid) so it outlives the shell process it is about to kill.
-    property var _reloadProc: Process {
+    property Exec _reloadProc: Exec {
         command: ["bash", "-c",
             "hyprctl reload >/dev/null 2>&1;" +
             "setsid bash -c 'sleep 0.3; pkill -x quickshell; sleep 0.5; exec quickshell' " +
             ">/dev/null 2>&1 < /dev/null &"]
-        running: false
     }
 
     // ── Public API ─────────────────────────────────────────────────────────
@@ -333,8 +307,7 @@ Singleton {
         root.updateAvailable   = false
         root.updateSuccess     = false
         root.hasConflict       = false
-        _preflightProc.running = false
-        _preflightProc.running = true
+        _preflightProc.run()
     }
 
     function _apply(withStash) {
@@ -345,9 +318,7 @@ Singleton {
         root.updateSuccess    = false
         root.newPackages      = []
         root.removedPackages  = []
-        _applyProc.command  = ["bash", "-c", root._applyScript(withStash)]
-        _applyProc.running  = false
-        _applyProc.running  = true
+        _applyProc.run(["bash", "-c", root._applyScript(withStash), "--", root._dir])
     }
 
     function applyUpdate() {
@@ -364,8 +335,7 @@ Singleton {
 
     function reloadShell() {
         console.log("UpdateService: reloadShell() triggered")
-        _reloadProc.running = false
-        _reloadProc.running = true
+        _reloadProc.run()
     }
 
     function dismiss() {

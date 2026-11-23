@@ -572,6 +572,8 @@ Every directory is imported as `import qs.src.<path>` _(verified on 0.3.2: no `q
 
 Paths relative to `config/quickshell/src/`. "split" means the file is cut into the parts listed; "→" alone is a move (and rename where the name changes).
 
+**Done in #115 (S5)** — every service except `PrefsService` (left for #146's schema) runs on `Exec` / `ExecQueue` / `JsonStore` / `Poller` / `Lease` / `Hypr`; the system stats services are leased singletons; no service reads `Popups`, `SurfaceState` or `ShellState` (the mode flags moved into their services: `FocusModeService.active`, `NotificationService.dnd`, `ScreenRecService.setupOpen`, `QuickToggleService.airplaneOn`, mirrored read-only by `ShellState`; the GPU switch prompt moved to its view; the battery dialog is wired in `app/`); `BatteryStatus` became a bar view over a new `BatteryService`; parsers in `sysinfo.js`, `nmcli.js`, `cliphist.js`.
+
 **Done in #113 (S4)** — every move and rename below that needs no code change, with these differences from the target: `features/network/` stays flat (`NetworkContent` loads its tabs by file name; the tab subfolders come with the splits), names that change with a split keep their name until it (`AudioControl`, `HistoryTab`, `BatteryStatus`, `KanbanDeleteDialog` → `components/feedback/ConfirmOverlay`), `IpcManager` stays in `state/` until #145, `BrightnessSlider` sits in `components/inputs/` until #146 makes it presentational, and the system stats services stay per-use until #115. New: `app/App.qml` is the composition root (`shell.qml` only creates it).
 
 ### 7.1 Root, theme, utils

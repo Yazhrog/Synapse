@@ -39,6 +39,7 @@ IO_TYPES = re.compile(r"\b(Process|FileView|Socket|SplitParser|StdioCollector)\s
 VISUAL_ROOT = re.compile(r"^(Item|Rectangle|Text|Column|Row|Grid|Flow|Flickable|ListView|GridView|"
                          r"FocusScope|MouseArea|Image|Loader|StatCard|PanelWindow|FloatingWindow)\s*\{", re.M)
 IMPORT = re.compile(r'^import\s+"([^"]+)"', re.M)
+QS_IMPORT = re.compile(r'^import\s+qs\.src\.([\w.]+)', re.M)
 SERVICE_UI_NAMES = re.compile(r"\b(Popups|SurfaceState)\.")
 UI_LAYERS = ("state", "actions", "features", "surface", "dialogs", "popups", "windows", "modules")
 
@@ -62,6 +63,8 @@ def singletons() -> dict:
 
 def import_targets(f: Path, text: str):
     """Resolved src-relative folders of a file's directory imports."""
+    for m in QS_IMPORT.finditer(text):
+        yield m.group(1).replace(".", "/")
     for m in IMPORT.finditer(text):
         spec = m.group(1)
         if spec.endswith(".js"):
@@ -121,11 +124,19 @@ def check() -> list:
             if re.search(r'^import\s+"\.\./', text, re.M):
                 found.append(("relative", r))
         for arr in command_arrays(text):
-            # Joining string literals across lines is fine; a value (an
-            # identifier or call) concatenated into the script is not, unless
-            # it goes through Paths.shellQuote().
-            code = re.sub(r'"(?:[^"\\]|\\.)*"', '""', arr).replace("Paths.shellQuote(", "(")
-            if re.search(r"\+\s*\(?\s*[A-Za-z_]|[A-Za-z_\])]\s*\+", code.replace("(", " ").replace("Paths.shellQuote", "")):
+            # Only the script itself (the element after "-c") matters: joining
+            # string literals across lines is fine, a value (an identifier or
+            # a call) concatenated into the script is not. Arguments after it
+            # ("--", path, …) may be built freely.
+            code = re.sub(r'"(?:[^"\\]|\\.)*"', '""', arr)
+            code = re.sub(r"'(?:[^'\\]|\\.)*'", "''", code)
+            script, depth = "", 0
+            for ch in code:
+                if ch in "([{": depth += 1
+                elif ch in ")]}": depth -= 1
+                elif ch == "," and depth == 0: break
+                script += ch
+            if re.search(r"\+\s*\(?\s*[A-Za-z_]|[A-Za-z_\])]\s*\+", script):
                 found.append(("shell-c", r))
                 break
         if lines > 500:

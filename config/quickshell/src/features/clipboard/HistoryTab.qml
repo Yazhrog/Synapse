@@ -2,11 +2,15 @@ import QtQuick
 import QtQuick.Controls
 import Quickshell.Io
 import qs.src.components.base
+import qs.src.core
 import qs.src.services.data
 import qs.src.state
 import qs.src.theme
 Item {
     id: root
+
+    // ClipboardService reloads the history while the popup is open.
+    Lease { service: ClipboardService; active: Popups.clipboardOpen }
 
     readonly property var pinned:  ClipboardService.pinned  ?? []
     readonly property var history: ClipboardService.entries ?? []

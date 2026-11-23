@@ -1,10 +1,8 @@
 pragma Singleton
 import QtQuick
 import Quickshell
-import Quickshell.Io
 import qs.src.core
 import qs.src.services.data
-import qs.src.state
 // ScreenRecService — owns all screen recording state.
 //
 // Audio routing (fixed):
@@ -17,6 +15,10 @@ import qs.src.state
 // The null sink is torn down after every recording (saved or discarded).
 // Notifications are sent via notify-send with action buttons (requires
 // libnotify ≥ 0.8 and a daemon that supports actions, e.g. dunst/mako).
+// Every path, geometry and device name goes to its command as an argument.
+//
+// `setupOpen` is the recording setup in the bar (capture / audio choice
+// before starting); ShellState.screenRecord mirrors it for the surface.
 
 Singleton {
     id: root
@@ -52,6 +54,10 @@ Singleton {
     function keepStripOpen()      { _stripTimer.stop()    }
     function scheduleStripClose() { _stripTimer.restart() }
 
+    // ── Setup ─────────────────────────────────────────────────────────────────
+    property bool setupOpen: false
+    function openSetup() { setupOpen = true }
+
     // ── Recording state ───────────────────────────────────────────────────────
     property bool   recording:      false
     property int    elapsed:        0
@@ -75,109 +81,49 @@ Singleton {
     // ── Audio bars — 6 bars, always active during recording ───────────────────
     property var audioBars: [0, 0, 0, 0, 0, 0]
 
-    // ── Config ────────────────────────────────────────────────────────────────
-    property var _configView: FileView {
-        id: configView
-        watchChanges: false
-        onLoaded: root._parseConfig(configView.text())
-    }
-
-    property var _initConfig: Process {
-        command: []
-        running: false
-        onExited: function() { configView.reload() }
-    }
-
-    Component.onCompleted: {
-        var path = Paths.userData("screenrec.json")
-        configView.path = path
-        _initConfig.command = [
-            "bash", "-c",
-            "[ -f '" + path + "' ] || " +
-            "(mkdir -p \"$(dirname '" + path + "')\" && " +
-            "printf '{\"captureTarget\":\"screen\",\"audioMic\":false,\"audioSystem\":false}\\n'" +
-            " > '" + path + "')"
-        ]
-        _initConfig.running = true
-    }
-
-    function _parseConfig(raw) {
-        if (!raw || raw.trim() === "") return
-        try {
-            var o = JSON.parse(raw)
+    // ── Config (user_data/screenrec.json) ─────────────────────────────────────
+    property JsonStore _config: JsonStore {
+        path:     Paths.userData("screenrec.json")
+        defaults: ({ captureTarget: "screen", audioMic: false, audioSystem: false })
+        onLoaded: {
+            const o = data
             if (o.captureTarget) root.captureTarget = o.captureTarget
             if (typeof o.audioMic    === "boolean") root.audioMic    = o.audioMic
             if (typeof o.audioSystem === "boolean") root.audioSystem = o.audioSystem
-        } catch(e) {}
+        }
     }
 
     function saveConfig() {
-        var path = Paths.userData("screenrec.json")
-        var data = JSON.stringify({
+        _config.set({
             captureTarget: root.captureTarget,
             audioMic:      root.audioMic,
             audioSystem:   root.audioSystem
         })
-        _saveProc.command = ["bash", "-c",
-            "printf '%s' " + Paths.shellQuote(data) + " > " + Paths.shellQuote(path)]
-        _saveProc.running = false
-        _saveProc.running = true
     }
-
-    property var _saveProc: Process { command: []; running: false }
 
     // ── Recording process ─────────────────────────────────────────────────────
     property string _pendingGeometry: ""
     property string _resolvedAudioDevice: ""
 
-    property var _windowPickerProc: Process {
-        command: []
-        running: false
-        stdout: StdioCollector {
-            id: windowPickerOut
-            onStreamFinished: {
-                var g = windowPickerOut.text.trim()
-                if (g !== "") root._pendingGeometry = g
-            }
-        }
-        onExited: function(exitCode, exitStatus) {
-            if (exitCode === 0 && root._pendingGeometry !== "")
+    // slurp prints the picked geometry ("x,y wxh"); cancelling exits non-zero
+    property Exec _pickerProc: Exec {
+        onFinished: ok => {
+            const g = lastOutput.trim()
+            if (ok && g !== "") {
+                root._pendingGeometry = g
                 root._resolveAudio()
-            else
+            } else {
                 root._pendingGeometry = ""
-        }
-    }
-
-    property var _regionPickerProc: Process {
-        command: []
-        running: false
-        stdout: StdioCollector {
-            id: regionPickerOut
-            onStreamFinished: {
-                var g = regionPickerOut.text.trim()
-                if (g !== "") root._pendingGeometry = g
             }
-        }
-        onExited: function(exitCode, exitStatus) {
-            if (exitCode === 0 && root._pendingGeometry !== "")
-                root._resolveAudio()
-            else
-                root._pendingGeometry = ""
         }
     }
 
     // Step 1: resolve/set up audio device, then launch.
     // Reads the resolved device name from stdout (last non-empty line).
-    property var _audioDeviceProc: Process {
-        command: []
-        running: false
-        stdout: SplitParser {
-            onRead: function(line) {
-                var s = line.trim()
-                if (s !== "") root._resolvedAudioDevice = s
-            }
-        }
-        onExited: function(exitCode, exitStatus) {
+    property Exec _audioDeviceProc: Exec {
+        onFinished: {
+            const lines = lastOutput.split("\n").map(l => l.trim()).filter(l => l !== "")
+            if (lines.length > 0) root._resolvedAudioDevice = lines[lines.length - 1]
             root._launch()
         }
     }
@@ -202,10 +148,7 @@ Singleton {
 
         if (root.audioMic && !root.audioSystem) {
             // Mic only — use the default source directly; no null sink needed
-            _audioDeviceProc.command = ["bash", "-c",
-                "printf '%s\\n' \"$(pactl get-default-source)\""]
-            _audioDeviceProc.running = false
-            _audioDeviceProc.running = true
+            _audioDeviceProc.run(["pactl", "get-default-source"])
             return
         }
 
@@ -233,51 +176,49 @@ Singleton {
         // Emit the recording device name as the final stdout line
         script += "; printf 'SynapseMixer.monitor\\n'"
 
-        _audioDeviceProc.command = ["bash", "-c", script]
-        _audioDeviceProc.running = false
-        _audioDeviceProc.running = true
+        _audioDeviceProc.run(["bash", "-c", script])
     }
 
     // ── Null-sink teardown — run after every recording ends ───────────────────
-    property var _cleanupAudioProc: Process { command: []; running: false }
+    property Exec _cleanupAudioProc: Exec {
+        command: ["bash", "-c",
+            "pactl unload-module module-loopback 2>/dev/null; " +
+            "pactl unload-module module-null-sink 2>/dev/null"]
+    }
 
     function _teardownNullSink() {
         if (!root._usingNullSink) return
         root._usingNullSink = false
-        _cleanupAudioProc.command = ["bash", "-c",
-            "pactl unload-module module-loopback 2>/dev/null; " +
-            "pactl unload-module module-null-sink 2>/dev/null"]
-        _cleanupAudioProc.running = false
-        _cleanupAudioProc.running = true
+        _cleanupAudioProc.run()
     }
 
     // ── Notification process ──────────────────────────────────────────────────
     // Uses notify-send --wait + --action (libnotify ≥ 0.8 required).
     // Saved recording: shows "View Folder" (xdg-open dir) and "Open in MPV".
-    property var _notifyProc: Process { command: []; running: false }
+    property Exec _notifyProc: Exec {}
 
     // ── wf-recorder process ───────────────────────────────────────────────────
-    property var _recProc: Process {
-        command: []
-        running: false
-        onExited: function(exitCode, exitStatus) {
+    // Runs for the whole recording and logs all along: its output isn't kept.
+    property Exec _recProc: Exec {
+        discardOutput: true
+        onFinished: {
             var savedFile = root._currentFile   // capture before it is cleared
 
             root.recording        = false
             root.elapsed          = 0
             root._pendingGeometry = ""
             root._currentFile     = ""
-            root._cavaRecProc.running = false
+            root._cavaRecProc.cancel()
             root.audioBars        = [0, 0, 0, 0, 0, 0]
-            ShellState.screenRecord = false
+            root.setupOpen        = false
 
             // Always tear down the null sink (no-op when mic-only or no-audio)
             root._teardownNullSink()
 
             if (!root._discarding && savedFile !== "") {
                 // Normal stop — notify with interactive action buttons.
-                _notifyProc.command = ["bash", "-c",
-                    "FILE=" + Paths.shellQuote(savedFile) + "; " +
+                _notifyProc.run(["bash", "-c",
+                    "FILE=\"$1\"; " +
                     "DIR=\"$(dirname \"$FILE\")\"; " +
                     "ACTION=$(notify-send" +
                     " --app-name 'ScreenRec'" +
@@ -289,9 +230,8 @@ Singleton {
                     "case \"$ACTION\" in" +
                     "  view) xdg-open \"$DIR\" ;;" +
                     "  open) mpv \"$FILE\" ;;" +
-                    "esac"]
-                _notifyProc.running = false
-                _notifyProc.running = true
+                    "esac",
+                    "--", savedFile])
             }
             // Discard path: _discardTimer handles file deletion + notification
         }
@@ -303,37 +243,33 @@ Singleton {
         return dir !== "" ? dir : Paths.home + "/Videos/screen_recordings"
     }
 
-    function _buildCmd() {
-    var ts  = Qt.formatDateTime(new Date(), "yyyyMMdd_HHmmss")
-    root._currentFile = root.outputDir + "/" + ts + ".mp4"
-    
-    var cmd = "mkdir -p " + Paths.shellQuote(root.outputDir) + " && " +
-              "wf-recorder -c libx264" +
-              " -x yuv420p" +
-              " -r 30" +                       // Limit FPS to 30
-              " -p preset=fast" +              // Faster encoding speed
-              " -p crf=26" +                   // Lower quality/smaller size
-              " -p profile=main" +             // Maximum web/Discord compatibility
-              " -p color_range=tv" +           // Fixes washed out blacks/whites
-              " -p colorspace=bt709" +         // Tags the correct HD color matrix
-              " -p color_primaries=bt709" +
-              " -p color_trc=bt709" +
-              " -f " + Paths.shellQuote(root._currentFile)
-              
-    if (root._pendingGeometry !== "")
-        cmd += " -g '" + root._pendingGeometry + "'"
-        
-    // Use --audio=DEVICE (matches wf-recorder working script convention) [cite: 48]
-    if ((root.audioMic || root.audioSystem) && root._resolvedAudioDevice !== "")
-        cmd += " --audio=" + root._resolvedAudioDevice
-        
-    return cmd
-}
+    // wf-recorder's arguments for this recording (and the file it writes).
+    function _recorderArgs() {
+        var ts  = Qt.formatDateTime(new Date(), "yyyyMMdd_HHmmss")
+        root._currentFile = root.outputDir + "/" + ts + ".mp4"
+        var args = ["wf-recorder", "-c", "libx264",
+                    "-x", "yuv420p",
+                    "-r", "30",                       // Limit FPS to 30
+                    "-p", "preset=fast",              // Faster encoding speed
+                    "-p", "crf=26",                   // Lower quality/smaller size
+                    "-p", "profile=main",             // Maximum web/Discord compatibility
+                    "-p", "color_range=tv",           // Fixes washed out blacks/whites
+                    "-p", "colorspace=bt709",         // Tags the correct HD color matrix
+                    "-p", "color_primaries=bt709",
+                    "-p", "color_trc=bt709",
+                    "-f", root._currentFile]
+        if (root._pendingGeometry !== "")
+            args.push("-g", root._pendingGeometry)
+        // --audio=DEVICE (the wf-recorder convention)
+        if ((root.audioMic || root.audioSystem) && root._resolvedAudioDevice !== "")
+            args.push("--audio=" + root._resolvedAudioDevice)
+        return args
+    }
 
     function _launch() {
-        _recProc.command = ["bash", "-c", root._buildCmd()]
-        _recProc.running = false
-        _recProc.running = true
+        // $1 is the folder to create; the rest is wf-recorder's command line
+        _recProc.run(["bash", "-c", 'mkdir -p "$1" && shift && exec "$@"', "--", root.outputDir]
+                     .concat(root._recorderArgs()))
         root.recording   = true
         root.elapsed     = 0
         root.openStrip   = ""
@@ -348,41 +284,31 @@ Singleton {
         if (root.captureTarget === "screen") {
             root._resolveAudio()
         } else if (root.captureTarget === "window") {
-            _windowPickerProc.command = [
+            _pickerProc.run([
                 "bash", "-c",
                 "hyprctl clients -j | python3 -c \"" +
                 "import sys,json; ws=json.load(sys.stdin); " +
                 "[print(str(w['at'][0])+','+str(w['at'][1])+' '+str(w['size'][0])+'x'+str(w['size'][1])) " +
                 "for w in ws if w['mapped']]\" | slurp"
-            ]
-            _windowPickerProc.running = false
-            _windowPickerProc.running = true
+            ])
         } else {
-            _regionPickerProc.command = [
+            _pickerProc.run([
                 "bash", "-c",
                 "hyprctl monitors -j | python3 -c \"" +
                 "import sys,json; ms=json.load(sys.stdin); " +
                 "[print(str(m['x'])+','+str(m['y'])+' '+str(m['width'])+'x'+str(m['height'])) for m in ms]\" | slurp"
-            ]
-            _regionPickerProc.running = false
-            _regionPickerProc.running = true
+            ])
         }
     }
 
-    function stopRecording() {
-        _sigProc.command = ["bash", "-c", "pkill -INT wf-recorder"]
-        _sigProc.running = false
-        _sigProc.running = true
-    }
+    function stopRecording() { _sigProc.run() }
 
     function discardRecording() {
         root._discarding = true
         var fileToDelete = root._currentFile
         // Kill wf-recorder; _recProc.onExited will see _discarding=true and skip
         // the saved notification. The timer below handles delete + notify.
-        _sigProc.command = ["bash", "-c", "pkill -INT wf-recorder"]
-        _sigProc.running = false
-        _sigProc.running = true
+        _sigProc.run()
         _discardTimer.fileToDelete = fileToDelete
         _discardTimer.restart()
     }
@@ -393,46 +319,42 @@ Singleton {
         onTriggered: {
             if (fileToDelete !== "") {
                 var f = fileToDelete
-                _discardDeleteProc.command = ["bash", "-c",
-                    "rm -f " + Paths.shellQuote(f) + " && " +
+                _discardDeleteProc.run(["bash", "-c",
+                    'rm -f "$1" && ' +
                     "notify-send" +
                     " --app-name 'ScreenRec'" +
                     " --icon 'video-x-generic'" +
                     " 'Recording Discarded'" +
-                    " 'The recording was deleted.'"]
-                _discardDeleteProc.running = false
-                _discardDeleteProc.running = true
+                    " 'The recording was deleted.'",
+                    "--", f])
                 fileToDelete        = ""
                 root._discarding    = false
             }
         }
     }
 
-    property var _discardDeleteProc: Process { command: []; running: false }
+    property Exec _discardDeleteProc: Exec {}
 
     function cancelSetup() {
         root.openStrip = ""
-        ShellState.screenRecord = false
+        root.setupOpen = false
     }
 
-    property var _sigProc: Process { command: []; running: false }
+    property Exec _sigProc: Exec { command: ["pkill", "-INT", "wf-recorder"] }
 
     // ── Cava — runs during recording, source mirrors wf-recorder's audio ──────
-    property var _cavaRecProc: Process {
-        command: []
-        running: false
-        stdout: SplitParser {
-            onRead: function(line) {
-                if (!root.recording) return
-                var t = line.trim()
-                if (t === "") return
-                if (t.endsWith(";")) t = t.slice(0, -1)
-                var parts = t.split(";")
-                if (parts.length !== 12) return
-                var bars = []
-                for (var i = 0; i < 12; i++) bars.push(parseInt(parts[i]) || 0)
-                root.audioBars = bars
-            }
+    property Exec _cavaRecProc: Exec {
+        stream: true
+        onLine: line => {
+            if (!root.recording) return
+            var t = line.trim()
+            if (t === "") return
+            if (t.endsWith(";")) t = t.slice(0, -1)
+            var parts = t.split(";")
+            if (parts.length !== 12) return
+            var bars = []
+            for (var i = 0; i < 12; i++) bars.push(parseInt(parts[i]) || 0)
+            root.audioBars = bars
         }
     }
 
@@ -444,14 +366,9 @@ Singleton {
             "bar_delimiter = 59\nframe_delimiter = 10\n\n" +
             "[input]\nmethod = pulse\nsource = " + src + "\n"
 
-        _cavaRecProc.command = [
-            "bash", "-c",
-            "mkdir -p /tmp/synapse && printf '%s\\n' " +
-            Paths.shellQuote(config) +
-            " > /tmp/synapse/cava_rec.ini && " +
-            "exec cava -p /tmp/synapse/cava_rec.ini 2>/dev/null"
-        ]
-        _cavaRecProc.running = false
-        _cavaRecProc.running = true
+        _cavaRecProc.run(["bash", "-c",
+            "mkdir -p /tmp/synapse && printf '%s\\n' \"$1\" > /tmp/synapse/cava_rec.ini && " +
+            "exec cava -p /tmp/synapse/cava_rec.ini 2>/dev/null",
+            "--", config])
     }
 }

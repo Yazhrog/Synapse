@@ -1,140 +1,64 @@
+pragma Singleton
 import QtQuick
-import Quickshell.Io
+import Quickshell
+import qs.src.core
+import "sysinfo.js" as SysInfo
 
-// Tracks auto-cpufreq daemon status, the kernel governor, and current freq.
-//
-// Reading strategy:
-//   1. systemctl is-active auto-cpufreq         → daemonActive
-//   2. cat /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor
-//      → reads ALL cores, picks the dominant governor
-//      → activeProfile: "performance" | "powersave"
-//   3. cat /sys/devices/system/cpu/cpu*/cpufreq/scaling_cur_freq
-//      → averages kHz across all cores → curFreqStr
-//
-// Exposes:
-//   string governor      — dominant sysfs value e.g. "powersave"
-//   string activeProfile — "performance" | "powersave"
-//   bool   daemonActive  — true if auto-cpufreq.service is running
-//   bool   busy
-//   string curFreqStr    — average frequency e.g. "2.40 GHz"
-//   function setActiveProfile(profile)  — "performance" | "powersave"
-
-QtObject {
+// CpuFreqService — the auto-cpufreq daemon status, the dominant kernel
+// governor across cores and the average current frequency, every 2 s while
+// watched (System page); and switching the governor.
+//   governor (sysfs value), activeProfile ("performance" | "powersave"),
+//   daemonActive, busy, curFreqStr ("2.40 GHz")
+Singleton {
     id: root
 
     property string governor:      "—"
     property string activeProfile: "powersave"
     property bool   daemonActive:  false
-    property bool   busy:          false
     property string curFreqStr:    "— GHz"
+    readonly property bool busy:   setGov.busy
 
-    property string _pendingProfile: ""
+    // ── Lease: polls only while a view shows the data ──────────────────────
+    readonly property bool watched: _leases.watched
+    function acquire() { _leases.acquire() }
+    function release() { _leases.release() }
+    property LeaseCount _leases: LeaseCount {}
 
-    // ── Daemon status check ───────────────────────────────────────────────────
-    property var _daemonProc: Process {
-        command: ["systemctl", "is-active", "auto-cpufreq"]
-        running: false
-        stdout: StdioCollector {
-            onStreamFinished: {
-                root.daemonActive = text.trim() === "active"
-            }
-        }
-    }
-
-    // ── Governor reader (all cores) ───────────────────────────────────────────
-    // Picks dominant governor, then maps it to "performance" or "powersave".
-    property var _govProc: Process {
-        command: ["sh", "-c", "cat /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor"]
-        running: false
-        stdout: StdioCollector {
-            onStreamFinished: {
-                var lines = text.trim().split("\n").filter(function(l) { return l !== "" })
-                if (lines.length === 0) return
-
-                var counts = {}
-                for (var i = 0; i < lines.length; i++) {
-                    var g = lines[i].trim()
-                    counts[g] = (counts[g] || 0) + 1
-                }
-
-                var dominant = lines[0].trim()
-                var max = 0
-                var keys = Object.keys(counts)
-                for (var j = 0; j < keys.length; j++) {
-                    if (counts[keys[j]] > max) {
-                        max = counts[keys[j]]
-                        dominant = keys[j]
-                    }
-                }
-
-                root.governor      = dominant
-                root.activeProfile = (dominant === "performance") ? "performance" : "powersave"
-            }
-        }
-    }
-
-    // ── Current frequency reader (all cores) ─────────────────────────────────
-    // scaling_cur_freq is in kHz. Average across all cores → format as GHz.
-    property var _freqProc: Process {
-        command: ["sh", "-c", "cat /sys/devices/system/cpu/cpu*/cpufreq/scaling_cur_freq"]
-        running: false
-        stdout: StdioCollector {
-            onStreamFinished: {
-                var lines = text.trim().split("\n").filter(function(l) { return l !== "" })
-                if (lines.length === 0) return
-
-                var sum = 0
-                for (var i = 0; i < lines.length; i++)
-                    sum += parseFloat(lines[i].trim())
-
-                var avgGhz = (sum / lines.length) / 1e6
-                root.curFreqStr = avgGhz.toFixed(2) + " GHz"
-            }
-        }
-    }
-
-    // ── Set profile ───────────────────────────────────────────────────────────
-    // Writes the requested governor to all cores via pkexec tee.
-    property var _setProc: Process {
-        command: []
-        running: false
-        onRunningChanged: {
-            if (!running) {
-                root.busy = false
-                root._poll()
-            }
-        }
-    }
-
+    // Writes the governor to every core.
     function setActiveProfile(profile) {
-        if (root.busy) return
-        root.busy = true
-
-        var gov = (profile === "performance") ? "performance" : "powersave"
-        _setProc.command = [
-            "sh", "-c",
-            "echo " + gov + " | tee /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor"
-        ]
-        _setProc.running = false
-        _setProc.running = true
+        if (busy) return
+        const gov = profile === "performance" ? "performance" : "powersave"
+        setGov.run(["sh", "-c", 'echo "$1" | tee /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor', "--", gov])
     }
 
-    // ── Poll timer ────────────────────────────────────────────────────────────
-    property var _pollTimer: Timer {
-        interval: 2000
-        running:  true
-        repeat:   true
-        onTriggered: root._poll()
+    function _poll() { govRead.run(); freqRead.run(); daemonRead.run() }
+
+    Exec {
+        id: daemonRead
+        command: ["systemctl", "is-active", "auto-cpufreq"]
+        // "inactive" exits 3: read the output either way
+        onFinished: root.daemonActive = lastOutput.trim() === "active"
     }
 
-    function _poll() {
-        _govProc.running    = false
-        _govProc.running    = true
-        _freqProc.running   = false
-        _freqProc.running   = true
-        _daemonProc.running = false
-        _daemonProc.running = true
+    Exec {
+        id: govRead
+        command: ["sh", "-c", "cat /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor"]
+        parse: SysInfo.dominantGovernor
+        onSucceeded: g => {
+            if (g === "") return
+            root.governor      = g
+            root.activeProfile = g === "performance" ? "performance" : "powersave"
+        }
     }
 
-    Component.onCompleted: _poll()
+    Exec {
+        id: freqRead
+        command: ["sh", "-c", "cat /sys/devices/system/cpu/cpu*/cpufreq/scaling_cur_freq"]
+        parse: SysInfo.averageFreqGhz
+        onSucceeded: f => { if (f !== "") root.curFreqStr = f }
+    }
+
+    Exec { id: setGov; onFinished: root._poll() }
+
+    Poller { interval: 2000; running: root.watched; onTick: root._poll() }
 }

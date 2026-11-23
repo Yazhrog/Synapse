@@ -1,10 +1,24 @@
 import QtQuick
 import qs.src.components.base
+import qs.src.state
 Item {
     id: root
 
     required property var cpuFreqService
     required property var envyService
+
+    // A GPU mode switch needs a reboot: ConfirmDialog asks, then runs it.
+    function switchGpu(mode) {
+        if (mode === envyService.currentMode || envyService.busy) return
+        Popups.closeAll()
+        Popups.showConfirm(
+            "Switch GPU Mode",
+            "Switch to " + mode + " mode?\nA reboot is required for the change to take effect.",
+            "Switch + Reboot",
+            "gpu-switch-envy",
+            mode
+        )
+    }
 
     Column {
         anchors.centerIn: parent
@@ -73,13 +87,13 @@ Item {
                     label:     "Integrated"
                     active:    root.envyService.currentMode === "integrated"
                     enabled:   !root.envyService.busy
-                    onClicked: root.envyService.switchMode("integrated")
+                    onClicked: root.switchGpu("integrated")
                 }
                 ProfileButton {
                     label:     "Hybrid"
                     active:    root.envyService.currentMode === "hybrid"
                     enabled:   !root.envyService.busy
-                    onClicked: root.envyService.switchMode("hybrid")
+                    onClicked: root.switchGpu("hybrid")
                 }
             }
 

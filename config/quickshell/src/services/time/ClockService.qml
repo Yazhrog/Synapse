@@ -1,8 +1,7 @@
 pragma Singleton
 import QtQuick
 import Quickshell
-import Quickshell.Io
-
+import qs.src.core
 // ============================================================
 // ClockService — the clock engine: wall clock, timer, stopwatch and alarms.
 //
@@ -177,12 +176,10 @@ Singleton {
     onAlarmsChanged: _updateNextAlarm()
 
     // ── Engine ─────────────────────────────────────────────────────────────
-    property Process _notifyProc: Process { running: false }
+    property Exec _notifyProc: Exec {}
 
     function _notify(title, body) {
-        _notifyProc.command = ["notify-send", "-a", "Synapse", "-i", "alarm", title, body]
-        _notifyProc.running = false
-        _notifyProc.running = true
+        _notifyProc.run(["notify-send", "-a", "Synapse", "-i", "alarm", title, body])
     }
 
     property Timer _tick: Timer {

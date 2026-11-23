@@ -1,16 +1,17 @@
 pragma Singleton
 import QtQuick
 import Quickshell
-import Quickshell.Io
+import qs.src.core
 import qs.src.services.desktop
-import qs.src.state
 // ============================================================
 // ScreenFilterService — the Hyprland screen shader (Quick Settings → Filter).
 //
 // `current` is the active shader's name ("" = off), read from Hyprland at
 // startup and after each wallpaper change. refreshList() fills `list` from
 // the shader directories; apply(name) sets it, and apply("") or applying
-// the active one turns it off.
+// the active one turns it off. The shader is set through Hypr with its full
+// path (looked up from the listing, never pasted into a shell string), then a
+// DPMS off/on forces a full redraw so the change shows at once.
 // ============================================================
 
 Singleton {
@@ -19,81 +20,67 @@ Singleton {
     property string current: ""
     property var    list:    []
 
-    // Shader directories (space-separated). ~/.config/quickshell is a symlink
-    // to the repo, so the last entry reaches the shaders Synapse ships;
-    // ~/.config/hypr/shaders is for your own.
-    property string shaderPaths: "~/.config/hypr/shaders ~/.local/share/hypr/shaders /usr/share/hyprshade/shaders ~/.config/quickshell/src/config/shaders"
+    // Shader directories. ~/.config/quickshell is a symlink to the repo, so
+    // the last entry reaches the shaders Synapse ships; ~/.config/hypr/shaders
+    // is for your own.
+    property var shaderDirs: ["~/.config/hypr/shaders", "~/.local/share/hypr/shaders",
+                              "/usr/share/hyprshade/shaders", "~/.config/quickshell/src/config/shaders"]
 
-    function refresh() { checkProc.running = false; checkProc.running = true }
+    function refresh() { checkExec.run() }
 
-    function refreshList() {
-        list = []
-        listProc.running = false
-        listProc.running = true
-    }
+    function refreshList() { list = []; listExec.run() }
 
     function apply(name) {
-        var turningOff = (name === "" || name === current)
+        const turningOff = name === "" || name === current
         current = turningOff ? "" : name
-
-        var isLua = ShellState.configProvider === "lua"
-
-        // Force a full redraw so the shader change shows at once
-        var damageCmd = isLua
-            ? ` && hyprctl dispatch 'hl.dsp.dpms({ action = "disable" })' && hyprctl dispatch 'hl.dsp.dpms({ action = "enable" })'`
-            : ` && hyprctl dispatch dpms off && hyprctl dispatch dpms on`
-
         if (turningOff) {
-            var offCmd = isLua
-                ? "hyprctl eval \"hl.config({ decoration = { screen_shader = '' } })\""
-                : "hyprctl keyword decoration:screen_shader '[[EMPTY]]'"
-            applyProc.command = ["bash", "-c", offCmd + damageCmd]
-        } else {
-            var resolveCmd =
-                "TARGET=$(find " + shaderPaths +
-                " -maxdepth 1 -type f \\( -name '" + name + ".glsl' -o -name '" + name + ".frag' \\)" +
-                " 2>/dev/null | head -n 1); "
-            var onCmd = isLua
-                ? "if [ -n \"$TARGET\" ]; then hyprctl eval \"hl.config({ decoration = { screen_shader = '$TARGET' } })\"" + damageCmd + "; fi"
-                : "if [ -n \"$TARGET\" ]; then hyprctl keyword decoration:screen_shader \"$TARGET\"" + damageCmd + "; fi"
-            applyProc.command = ["bash", "-c", resolveCmd + onCmd]
+            Hypr.setOptions("decoration", { screen_shader: Hypr.provider === "conf" ? "[[EMPTY]]" : "" })
+            _redraw()
+            return
         }
-
-        applyProc.running = false
-        applyProc.running = true
+        // Resolve the name to its file: the first .glsl / .frag in the dirs.
+        resolveExec.run(_findArgs(name + ".glsl", name + ".frag"))
     }
 
-    Process {
-        id: checkProc
-        command: ["bash", "-c",
-            "hyprctl getoption decoration:screen_shader -j 2>/dev/null" +
-            " | python3 -c \"" +
-            "import sys,json,os;" +
-            "d=json.load(sys.stdin);" +
-            "s=d.get('str','').strip();" +
-            "print('' if s in ('','[[EMPTY]]') else os.path.splitext(os.path.basename(s))[0])\""]
-        running: false
-        stdout: StdioCollector { onStreamFinished: root.current = text.trim() }
+    function _redraw() {
+        Hypr.dispatch('hl.dsp.dpms({ action = "disable" })', ["dpms", "off"])
+        Hypr.dispatch('hl.dsp.dpms({ action = "enable" })', ["dpms", "on"], () => root.refresh())
     }
 
-    Process {
-        id: applyProc
-        command: []
-        running: false
-        onRunningChanged: if (!running) root.refresh()
+    // find <dirs> -maxdepth 1 -type f ( -name a -o -name b )
+    function _findArgs(a, b) {
+        return ["find"].concat(shaderDirs.map(d => Paths.expand(d)))
+            .concat(["-maxdepth", "1", "-type", "f", "(", "-name", a, "-o", "-name", b, ")"])
     }
 
-    Process {
-        id: listProc
-        // Every .glsl / .frag in the shader directories, without the extension
-        command: ["bash", "-c", "find " + root.shaderPaths + " -maxdepth 1 -type f \\( -name '*.glsl' -o -name '*.frag' \\) 2>/dev/null | rev | cut -d/ -f1 | rev | sed 's/\\.[^.]*$//' | sort -u"]
-        running: false
-        stdout: SplitParser {
-            onRead: function(l) {
-                var n = l.trim()
-                if (n !== "") root.list = root.list.concat([n])
-            }
+    // find exits 1 when a directory is missing but still prints the others
+    Exec {
+        id: resolveExec
+        onFinished: {
+            const path = lastOutput.split("\n").map(l => l.trim()).find(l => l !== "") ?? ""
+            if (path === "") { root.refresh(); return }
+            Hypr.setOptions("decoration", { screen_shader: path })
+            root._redraw()
         }
+    }
+
+    Exec {
+        id: checkExec
+        command: ["hyprctl", "getoption", "decoration:screen_shader", "-j"]
+        onSucceeded: out => {
+            let s = ""
+            try { s = String(JSON.parse(out).str ?? "").trim() } catch (e) {}
+            root.current = s === "" || s === "[[EMPTY]]" ? "" : s.split("/").pop().replace(/\.[^.]*$/, "")
+        }
+    }
+
+    // Every .glsl / .frag in the shader directories, without the extension
+    Exec {
+        id: listExec
+        command: root._findArgs("*.glsl", "*.frag")
+        onFinished: root.list = Array.from(new Set(
+            lastOutput.split("\n").map(l => l.trim()).filter(l => l !== "")
+                      .map(p => p.split("/").pop().replace(/\.[^.]*$/, "")))).sort()
     }
 
     Connections {

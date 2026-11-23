@@ -1,9 +1,7 @@
 pragma Singleton
 import QtQuick
 import Quickshell
-import Quickshell.Io
 import qs.src.core
-import qs.src.state
 Singleton {
     id: root
 
@@ -18,7 +16,7 @@ Singleton {
     readonly property string _confPath: _configDir + "/SynapseKeybinds.conf"
     readonly property string _jsonPath: Paths.userData("keybinds.json")
     
-    property string configProvider: ShellState.configProvider
+    readonly property string configProvider: Hypr.provider
 
     // ── Capture gate ──────────────────────────────────────────────────────────
     // Set true by KeybindsPage while a combo is being recorded.
@@ -32,18 +30,14 @@ Singleton {
     // install/steps/06-shell-config.sh reads the same file for its live conflict
     // check, so the two never drift out of sync with each other or with the
     // IpcHandler targets in IpcManager.qml.
-    property var _defaults: ({})
+    readonly property var _defaults: _defaultsStore.data
 
-    property var _defaultsFile: FileView {
-        id: defaultsFile
-        path: root._shellDir + "/src/config/keybind-defaults.json"
+    property JsonStore _defaultsStore: JsonStore {
+        path:     root._shellDir + "/src/config/keybind-defaults.json"
+        readOnly: true
         onLoaded: {
-            try {
-                root._defaults = JSON.parse(defaultsFile.text())
-            } catch (e) {
-                console.error("Synapse: failed to parse keybind-defaults.json — no shell keybinds will be active")
-            }
-            root._loadProc.running = true
+            if (error !== "") console.error("Synapse: failed to parse keybind-defaults.json — no shell keybinds will be active")
+            root._merge()
         }
     }
 
@@ -53,21 +47,14 @@ Singleton {
     // Refreshed each time a BindRow enters capture mode.
     property var _hyprBinds: []
 
-    property var _hyprBindsProc: Process {
+    property Exec _hyprBindsProc: Exec {
         command: ["hyprctl", "binds", "-j"]
-        running: false
-        stdout: StdioCollector {
-            onStreamFinished: {
-                try   { root._hyprBinds = JSON.parse(text.trim()) }
-                catch (e) { root._hyprBinds = [] }
-            }
-        }
+        parse: out => JSON.parse(out.trim())
+        onSucceeded: binds => root._hyprBinds = binds
+        onFailed: root._hyprBinds = []
     }
 
-    function loadHyprBinds() {
-        _hyprBindsProc.running = false
-        _hyprBindsProc.running = true
-    }
+    function loadHyprBinds() { _hyprBindsProc.run() }
 
     // Converts "SUPER + SHIFT" → Hyprland modmask integer
     function _modsToMask(modsStr) {
@@ -150,34 +137,37 @@ Singleton {
     }
 
     // ── Load ──────────────────────────────────────────────────────────────────
-    property var _loadProc: Process {
-        command: ["bash", "-c",
-            "[ -f '" + root._jsonPath + "' ] && cat '" + root._jsonPath + "' || echo '{}'"]
-        running: false
-        stdout: StdioCollector {
-            onStreamFinished: {
-                var merged = {}
-                var defs   = root._defaults
-                var dkeys  = Object.keys(defs)
-                for (var i = 0; i < dkeys.length; i++) {
-                    var dk = dkeys[i]
-                    merged[dk] = { mods: defs[dk].mods, key: defs[dk].key,
-                                   label: defs[dk].label, group: defs[dk].group }
-                }
-                try {
-                    var saved = JSON.parse(text.trim())
-                    var sk = Object.keys(saved)
-                    for (var j = 0; j < sk.length; j++) {
-                        var s = sk[j]
-                        if (!merged[s]) continue
-                        if (saved[s].mods !== undefined) merged[s].mods = saved[s].mods
-                        if (saved[s].key  !== undefined) merged[s].key  = saved[s].key
-                    }
-                } catch(e) {}
-                root.keybinds = merged
-                root._writeFiles()
-            }
+    // The user's overrides (only the binds that differ from the defaults).
+    property JsonStore _overrides: JsonStore {
+        path:            root._jsonPath
+        defaults:        ({})
+        indent:          2
+        createIfMissing: false
+        onLoaded: root._merge()
+    }
+
+    // Defaults + overrides → keybinds, then the generated files. Runs once
+    // both files are read.
+    function _merge() {
+        if (!_defaultsStore.ready || !_overrides.ready) return
+        var merged = {}
+        var defs   = root._defaults
+        var dkeys  = Object.keys(defs)
+        for (var i = 0; i < dkeys.length; i++) {
+            var dk = dkeys[i]
+            merged[dk] = { mods: defs[dk].mods, key: defs[dk].key,
+                           label: defs[dk].label, group: defs[dk].group }
         }
+        var saved = _overrides.data
+        var sk = Object.keys(saved)
+        for (var j = 0; j < sk.length; j++) {
+            var s = sk[j]
+            if (!merged[s] || !saved[s]) continue
+            if (saved[s].mods !== undefined) merged[s].mods = saved[s].mods
+            if (saved[s].key  !== undefined) merged[s].key  = saved[s].key
+        }
+        root.keybinds = merged
+        root._writeFiles()
     }
 
     // ── Save / Reload ─────────────────────────────────────────────────────────
@@ -191,30 +181,15 @@ Singleton {
             if (root.keybinds[k].mods !== defs[k].mods || root.keybinds[k].key !== defs[k].key)
                 out[k] = { mods: root.keybinds[k].mods, key: root.keybinds[k].key }
         }
-        var json = JSON.stringify(out, null, 2)
-        _saveProc.command = ["bash", "-c",
-            "mkdir -p \"$(dirname '" + root._jsonPath + "')\" && " +
-            "printf '%s' " + Paths.shellQuote(json) + " > " + Paths.shellQuote(root._jsonPath)]
-        _saveProc.running = false
-        _saveProc.running = true
+        _overrides.set(out)
         root._writeFiles()
-    }
-
-    property var _saveProc: Process { command: []; running: false }
-
-    property var _reloadProc: Process {
-        command: ["hyprctl", "reload"]
-        running: false
     }
 
     // Brief delay lets the file writes flush before hyprctl re-reads them
     property var _reloadTimer: Timer {
         interval: 300
         repeat:   false
-        onTriggered: {
-            root._reloadProc.running = false
-            root._reloadProc.running = true
-        }
+        onTriggered: Hypr.reload()
     }
 
     function reload() {
@@ -268,35 +243,26 @@ Singleton {
     // different from what Hyprland read, the binds it loaded are stale and it
     // needs a reload. Without this, a change to the generated format leaves
     // every shell keybind dead until the next manual reload.
-    property var _writeProc: Process {
-        command: []
-        running: false
-        stdout: StdioCollector {
-            onStreamFinished: {
-                if (text.indexOf("CHANGED") >= 0) {
-                    console.log("KeybindService: generated binds changed on disk — reloading Hyprland.")
-                    root.reload()
-                }
+    property Exec _writeProc: Exec {
+        onSucceeded: out => {
+            if (out.indexOf("CHANGED") >= 0) {
+                console.log("KeybindService: generated binds changed on disk — reloading Hyprland.")
+                root.reload()
             }
         }
     }
 
+    // Writes both files so the user has them regardless of which provider they
+    // use. Paths and contents go in as arguments ($1 lua, $2 conf, $3 / $4
+    // their text), never into the script.
     function _writeFiles() {
-        var lua = _genLua()
-        var conf = _genConf()
-        var le  = lua.replace(/\\/g, "\\\\").replace(/'/g, "'\\''")
-        var ce  = conf.replace(/\\/g, "\\\\").replace(/'/g, "'\\''")
-
-        // Write both files so the user has them regardless of what they switch to
-        _writeProc.command = ["bash", "-c",
-            "mkdir -p \"$(dirname '" + root._luaPath + "')\" && " +
-            "printf '%s' '" + le + "' > '" + root._luaPath + ".tmp' && " +
-            "printf '%s' '" + ce + "' > '" + root._confPath + "' && " +
-            "{ cmp -s '" + root._luaPath + ".tmp' '" + root._luaPath + "' || echo CHANGED; } && " +
-            "mv '" + root._luaPath + ".tmp' '" + root._luaPath + "'"]
-
-        _writeProc.running = false
-        _writeProc.running = true
+        _writeProc.run(["bash", "-c",
+            'mkdir -p "$(dirname "$1")" && ' +
+            'printf "%s" "$3" > "$1.tmp" && ' +
+            'printf "%s" "$4" > "$2" && ' +
+            '{ cmp -s "$1.tmp" "$1" || echo CHANGED; } && ' +
+            'mv "$1.tmp" "$1"',
+            "--", root._luaPath, root._confPath, _genLua(), _genConf()])
     }
 
     function _grouped() {
@@ -392,7 +358,6 @@ Singleton {
         return lines.join("\n")
     }
 
-    // Loading of user overrides is kicked off by _defaultsFile.onLoaded above,
-    // once _defaults is populated — not on Component.onCompleted, since the
-    // merge in _loadProc needs _defaults to already be there.
+    // _merge() runs when the second of the two stores (defaults, overrides)
+    // has loaded, so the keybinds are never built from half the data.
 }

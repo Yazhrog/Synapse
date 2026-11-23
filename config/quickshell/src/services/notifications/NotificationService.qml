@@ -1,15 +1,15 @@
 pragma Singleton
 import QtQuick
 import Quickshell.Services.Notifications
-import qs.src.state
 // ─────────────────────────────────────────────────────────────
-// NotificationService — global singleton
+// NotificationService — the shell's notification server (global singleton).
+// `dnd` (Do Not Disturb) drops incoming notifications, except the battery
+// warnings; ShellState.dnd mirrors it.
 // ─────────────────────────────────────────────────────────────
-pragma Singleton
-import QtQuick
-import Quickshell.Services.Notifications
 NotificationServer {
     id: root
+
+    property bool dnd: false
 
     bodyMarkupSupported:   true
     bodySupported:         true
@@ -43,7 +43,7 @@ NotificationServer {
             root.list = root.list.filter(function(x) { return x !== n })
         })
 
-        if (ShellState.dnd && n.appName !== "Synapse Battery") return
+        if (root.dnd && n.appName !== "Synapse Battery") return
 
         if (root._ready) {
             root.notificationAdded(n)
