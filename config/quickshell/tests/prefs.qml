@@ -48,6 +48,14 @@ ShellRoot {
             check("validated on read", d.borderWidth === 16, "borderWidth " + d.borderWidth)
             check("isDefault", Prefs.isDefault("cornerRadius") && !Prefs.isDefault("barStyle"), "")
 
+            let borderNotified = 0
+            const onBorder = () => borderNotified++
+            Prefs.data.borderWidthChanged.connect(onBorder)
+            Prefs.set("backgroundOpacity", 70)
+            Prefs.data.borderWidthChanged.disconnect(onBorder)
+            check("only the changed key notifies", borderNotified === 0 && Prefs.data.backgroundOpacity === 70,
+                  "borderWidth notified " + borderNotified + " times")
+
             Prefs.set("barStyle", "nonsense")
             check("strict option rejected", Prefs.data.barStyle === "frame", Prefs.data.barStyle)
             Prefs.set("backgroundOpacity", 10)

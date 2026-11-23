@@ -19,10 +19,14 @@ import qs.src.core
 //
 // Adding a pref: one entry in PrefSchema.qml (+ a Pref* control in a config
 // page). User data (tasks, pins, wallpaper, keybinds) keeps its own files.
+//
+// `data` is one object with a property per schema key, and only the keys
+// whose value changed notify: dragging the border-width slider re-evaluates
+// the bindings on borderWidth, not every binding on every pref.
 Singleton {
     id: root
 
-    readonly property var  data:     _validated(_store.data)
+    readonly property QtObject data: _data
     readonly property var  defaults: PrefSchema.defaults
     readonly property bool ready:    _store.ready
     signal loaded()
@@ -54,10 +58,29 @@ Singleton {
     // ── Implementation ──────────────────────────────────────────────────────
     function _same(a, b) { return JSON.stringify(a) === JSON.stringify(b) }
 
-    function _validated(doc) {
-        const out = Object.assign({}, doc)
-        for (const k in PrefSchema.keys) out[k] = PrefSchema.validate(k, doc[k])
-        return out
+    // One `property var` per schema key, filled with the defaults before any
+    // binding reads it.
+    property QtObject _data: _makeData()
+    function _makeData() {
+        const o = Qt.createQmlObject("import QtQuick\nQtObject {\n"
+            + Object.keys(PrefSchema.keys).map(k => "    property var " + k + "\n").join("")
+            + "}\n", root, "PrefsData")
+        for (const k in PrefSchema.keys) o[k] = PrefSchema.validate(k, PrefSchema.keys[k].default)
+        return o
+    }
+
+    // Copies the validated store into _data, key by key, only where it changed.
+    function _sync() {
+        const doc = _store.data
+        for (const k in PrefSchema.keys) {
+            const v = PrefSchema.validate(k, doc[k])
+            if (!_same(_data[k], v)) _data[k] = v
+        }
+    }
+    Component.onCompleted: _sync()
+    property Connections _storeChanges: Connections {
+        target: root._store
+        function onDataChanged() { root._sync() }
     }
 
     property JsonStore _store: JsonStore {
