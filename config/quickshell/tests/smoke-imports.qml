@@ -1,33 +1,43 @@
-// Import smoke test: loads the popup contents through the same imports the
-// Dynamic Surface uses (windows/DynamicSurface.qml), and nothing else.
-//
-// Quickshell only finds files in folders it reaches by following
-// `import "…"` lines from shell.qml; a folder that is only listed in a qmldir
-// (services/home, services/config_tab, …) is not scanned unless some file
-// imports it. tests/smoke.qml imports many folders itself, which hides that,
-// so this run doesn't. Run by tests/smoke.sh.
+// Import smoke test: loads every popup the way the Dynamic Surface hosts it,
+// from app/PopupManifest.qml with nothing else imported, so each content
+// must import everything it uses itself (with qs.* imports and no qmldir, a
+// missing import fails here as "X is not a type"). Run by tests/smoke.sh.
 import Quickshell
 import QtQuick
-import "./src/modules/Center/"
-import "./src/modules/Right/"
-import "./src/modules/Left/"
-import "./src/shapes/"
-import "./src/components/"
-import "./src/services/"
-import "./src/popups/"
-import "./src/theme/"
-import "./src/"
-
+import qs.src.app
+import qs.src.state
 ShellRoot {
+    PopupManifest { id: manifest }
+
+    // What the specs read from the DynamicSurface, at scale 1.
+    readonly property var fakeSurface: ({
+        px: v => Math.round(v), borderWidth: 2, notchRadius: 16, notchHeight: 34,
+        notchBottom: 34, cornerRadius: 12, framed: true, width: 1920, height: 1080
+    })
+
     FloatingWindow {
         implicitWidth: 1920; implicitHeight: 1080
         Column {
-            DashboardContent { id: dash; width: 884;  height: 489 }
-            NetworkContent   { width: 467;  height: 576; page: Popups.networkPage || "wifi" }
-            WallpaperContent { width: 1010; height: 420; open: true }
-            CenterContent    {}
+            Repeater {
+                model: manifest.popups
+                delegate: Loader {
+                    required property var modelData
+                    readonly property var  sz: modelData.size(fakeSurface, null)
+                    readonly property rect p:  modelData.place(fakeSurface, sz[0], sz[1])
+                    width: p.width; height: p.height
+                    sourceComponent: modelData.component
+                    onLoaded: {
+                        if ("surface" in item) item.surface = fakeSurface
+                        if (modelData.key === "dashboard") dash = item
+                    }
+                }
+            }
+            Loader { sourceComponent: manifest.osd; width: 164; height: 276 }
+            Loader { sourceComponent: manifest.recordingOptions }
         }
     }
+
+    property var dash: null
 
     // Visit every dashboard and network page, so their loaders and pages build.
     property var _steps: [

@@ -1,0 +1,114 @@
+import QtQuick
+import qs.src.services.system
+import qs.src.theme
+// BatteryStatus — the battery icon (charging animation, low-level colours and
+// pulse) and its %, shown on hover or always (showPercentage). The state
+// comes from BatteryService.
+
+Item {
+    id: root
+
+    property bool showPercentage: false
+
+    readonly property real pct:      BatteryService.percent
+    readonly property bool charging: BatteryService.charging
+    readonly property bool full:     BatteryService.full
+
+    implicitWidth:  statusRow.implicitWidth + 6
+    implicitHeight: statusRow.implicitHeight
+
+    // ── Nerd Font icons ──────────────────────────────────────────────────────
+    function staticIcon(p) {
+        if (p > 90) return "󰁹"
+        if (p > 80) return "󰂂"
+        if (p > 70) return "󰂁"
+        if (p > 60) return "󰂀"
+        if (p > 50) return "󰁿"
+        if (p > 40) return "󰁾"
+        if (p > 30) return "󰁽"
+        if (p > 20) return "󰁼"
+        if (p > 10) return "󰁻"
+        return "󰁺"
+    }
+
+    // Charging animation frames (low → full)
+    readonly property var chargeFrames: ["󰢜","󰂆","󰂇","󰂈","󰂉","󰂊","󰂋","󰂅"]
+    property int chargeFrame: 0
+
+    Timer {
+        interval: 650
+        running:  root.charging && !root.full
+        repeat:   true
+        onTriggered: root.chargeFrame = (root.chargeFrame + 1) % root.chargeFrames.length
+    }
+
+    readonly property string icon: {
+        if (full)     return "󰂄"
+        if (charging) return chargeFrames[chargeFrame % chargeFrames.length]
+        return staticIcon(pct)
+    }
+
+    // ── Color ─────────────────────────────────────────────────────────────────
+    readonly property color iconColor: {
+        if (full)      return Theme.color.accent
+        if (charging)  return Theme.color.accent
+        if (pct <= 5)  return "#ff4444"
+        if (pct <= 10) return "#ff6b00"
+        if (pct <= 20) return "#ffcc00"
+        if (pct <= 30) return "#ff9900"
+        return Theme.color.text
+    }
+
+    // ── Display ───────────────────────────────────────────────────────────────
+    Row {
+        id: statusRow
+        spacing: 4
+        anchors.centerIn: parent
+
+        Text {
+            id: iconText
+            text:                   root.icon
+            color:                  root.iconColor
+            font.pixelSize:         16
+            anchors.verticalCenter: parent.verticalCenter
+
+            // Pulse when critically low and discharging
+            SequentialAnimation on opacity {
+                id: pulseAnim
+                running:  root.pct <= 10 && !root.charging
+                loops:    Animation.Infinite
+                NumberAnimation { to: 0.2; duration: 600; easing.type: Easing.InOutSine }
+                NumberAnimation { to: 1.0; duration: 600; easing.type: Easing.InOutSine }
+            }
+
+            // Snap back when animation stops
+            Connections {
+                target: pulseAnim
+                function onRunningChanged() {
+                    if (!pulseAnim.running) iconText.opacity = 1.0
+                }
+            }
+        }
+        
+        Item {
+            id: pctWrapper
+            property bool show: root.showPercentage || hov.hovered
+            implicitWidth: show ? pctText.implicitWidth + 2 : 0
+            implicitHeight: pctText.implicitHeight
+            clip: true
+            anchors.verticalCenter: parent.verticalCenter
+            Behavior on implicitWidth { NumberAnimation { duration: Theme.motion.slow; easing.type: Easing.InOutCubic } }
+
+            Text {
+                id: pctText
+                text:           root.pct + "%"
+                color:          hov.hovered ? Theme.color.accent : Theme.color.text
+                font.pixelSize: 12
+                anchors.verticalCenter: parent.verticalCenter
+                Behavior on color { ColorAnimation { duration: 120 } }
+            }
+        }
+    }
+
+    HoverHandler { id: hov }
+}

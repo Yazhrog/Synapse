@@ -1,0 +1,67 @@
+import QtQuick
+import qs.src.services.data
+import qs.src.services.time
+import qs.src.theme
+// ClockView — the big stacked HH / MM clock with seconds (and AM/PM).
+
+Item {
+    id: root
+
+    readonly property bool   _h24: Prefs.data.use24HourClock
+    readonly property string _hStr: ClockService.zp(_h24 ? ClockService.hours : (ClockService.hours % 12 || 12))
+    readonly property string _ampm: _h24 ? "" : (ClockService.hours < 12 ? "AM" : "PM")
+
+    Row {
+        anchors.centerIn: parent
+        spacing: 10
+
+        // HH stacked above MM with diagonal offset
+        Item {
+            anchors.verticalCenter: parent.verticalCenter
+            // Width fits both texts plus the one-char offset
+            readonly property int charOffset: 40
+            width:  hhText.implicitWidth + charOffset
+            height: hhText.implicitHeight + mmText.implicitHeight - 8
+
+            Text {
+                id: hhText
+                anchors.left: parent.left
+                anchors.top:  parent.top
+                text: root._hStr
+                font.pixelSize: 72; font.weight: Font.Bold
+                font.family: "JetBrainsMono Nerd Font"; font.letterSpacing: -4
+                color: Theme.color.text
+            }
+            Text {
+                id: mmText
+                anchors.left: parent.left
+                anchors.leftMargin: parent.charOffset
+                anchors.top:  hhText.bottom
+                anchors.topMargin: -8
+                text: ClockService.zp(ClockService.minutes)
+                font.pixelSize: 72; font.weight: Font.Bold
+                font.family: "JetBrainsMono Nerd Font"; font.letterSpacing: -4
+                color: Theme.color.accent
+            }
+        }
+
+        // Seconds (and AM/PM in 12-hour mode) — centered beside the stack
+        Column {
+            anchors.verticalCenter: parent.verticalCenter
+            spacing: 2
+            Text {
+                text: ClockService.zp(ClockService.seconds)
+                font.pixelSize: 22; font.weight: Font.Medium
+                font.family: "JetBrainsMono Nerd Font"
+                color: Qt.rgba(Theme.color.text.r, Theme.color.text.g, Theme.color.text.b, 0.45)
+            }
+            Text {
+                visible: root._ampm !== ""
+                text: root._ampm
+                font.pixelSize: 13; font.weight: Font.Bold
+                font.family: "JetBrainsMono Nerd Font"
+                color: Qt.rgba(Theme.color.accent.r, Theme.color.accent.g, Theme.color.accent.b, 0.70)
+            }
+        }
+    }
+}

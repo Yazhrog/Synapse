@@ -1,0 +1,58 @@
+name: Roadmap
+
+# In progress = its PR is a draft; In review = its PR is ready for review;
+# Done = merged into dev (issue stays open); Closed = released to main.
+# See .github/scripts/roadmap.sh. ROADMAP_TOKEN is a classic PAT (repo +
+# project): GITHUB_TOKEN can't edit a project owned by a user account.
+
+on:
+  push:
+    branches: [dev, main]
+  # Any base branch: a stacked PR is based on the layer below it.
+  pull_request:
+    types: [opened, reopened, edited, ready_for_review, converted_to_draft]
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Only list the Done issues that would be closed"
+        type: boolean
+        default: true
+
+concurrency:
+  group: roadmap-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+env:
+  GH_TOKEN: ${{ secrets.ROADMAP_TOKEN }}
+  PROJECT_NUMBER: 1
+
+jobs:
+  status:
+    # Same-repo PRs only: a fork's PR gets no secrets.
+    if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Move the issues this PR closes to In progress / In review
+        run: .github/scripts/roadmap.sh status "${{ github.event.pull_request.number }}"
+
+  done:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/dev'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Move the issues closed by this push's PRs to Done
+        run: .github/scripts/roadmap.sh done "${{ github.event.before }}" "${{ github.sha }}"
+
+  close:
+    if: (github.event_name == 'push' && github.ref == 'refs/heads/main') || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Close every open Done issue
+        env:
+          DRY_RUN: ${{ github.event_name == 'workflow_dispatch' && inputs.dry_run && '1' || '0' }}
+        run: .github/scripts/roadmap.sh close "${{ github.event_name == 'push' && github.sha || '' }}"

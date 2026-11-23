@@ -1,0 +1,64 @@
+pragma Singleton
+import QtQuick
+import Quickshell
+import Quickshell.Services.Mpris
+import qs.src.core
+import qs.src.services.data
+// Single cava process shared by CenterContent and PlayerCard.
+// 32 bars at 30fps. isPlaying mirrors the active MPRIS player state.
+// `enabled` follows Prefs.data.enableVisualiser: when off, cava is stopped
+// and the bars are hidden.
+
+Singleton {
+    id: root
+
+    readonly property int barCount: 32
+    readonly property bool enabled: Prefs.ready && Prefs.data.enableVisualiser
+
+    function _zeros() {
+        var a = []; for (var i = 0; i < root.barCount; i++) a.push(0); return a
+    }
+
+    property var bars: _zeros()
+
+    onEnabledChanged: {
+        if (enabled) _cava.run()
+        else { _cava.cancel(); bars = _zeros() }
+    }
+    Component.onCompleted: if (enabled) _cava.run()
+
+    // isPlaying is true if ANY MPRIS player is currently playing.
+    // This ensures bars flow regardless of which player index is active in PlayerCard.
+    readonly property bool isPlaying: {
+        var vals = Mpris.players.values
+        for (var i = 0; i < vals.length; i++) {
+            if (vals[i].playbackState === MprisPlaybackState.Playing) return true
+        }
+        return false
+    }
+
+    property Exec _cava: Exec {
+        stream: true
+        command: [
+            "bash", "-c",
+            "mkdir -p /tmp/synapse && " +
+            "printf '[general]\\nbars = 32\\nframerate = 30\\nnoise_reduction = 77\\n\\n" +
+            "[output]\\nmethod = raw\\nraw_target = /dev/stdout\\n" +
+            "data_format = ascii\\nascii_max_range = 100\\n" +
+            "bar_delimiter = 59\\nframe_delimiter = 10\\n' " +
+            "> /tmp/synapse/cava_shared.ini && " +
+            "exec cava -p /tmp/synapse/cava_shared.ini 2>/dev/null"
+        ]
+        onLine: line => {
+            var t = line.trim()
+            if (t === "") return
+            if (t.endsWith(";")) t = t.slice(0, -1)
+            var parts = t.split(";")
+            if (parts.length !== root.barCount) return
+            var arr = []
+            for (var i = 0; i < parts.length; i++)
+                arr.push(parseInt(parts[i]) || 0)
+            root.bars = arr
+        }
+    }
+}

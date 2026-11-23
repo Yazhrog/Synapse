@@ -1,75 +1,26 @@
 pragma Singleton
 import QtQuick
-import "."
+import Quickshell
+import qs.src.theme.tokens
 
-QtObject {
-    // ── Bindings to Modular Singletons ────────────────────────────────────────
-    // Note: property alias cannot point to other singletons, so we use direct bindings.
-    
-    // Colors
-    property color background: Colors.background
-    property color active:     Colors.active
-    property color text:       Colors.text
-    property color subtext:    Colors.subtext
-    property color icon:       Colors.icon
-    property color border:     Colors.border
-    property color iconFont:   Colors.iconFont
+// Theme — the facade over the design tokens (ARCHITECTURE.md §5.9, §5.12),
+// the one theme import a view needs:
+//
+//   Theme.color   roles (accent, text, surface…), state layers, alpha(c, a)
+//   Theme.font    families, size scale, weights
+//   Theme.space   spacing scale
+//   Theme.radius  sm/md/lg, card (corner pref), notch
+//   Theme.motion  durations and curves (with the Anim / Fade components)
+//   Theme.frame   frame and region sizes, frame prefs
+//
+// The colours come from a ColorSource (theme/sources/; matugen today).
+Singleton {
+    id: root
 
-    property color wsBackground: Colors.wsBackground
-    property color wsActive:     Colors.wsActive
-    property color wsOccupied:   Colors.wsOccupied
-    property color wsEmpty:      Colors.wsEmpty
-    property color wsOverlay:    Colors.wsOverlay
-    property color wsUrgent:     Colors.wsUrgent
-
-    // Metrics
-    property bool barEnabled: Metrics.barEnabled
-    
-    property int borderWidth:   Metrics.borderWidth
-    property int cornerRadius:  Metrics.cornerRadius
-    property string barStyle:   Metrics.barStyle
-    // Alpha of the frame (bar, borders, popups) — Config → Appearance.
-    property real backgroundOpacity: Metrics.backgroundOpacity
-    property color surfaceBackground: Qt.rgba(background.r, background.g, background.b,
-                                              background.a * backgroundOpacity)
-    property int notchRadius:   Metrics.notchRadius
-    property int notchHeight:   Metrics.notchHeight
-    property int exclusionGap:  Metrics.exclusionGap
-    property int spacing:       Metrics.spacing
-
-    property int notchPadding:           Metrics.notchPadding
-    property int notchHorizontalPadding: Metrics.notchHorizontalPadding
-    property int notchVerticalPadding:   Metrics.notchVerticalPadding
-    property int notchSideMargin:        Metrics.notchSideMargin
-
-    property int lNotchMinWidth: Metrics.lNotchMinWidth
-    property int lNotchMaxWidth: Metrics.lNotchMaxWidth
-    property int cNotchMinWidth: Metrics.cNotchMinWidth
-    property int cNotchMaxWidth: Metrics.cNotchMaxWidth
-    property int rNotchMinWidth: Metrics.rNotchMinWidth
-    property int rNotchMaxWidth: Metrics.rNotchMaxWidth
-
-    property int dashboardWidth:  Metrics.dashboardWidth
-    property int dashboardHeight: Metrics.dashboardHeight
-
-    property int notificationsWidth: Metrics.notificationsWidth
-    property int notificationToastWidth: Metrics.notificationToastWidth
-    property int networkPopupWidth:  Metrics.networkPopupWidth
-
-    property int popupMinWidth:   Metrics.popupMinWidth
-    property int popupMaxWidth:   Metrics.popupMaxWidth
-    property int popupMinHeight:   Metrics.popupMinHeight
-    property int popupMaxHeight:  Metrics.popupMaxHeight
-    property int popupPadding:     Metrics.popupPadding
-
-    property int wsDotSize:     Metrics.wsDotSize
-    property int wsActiveWidth: Metrics.wsActiveWidth
-    property int wsSpacing:     Metrics.wsSpacing
-    property int wsPadding:     Metrics.wsPadding
-    property int wsRadius:      Metrics.wsRadius
-
-    property int animDuration: Metrics.animDuration
-
-    property int settingsRowMinHeight: Metrics.settingsRowMinHeight
-    property int settingsRowPadding:   Metrics.settingsRowPadding
+    readonly property FrameTokens  frame:  FrameTokens {}
+    readonly property ColorTokens  color:  ColorTokens { frameOpacity: root.frame.opacity }
+    readonly property FontTokens   font:   FontTokens {}
+    readonly property SpaceTokens  space:  SpaceTokens {}
+    readonly property RadiusTokens radius: RadiusTokens {}
+    readonly property MotionTokens motion: MotionTokens {}
 }

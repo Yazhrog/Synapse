@@ -2,9 +2,8 @@ pragma Singleton
 import QtQuick
 import Quickshell
 import Quickshell.Hyprland
-import "../"
-import "../services/"
-
+import qs.src.services.notifications
+import qs.src.theme
 // ============================================================
 // ToastState — the notification toast queue, shared by every screen.
 //
@@ -74,7 +73,7 @@ Singleton {
 
     property Timer _slideOutTimer: Timer {
         id: slideOutTimer
-        interval: Theme.animDuration + 20
+        interval: Theme.motion.slow + 20
         onTriggered: {
             // Skip notifications that were closed while waiting in the queue.
             const queue = root.queue.filter(n => n && n.tracked)

@@ -4,22 +4,44 @@
 // be created offscreen, so their contents are loaded on their own here.
 import Quickshell
 import QtQuick
-import "./src"
-import "./src/shapes"
-import "./src/components"
-import "./src/popups"
-import "./src/services"
-import "./src/services/config_tab"
-import "./src/modules/Right"
-import "./src/modules/Center"
-
+import qs.src.actions
+import qs.src.components.base
+import qs.src.components.feedback
+import qs.src.core
+import qs.src.dialogs
+import qs.src.features.clipboard
+import qs.src.features.dashboard.apps
+import qs.src.features.dashboard.tasks
+import qs.src.features.notifications
+import qs.src.features.audio
+import qs.src.features.bar.center
+import qs.src.features.bar.right
+import qs.src.features.dashboard
+import qs.src.features.dashboard.config.pages
+import qs.src.features.dashboard.system
+import qs.src.features.network
+import qs.src.features.osd
+import qs.src.features.power
+import qs.src.features.screenrec
+import qs.src.features.wallpaper
+import qs.src.services.data
+import qs.src.services.desktop
+import qs.src.services.media
+import qs.src.services.network
+import qs.src.services.system
+import qs.src.services.time
+import qs.src.state
+import qs.src.surface.shape
+import qs.src.theme
 ShellRoot {
-    property var _singletons: [Theme, Paths, PrefsService, SurfaceState, Popups, ToastState,
-                               ShellState, KeybindService, UpdateService, IpcManager,
-                               FocusModeService, CavaService, AppearanceService, DataService, ClockState,
+    property var _singletons: [Theme, Paths, Prefs, SurfaceState, Popups, ToastState,
+                               ShellModes, KeybindService, UpdateService, IpcBridge, Actions,
+                               FocusModeService, CavaService, AppearanceService, DataService, ClockService,
                                BrightnessService, QuickToggleService, HotspotService, ScreenFilterService,
-                               KanbanService, WifiService, BluetoothService, VpnService,
-                               ActiveWindowService]
+                               TaskService, WifiService, BluetoothService, VpnService,
+                               ActiveWindowService, PowerService, GpuModeService, AppsService,
+                               KeyboardLayoutService, ProfileService, SystemInfoService, AudioService,
+                               MediaService, Dialogs]
 
     FloatingWindow {
         implicitWidth: 1920; implicitHeight: 1080
@@ -42,8 +64,19 @@ ShellRoot {
             GeneralPage         { width: 600; height: 460 }
             AppearancePage      { width: 600; height: 300 }
             DataPage            { width: 600; height: 460 }
-            Row { Clock {} Battery {} Audio {} }
+            Row { Clock {} BatteryIndicator {} AudioIndicator {} }
             CenterContent       {}
+            SystemStats         { width: 400; height: 300 }
+            // Parts only shown with data (apps, clipboard entries, tasks,
+            // notifications) or in a layer-shell window (UpdatePopup)
+            AppTile             { width: 400; app: ({ id: "a", name: "App", icon: "", exec: "", pinned: true }) }
+            AppSearchBar        { width: 400; hint: "Ctrl+P pin" }
+            ClipRow             { width: 400; previewText: "text"; isPinned: true }
+            TaskExtraFields     { width: 300 }
+            NotificationCard    { width: 360; notification: null }
+            UpdateHeader        {}
+            UpdateCommitList    { width: 300 }
+            PillButton          { width: 80; label: "OK" }
         }
     }
 
