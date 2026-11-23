@@ -1,5 +1,4 @@
 import QtQuick
-import Quickshell.Io
 import qs.src.core
 import qs.src.services.data
 import qs.src.services.desktop

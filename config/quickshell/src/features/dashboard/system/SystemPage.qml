@@ -14,7 +14,7 @@ Item {
     readonly property var thermal: ThermalService
     readonly property var fan:     FanControl
     readonly property var disk:    DiskService
-    readonly property var envy:    EnvyControlService
+    readonly property var envy:    GpuModeService
     readonly property var cpuFreq: CpuFreqService
     readonly property var gpu:     GpuService
 

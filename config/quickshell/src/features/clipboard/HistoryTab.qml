@@ -1,6 +1,5 @@
 import QtQuick
 import QtQuick.Controls
-import Quickshell.Io
 import qs.src.components.base
 import qs.src.core
 import qs.src.services.data
@@ -228,20 +227,13 @@ component ClipRow: Item {
     // Image preview: decoded to a temp file per entry id
     property string _imgPath: ""
 
-    property var _imgDecodeProc: Process {
-        command: []
-        running: false
-        onRunningChanged: {
-            if (!running) row._imgPath = "/tmp/clip_prev_" + row.entryId
-        }
+    Connections {
+        target: ClipboardService
+        function onPreviewReady(id, path) { if (id === row.entryId) row._imgPath = path }
     }
 
     Component.onCompleted: {
-        if (row.isImage && row.entryId !== "") {
-            _imgDecodeProc.command = ["bash", "-c",
-                "cliphist decode '" + row.entryId + "' > '/tmp/clip_prev_" + row.entryId + "' 2>/dev/null"]
-            _imgDecodeProc.running = true
-        }
+        if (row.isImage && row.entryId !== "") ClipboardService.decodePreview(row.entryId)
     }
 
     // Collapse height to zero for animated removal

@@ -12,7 +12,7 @@ import "sysinfo.js" as SysInfo
 Singleton {
     id: root
 
-    readonly property string envyMode: EnvyControlService.currentMode
+    readonly property string envyMode: GpuModeService.currentMode
 
     property QtObject igpu: QtObject {
         property real   freqPercent: 0

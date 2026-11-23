@@ -51,6 +51,23 @@ Singleton {
         _copy.run(["wl-copy"])
     }
 
+    // ── Image previews ──────────────────────────────────────────────────────
+    // An image entry decoded to a temporary file, one at a time; then
+    // previewReady(id, path) (also when decoding failed: the image just
+    // doesn't load).
+    signal previewReady(string id, string path)
+
+    function previewPath(id) { return "/tmp/clip_prev_" + id }
+
+    function decodePreview(id) {
+        if (!id || id === "") return
+        const path = previewPath(id)
+        _previews.enqueue(["bash", "-c", 'cliphist decode "$1" > "$2" 2>/dev/null', "--", id, path],
+                          () => root.previewReady(id, path))
+    }
+
+    property ExecQueue _previews: ExecQueue {}
+
     // ── Type: copy first, then wtype after popup closes ─────────────────────
     property Exec _wtype: Exec { command: ["bash", "-c", "sleep 0.35 && wl-paste -n | wtype -"] }
 

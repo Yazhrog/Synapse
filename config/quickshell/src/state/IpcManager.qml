@@ -139,7 +139,7 @@ Singleton {
         function toggle() {
             if (ScreenRecService.recording) {
                  ScreenRecService.stopRecording()
-             } else if (ShellState.screenRecord) {
+             } else if (ShellModes.screenRecord) {
                  ScreenRecService.cancelSetup()
              } else {
                  Popups.closeAll()

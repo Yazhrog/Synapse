@@ -1,7 +1,7 @@
 import QtQuick
 import Quickshell
-import Quickshell.Services.Pipewire
 import qs.src.services.data
+import qs.src.services.media
 import qs.src.state
 import qs.src.theme
 Item {
@@ -13,11 +13,7 @@ Item {
     implicitWidth:  row.implicitWidth + 6
     implicitHeight: row.implicitHeight
 
-    readonly property var sink: Pipewire.defaultAudioSink
-
-    PwObjectTracker {
-        objects: root.sink ? [root.sink] : []
-    }
+    readonly property var sink: AudioService.sink
 
     readonly property string icon: {
         if (!sink?.ready)            return "󰕾"
@@ -73,8 +69,7 @@ Item {
 
         onClicked: function(mouse) {
             if (mouse.button === Qt.RightButton) {
-                if (root.sink?.ready)
-                    root.sink.audio.muted = !root.sink.audio.muted
+                AudioService.toggleMute()
             } else {
                 Popups.toggle("audio", QsWindow.window?.screen?.name ?? "")
             }

@@ -11,7 +11,7 @@ import qs.src.theme
 // scrollable grid of toggle tiles, plus the shader picker of the Filter tile.
 // Layout only: the state and actions live in BrightnessService,
 // QuickToggleService, WifiService, BluetoothService, HotspotService,
-// ScreenFilterService, ShellState,
+// ScreenFilterService, ShellModes,
 // FocusModeService and ScreenRecService.
 
 StatCard {
@@ -114,25 +114,25 @@ StatCard {
                     }
                     QuickToggleTile {
                         width: tileGrid.btnW; height: tileGrid.btnH
-                        on: ShellState.focusMode
-                        icon: ShellState.focusMode ? "󱃕" : "󰍻"; label: "Focus Mode"
+                        on: ShellModes.focusMode
+                        icon: ShellModes.focusMode ? "󱃕" : "󰍻"; label: "Focus Mode"
                         onToggled: FocusModeService.toggle()
                     }
                     QuickToggleTile {
                         width: tileGrid.btnW; height: tileGrid.btnH
-                        on: ShellState.dnd; icon: ShellState.dnd ? "󰂛" : "󰂚"
+                        on: ShellModes.dnd; icon: ShellModes.dnd ? "󰂛" : "󰂚"
                         label: "Do Not Disturb"
                         onToggled: NotificationService.dnd = !NotificationService.dnd
                     }
                     QuickToggleTile {
                         width: tileGrid.btnW; height: tileGrid.btnH
-                        on:    ShellState.screenRecord || ScreenRecService.recording
+                        on:    ShellModes.screenRecord || ScreenRecService.recording
                         icon:  ScreenRecService.recording ? "⏹" : "󰻂"
                         label: ScreenRecService.recording ? "Recording" : "Screen Capture"
                         onToggled: {
                             if (ScreenRecService.recording) {
                                 ScreenRecService.stopRecording()
-                            } else if (ShellState.screenRecord) {
+                            } else if (ShellModes.screenRecord) {
                                 ScreenRecService.cancelSetup()
                             } else {
                                 Popups.closeAll()

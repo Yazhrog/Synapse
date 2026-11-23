@@ -71,7 +71,7 @@ PanelWindow {
     readonly property var    openSpec: contents[openContent] ?? null
 
     // The screen-recording setup (bar carousel) also wants Escape to cancel it.
-    readonly property bool recSetup:      ShellState.screenRecord && !ScreenRecService.recording
+    readonly property bool recSetup:      ShellModes.screenRecord && !ScreenRecService.recording
     readonly property bool wantsKeyboard: openSpec !== null || (recSetup && _focusedHere)
 
     // ── Fullscreen ───────────────────────────────────────────────────────────
@@ -292,7 +292,7 @@ PanelWindow {
     }
 
     // ── Frame geometry (animated) ────────────────────────────────────────────
-    property real notchBottom: ShellState.focusMode ? borderWidth : notchHeight
+    property real notchBottom: ShellModes.focusMode ? borderWidth : notchHeight
     Behavior on notchBottom { Anim {} }
 
     readonly property int lWidth: Math.max(
@@ -476,7 +476,7 @@ PanelWindow {
         y:       0
         width:   root.cWidth
         height:  Math.max(1, root.borderWidth)
-        enabled: ShellState.focusMode
+        enabled: ShellModes.focusMode
         TapHandler { onTapped: Popups.toggle("dashboard", root.screenName) }
     }
 
