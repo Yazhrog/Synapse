@@ -3,9 +3,11 @@ import QtQuick
 import Quickshell
 import qs.src.core
 import qs.src.services.data
+import "update.js" as UpdateScript
 // UpdateService — startup update checker (30s delay).
 // The autoUpdate preference lives in Prefs. Every git command gets the
 // repo path as an argument ($1 in the scripts), never pasted into a string.
+// The apply script and the reading of its output are update.js.
 Singleton {
     id: root
 
@@ -33,13 +35,13 @@ Singleton {
     property var    removedPackages: []
     property int _pingAttempts:    0
     property int _pingMaxAttempts: 12
-    
+
     property var _pingRetryTimer: Timer {
         interval: 5000
         repeat:   false
         onTriggered: root._pingCheck()
     }
-    
+
     property Exec _pingProc: Exec {
         command: ["ping", "-c", "1", "-W", "3", "1.1.1.1"]
         onSucceeded: {
@@ -57,13 +59,13 @@ Singleton {
             }
         }
     }
-    
+
     function _startConnectivityCheck() {
         root._pingAttempts = 0
         root._pingCheck()
         console.log("Started connectivity check for updates.")
     }
-    
+
     function _pingCheck() { root._pingProc.run() }
 
     // Popup is only shown when autoUpdate is enabled
@@ -175,106 +177,24 @@ Singleton {
         }
     }
 
-    // ── Apply: pull → relink → report ─────────────────────────────────────
-    // One shell script so the relink can't be skipped: a pull that adds a new
-    // config file needs a symlink created for it before the change is live.
-    //
-    // Emits marker lines the handler below reads:
-    //   PULL_FAILED (+ git's own output)  ·  LINK_FAILED  ·  NEEDS_INSTALL  ·
-    //   NEW_PKGS:a,b  ·  REMOVED_PKGS:c  ·  OK
-    function _applyScript(withStash) {
-        // The repo path is $1 (passed by _apply()), never pasted in; copied to
-        // $repo first because _pkgs() below has its own $1.
-        var d = "\"$repo\""
-        return "repo=\"$1\";\n" + (withStash
-                // || true so an already-clean worktree doesn't abort the chain
-                ? "git -C " + d + " stash push -m 'synapse-pre-update' >/dev/null 2>&1 || true;\n"
-                : "") +
-            "before=$(git -C " + d + " rev-parse HEAD 2>/dev/null);\n" +
-            // --ff-only: refuse to invent a merge commit in the user's repo
-            "out=$(git -C " + d + " pull --ff-only origin main 2>&1) || " +
-            "{ printf 'PULL_FAILED\\n%s\\n' \"$out\"; exit 0; };\n" +
-            "after=$(git -C " + d + " rev-parse HEAD 2>/dev/null);\n" +
-            "changed=$(git -C " + d + " diff --name-only \"$before\" \"$after\" 2>/dev/null);\n" +
-            // Reads PACMAN_DEPS/AUR_DEPS out of 02-packages.sh at a given
-            // revision as plain text — never sourced, that script installs
-            // packages at the top level. A line-based diff isn't enough since
-            // several package names can share one array line; this extracts
-            // the full token set at each revision so added/removed names are
-            // exact regardless of how the lines were reflowed.
-            "_pkgs() { git -C " + d + " show \"$1:install/steps/02-packages.sh\" 2>/dev/null | " +
-            "awk -v n=\"$2\" 'index($0,n\"=(\")==1{f=1;next} f&&$0==\")\"{f=0} f' | " +
-            "sed 's/#.*$//' | tr -s ' \\t' '\\n' | sed '/^[[:space:]]*$/d'; };\n" +
-            "if [ \"$before\" != \"$after\" ] && printf '%s\\n' \"$changed\" | " +
-            "grep -qx 'install/steps/02-packages.sh'; then\n" +
-            "  old_all=$( { _pkgs \"$before\" PACMAN_DEPS; _pkgs \"$before\" AUR_DEPS; } | sort -u );\n" +
-            "  new_all=$( { _pkgs \"$after\" PACMAN_DEPS; _pkgs \"$after\" AUR_DEPS; } | sort -u );\n" +
-            "  added=$(comm -13 <(printf '%s\\n' \"$old_all\") <(printf '%s\\n' \"$new_all\") | grep -v '^$');\n" +
-            "  removed=$(comm -23 <(printf '%s\\n' \"$old_all\") <(printf '%s\\n' \"$new_all\") | grep -v '^$');\n" +
-            "  [ -n \"$added\" ] && printf 'NEW_PKGS:%s\\n' \"$(printf '%s\\n' \"$added\" | paste -sd, -)\";\n" +
-            "  [ -n \"$removed\" ] && printf 'REMOVED_PKGS:%s\\n' \"$(printf '%s\\n' \"$removed\" | paste -sd, -)\";\n" +
-            "fi;\n" +
-            "bash " + d + "/install/link.sh >/dev/null 2>&1 || printf 'LINK_FAILED\\n';\n" +
-            // Packages and the manifest itself need the full installer
-            "printf '%s\\n' \"$changed\" | grep -qE '^install/(steps/|lib/manifest\\.sh)' && " +
-            "printf 'NEEDS_INSTALL\\n';\n" +
-            "printf 'OK\\n'"
-    }
-
-    function _parseCsvMarker(text, prefix) {
-        var lines = text.split("\n")
-        for (var i = 0; i < lines.length; i++) {
-            if (lines[i].indexOf(prefix) === 0) {
-                var rest = lines[i].substring(prefix.length).trim()
-                return rest === "" ? [] : rest.split(",")
-            }
-        }
-        return []
-    }
-
+    // ── Apply: pull → relink → report (UpdateScript.applyScript) ───────────
     function _handleApplyResult(text) {
         root.updating = false
-
-        if (text.indexOf("PULL_FAILED") >= 0) {
-            var g = text.toLowerCase()
-            // Distinguish the causes instead of blaming local changes for
-            // everything — a network drop is not something Stash can fix.
-            if (g.indexOf("would be overwritten") >= 0 ||
-                g.indexOf("local changes") >= 0 ||
-                g.indexOf("please commit") >= 0 ||
-                g.indexOf("unstaged changes") >= 0) {
-                root.hasConflict = true
-                root.lastError   = ""
-            } else if (g.indexOf("not possible to fast-forward") >= 0 ||
-                       g.indexOf("diverged") >= 0 ||
-                       g.indexOf("non-fast-forward") >= 0) {
-                root.hasConflict = false
-                root.lastError   = "Your checkout has commits that aren't on origin/main. " +
-                                   "Push or rebase them, then update again."
-            } else if (g.indexOf("could not resolve host") >= 0 ||
-                       g.indexOf("unable to access") >= 0 ||
-                       g.indexOf("connection") >= 0 ||
-                       g.indexOf("timed out") >= 0) {
-                root.hasConflict = false
-                root.lastError   = "Could not reach the remote. Check your connection."
-            } else {
-                root.hasConflict = false
-                root.lastError   = "Update failed:\n" +
-                                   text.replace("PULL_FAILED", "").trim().split("\n").slice(0, 4).join("\n")
-            }
+        const r = UpdateScript.parseApplyResult(text)
+        if (!r.ok) {
+            root.hasConflict = r.conflict
+            root.lastError   = r.error
             console.log("UpdateService: pull failed —\n" + text)
             return
         }
-
         root.updateAvailable  = false
         root.hasConflict      = false
         root.lastError        = ""
-        root.needsFullInstall = text.indexOf("NEEDS_INSTALL") >= 0
-        root.newPackages      = root._parseCsvMarker(text, "NEW_PKGS:")
-        root.removedPackages  = root._parseCsvMarker(text, "REMOVED_PKGS:")
+        root.needsFullInstall = r.needsFullInstall
+        root.newPackages      = r.newPackages
+        root.removedPackages  = r.removedPackages
         root.updateSuccess    = true
-
-        if (text.indexOf("LINK_FAILED") >= 0)
+        if (r.linkFailed)
             console.log("UpdateService: pull succeeded but install/link.sh failed.")
         console.log("UpdateService: update applied. needsFullInstall=" + root.needsFullInstall)
     }
@@ -318,7 +238,7 @@ Singleton {
         root.updateSuccess    = false
         root.newPackages      = []
         root.removedPackages  = []
-        _applyProc.run(["bash", "-c", root._applyScript(withStash), "--", root._dir])
+        _applyProc.run(["bash", "-c", UpdateScript.applyScript(withStash), "--", root._dir])
     }
 
     function applyUpdate() {

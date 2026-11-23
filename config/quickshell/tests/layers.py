@@ -24,8 +24,8 @@ Rules:
               the same folder is fine
   shell-c     no "-c" command element followed by string concatenation in
               the same array (data must go in as arguments; see #133)
-  size        files over budget: views 300 lines, services/state 350
-              (warning), any file over 500 (violation)
+  size        files over budget: views 300 lines, services/state and pure
+              .js modules 350 (warning), any file over 500 (violation)
 """
 import re
 import sys
@@ -150,7 +150,9 @@ def size_warnings() -> list:
         if f.suffix not in (".qml", ".js") or not f.is_file():
             continue
         n = len(f.read_text(errors="replace").splitlines())
-        budget = 350 if top(f) in ("services", "state", "core", "actions", "theme") else 300
+        # Pure .js modules are logic, not views: they get the service budget.
+        logic = f.suffix == ".js" or top(f) in ("services", "state", "core", "actions", "theme")
+        budget = 350 if logic else 300
         if budget < n <= 500:
             out.append(f"{rel(f)} ({n} > {budget})")
     return out

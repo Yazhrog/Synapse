@@ -4,7 +4,11 @@ import qs.src.features.bar
 import qs.src.features.bar.center
 import qs.src.features.clipboard
 import qs.src.features.dashboard
+import qs.src.features.dashboard.apps
 import qs.src.features.dashboard.config
+import qs.src.features.dashboard.home
+import qs.src.features.dashboard.tasks
+import qs.src.dialogs
 import qs.src.features.network
 import qs.src.features.notifications
 import qs.src.features.osd
@@ -28,8 +32,7 @@ import qs.src.surface.shape
 //   clock    shows the time or date: only comparable with a fake clock
 //
 // Layer-shell windows (ConfirmDialog, BatteryCriticalDialog, UpdatePopup)
-// can't be created offscreen; their cards join as plain components when
-// they are split (#116).
+// can't be created offscreen; their parts join as plain components.
 QtObject {
     id: root
 
@@ -58,7 +61,15 @@ QtObject {
         { name: "clipboard",          w: 410, h: 544, setup: _none(), component: clipboard },
         { name: "wallpaper",          w: 1010, h: 420, setup: _none(), component: wallpaper },
         { name: "osd",                w: 164, h: 276, setup: _none(), component: osd },
-        { name: "screenrec-options",  w: 0, h: 0,   setup: _none(), component: screenRecOptions }
+        { name: "screenrec-options",  w: 0, h: 0,   setup: _none(), component: screenRecOptions },
+
+        // ── Parts that only show with data or on interaction ─────────────────
+        { name: "player-card",        w: 360, h: 280, setup: _none(), component: playerCard },
+        { name: "task-date-picker",   w: 400, h: 400, setup: _none(), component: taskDatePicker,
+          props: { pickerTaskId: 0, pickerYear: 2025, pickerMonth: 5, pickerDay: 14, pickerHasTime: true } },
+        { name: "app-tile",           w: 400, h: 46,  setup: _none(), component: appTile },
+        { name: "clip-row",           w: 400, h: 0,   setup: _none(), component: clipRow },
+        { name: "update-header",      w: 340, h: 0,   setup: _none(), component: updateHeader }
     ]
 
 
@@ -128,4 +139,11 @@ QtObject {
     readonly property Component wallpaper:     Component { WallpaperContent { open: true } }
     readonly property Component osd:           Component { QuickControlContent {} }
     readonly property Component screenRecOptions: Component { ScreenRecOptions {} }
+    readonly property Component playerCard:     Component { PlayerCard {} }
+    readonly property Component taskDatePicker: Component { TaskDatePicker {} }
+    readonly property Component appTile:        Component {
+        AppTile { app: ({ id: "a", name: "Files", icon: "", exec: "", pinned: true }); selected: true }
+    }
+    readonly property Component clipRow:        Component { ClipRow { previewText: "Copied text"; isPinned: true } }
+    readonly property Component updateHeader:   Component { UpdateHeader {} }
 }

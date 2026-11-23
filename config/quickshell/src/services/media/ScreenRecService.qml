@@ -3,6 +3,8 @@ import QtQuick
 import Quickshell
 import qs.src.core
 import qs.src.services.data
+import qs.src.services.media.recorders
+import "screenrec.js" as ScreenRec
 // ScreenRecService — owns all screen recording state.
 //
 // Audio routing (fixed):
@@ -16,6 +18,8 @@ import qs.src.services.data
 // Notifications are sent via notify-send with action buttons (requires
 // libnotify ≥ 0.8 and a daemon that supports actions, e.g. dunst/mako).
 // Every path, geometry and device name goes to its command as an argument.
+// The recorder itself is a RecorderBackend (recorders/; wf-recorder today);
+// the pure parts (audio routing script, cava frames) are screenrec.js.
 //
 // `setupOpen` is the recording setup in the bar (capture / audio choice
 // before starting); ShellModes.screenRecord mirrors it for the surface.
@@ -65,11 +69,10 @@ Singleton {
     property bool   _discarding:    false // true when discardRecording() was called
     property bool   _usingNullSink: false // true while SynapseMixer is active
 
-    readonly property string elapsedDisplay: {
-        var m = Math.floor(elapsed / 60)
-        var s = elapsed % 60
-        return (m < 10 ? "0" : "") + m + ":" + (s < 10 ? "0" : "") + s
-    }
+    readonly property string elapsedDisplay: ScreenRec.formatElapsed(elapsed)
+
+    // The recorder (RecorderBackend strategy; a pref picks it once F14 adds more).
+    property RecorderBackend backend: WfRecorder {}
 
     property var _elapsedTimer: Timer {
         interval: 1000
@@ -122,61 +125,21 @@ Singleton {
     // Reads the resolved device name from stdout (last non-empty line).
     property Exec _audioDeviceProc: Exec {
         onFinished: {
-            const lines = lastOutput.split("\n").map(l => l.trim()).filter(l => l !== "")
-            if (lines.length > 0) root._resolvedAudioDevice = lines[lines.length - 1]
+            const device = ScreenRec.lastLine(lastOutput)
+            if (device !== "") root._resolvedAudioDevice = device
             root._launch()
         }
     }
 
     // ── Audio resolution ──────────────────────────────────────────────────────
-    //
-    // none:        call _launch() immediately — no audio device, no null sink.
-    // mic only:    get default PulseAudio source; pass straight to wf-recorder.
-    // system only: create SynapseMixer null sink, route sink.monitor into it.
-    // both:        create SynapseMixer null sink, route sink.monitor AND
-    //              default source (mic) into it via two loopback modules.
-    //
+    // No audio launches right away; otherwise the routing command (see
+    // ScreenRec.audioRouting) prints the device to record from.
     function _resolveAudio() {
         root._resolvedAudioDevice = ""
-        root._usingNullSink       = false
-
-        if (!root.audioMic && !root.audioSystem) {
-            // No audio — skip device resolution entirely
-            root._launch()
-            return
-        }
-
-        if (root.audioMic && !root.audioSystem) {
-            // Mic only — use the default source directly; no null sink needed
-            _audioDeviceProc.run(["pactl", "get-default-source"])
-            return
-        }
-
-        // System audio (alone or combined with mic) — needs SynapseMixer
-        root._usingNullSink = true
-
-        var script =
-            // Clean up any stale modules from a previous crashed session
-            "pactl unload-module module-loopback 2>/dev/null; " +
-            "pactl unload-module module-null-sink 2>/dev/null; " +
-            "sleep 0.3; " +
-            // Create the virtual mixer sink
-            "pactl load-module module-null-sink sink_name=SynapseMixer >/dev/null; " +
-            "sleep 0.3; " +
-            // Route system audio (default sink monitor) into SynapseMixer
-            "pactl load-module module-loopback " +
-            "sink=SynapseMixer source=$(pactl get-default-sink).monitor >/dev/null"
-
-        if (root.audioMic && root.audioSystem) {
-            // Also route mic into SynapseMixer
-            script += "; pactl load-module module-loopback " +
-                      "sink=SynapseMixer source=$(pactl get-default-source) >/dev/null"
-        }
-
-        // Emit the recording device name as the final stdout line
-        script += "; printf 'SynapseMixer.monitor\\n'"
-
-        _audioDeviceProc.run(["bash", "-c", script])
+        const routing = ScreenRec.audioRouting(root.audioMic, root.audioSystem)
+        root._usingNullSink = routing !== null && routing.usesNullSink
+        if (routing === null) root._launch()
+        else _audioDeviceProc.run(routing.command)
     }
 
     // ── Null-sink teardown — run after every recording ends ───────────────────
@@ -197,7 +160,7 @@ Singleton {
     // Saved recording: shows "View Folder" (xdg-open dir) and "Open in MPV".
     property Exec _notifyProc: Exec {}
 
-    // ── wf-recorder process ───────────────────────────────────────────────────
+    // ── Recorder process ───────────────────────────────────────────────────
     // Runs for the whole recording and logs all along: its output isn't kept.
     property Exec _recProc: Exec {
         discardOutput: true
@@ -243,31 +206,17 @@ Singleton {
         return dir !== "" ? dir : Paths.home + "/Videos/screen_recordings"
     }
 
-    // wf-recorder's arguments for this recording (and the file it writes).
+    // The recorder's arguments for this recording (and the file it writes).
     function _recorderArgs() {
         var ts  = Qt.formatDateTime(new Date(), "yyyyMMdd_HHmmss")
         root._currentFile = root.outputDir + "/" + ts + ".mp4"
-        var args = ["wf-recorder", "-c", "libx264",
-                    "-x", "yuv420p",
-                    "-r", "30",                       // Limit FPS to 30
-                    "-p", "preset=fast",              // Faster encoding speed
-                    "-p", "crf=26",                   // Lower quality/smaller size
-                    "-p", "profile=main",             // Maximum web/Discord compatibility
-                    "-p", "color_range=tv",           // Fixes washed out blacks/whites
-                    "-p", "colorspace=bt709",         // Tags the correct HD color matrix
-                    "-p", "color_primaries=bt709",
-                    "-p", "color_trc=bt709",
-                    "-f", root._currentFile]
-        if (root._pendingGeometry !== "")
-            args.push("-g", root._pendingGeometry)
-        // --audio=DEVICE (the wf-recorder convention)
-        if ((root.audioMic || root.audioSystem) && root._resolvedAudioDevice !== "")
-            args.push("--audio=" + root._resolvedAudioDevice)
-        return args
+        const audio = root.audioMic || root.audioSystem
+        return root.backend.command({ file: root._currentFile, geometry: root._pendingGeometry,
+                                      audioDevice: audio ? root._resolvedAudioDevice : "" })
     }
 
     function _launch() {
-        // $1 is the folder to create; the rest is wf-recorder's command line
+        // $1 is the folder to create; the rest is the recorder's command line
         _recProc.run(["bash", "-c", 'mkdir -p "$1" && shift && exec "$@"', "--", root.outputDir]
                      .concat(root._recorderArgs()))
         root.recording   = true
@@ -306,7 +255,7 @@ Singleton {
     function discardRecording() {
         root._discarding = true
         var fileToDelete = root._currentFile
-        // Kill wf-recorder; _recProc.onExited will see _discarding=true and skip
+        // Stop the recorder; _recProc.onFinished will see _discarding=true and skip
         // the saved notification. The timer below handles delete + notify.
         _sigProc.run()
         _discardTimer.fileToDelete = fileToDelete
@@ -340,32 +289,20 @@ Singleton {
         root.setupOpen = false
     }
 
-    property Exec _sigProc: Exec { command: ["pkill", "-INT", "wf-recorder"] }
+    property Exec _sigProc: Exec { command: root.backend.stopCommand }
 
-    // ── Cava — runs during recording, source mirrors wf-recorder's audio ──────
+    // ── Cava — runs during recording, source mirrors the recorder's audio ─────
     property Exec _cavaRecProc: Exec {
         stream: true
         onLine: line => {
             if (!root.recording) return
-            var t = line.trim()
-            if (t === "") return
-            if (t.endsWith(";")) t = t.slice(0, -1)
-            var parts = t.split(";")
-            if (parts.length !== 12) return
-            var bars = []
-            for (var i = 0; i < 12; i++) bars.push(parseInt(parts[i]) || 0)
-            root.audioBars = bars
+            const bars = ScreenRec.parseCavaLine(line)
+            if (bars) root.audioBars = bars
         }
     }
 
     function _startCavaWithSource(src) {
-        var config =
-            "[general]\nbars = 12\nframerate = 20\nnoise_reduction = 77\n\n" +
-            "[output]\nmethod = raw\nraw_target = /dev/stdout\n" +
-            "data_format = ascii\nascii_max_range = 100\n" +
-            "bar_delimiter = 59\nframe_delimiter = 10\n\n" +
-            "[input]\nmethod = pulse\nsource = " + src + "\n"
-
+        const config = ScreenRec.cavaConfig(src)
         _cavaRecProc.run(["bash", "-c",
             "mkdir -p /tmp/synapse && printf '%s\\n' \"$1\" > /tmp/synapse/cava_rec.ini && " +
             "exec cava -p /tmp/synapse/cava_rec.ini 2>/dev/null",

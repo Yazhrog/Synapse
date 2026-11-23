@@ -1,6 +1,7 @@
 import QtQuick
 import Quickshell
 import Quickshell.Wayland
+import qs.src.components.base
 import qs.src.services.system
 import qs.src.state
 import qs.src.theme
@@ -115,53 +116,7 @@ PanelWindow {
             spacing: 12
 
             // ── Header row ────────────────────────────────────────────────────
-            Row {
-                width:   parent.width
-                spacing: 10
-
-                Text {
-                    id: headerIcon
-                    anchors.verticalCenter: parent.verticalCenter
-                    font.pixelSize: 18
-                    text: UpdateService.updating || UpdateService.checking ? "󰑐"
-                        : UpdateService.updateSuccess                      ? "󰄬"
-                        : UpdateService.hasConflict                        ? "󰙨"
-                        : UpdateService.lastError !== ""                   ? "󰅙"
-                        : "󰑓"
-                    // Only the error state gets a distinct (destructive-style) color,
-                    // matching ConfirmDialog's convention of reserving red for the one
-                    // negative case rather than tinting every state a different hue.
-                    color: (UpdateService.lastError !== "" && !UpdateService.updating)
-                         ? "#cc3a3a"
-                         : Theme.color.accent
-                    Behavior on color { ColorAnimation { duration: 200 } }
-
-                    RotationAnimator {
-                        target:      headerIcon
-                        from:        0; to: 360
-                        duration:    900
-                        loops:       Animation.Infinite
-                        running:     UpdateService.updating || UpdateService.checking
-                        easing.type: Easing.Linear
-                        // Stopping leaves the icon at whatever angle it reached:
-                        // straighten it, or the next state's icon (✓, ✕) shows tilted.
-                        onRunningChanged: if (!running) headerIcon.rotation = 0
-                    }
-                }
-
-                Text {
-                    anchors.verticalCenter: parent.verticalCenter
-                    font.pixelSize: 13
-                    font.weight:    Font.DemiBold
-                    color:          Theme.color.text
-                    text: UpdateService.updating      ? "Updating…"
-                        : UpdateService.updateSuccess ? "Update Complete"
-                        : UpdateService.hasConflict   ? "Conflict Detected"
-                        : UpdateService.lastError !== "" && !UpdateService.updating
-                                                      ? "Update Failed"
-                        : "Synapse Update Available"
-                }
-            }
+            UpdateHeader { width: parent.width }
 
             Rectangle {
                 width: parent.width; height: 1
@@ -185,86 +140,23 @@ PanelWindow {
                     color: Qt.rgba(Theme.color.text.r, Theme.color.text.g, Theme.color.text.b, 0.55)
                 }
 
-                Column {
-                    width:   parent.width
-                    spacing: 4
-
-                    Repeater {
-                        model: Math.min(3, UpdateService.commitMessages.length)
-                        delegate: Row {
-                            spacing: 8
-                            Text {
-                                text:           "·"
-                                font.pixelSize: 11
-                                color:          Qt.rgba(Theme.color.accent.r, Theme.color.accent.g, Theme.color.accent.b, 0.60)
-                                anchors.verticalCenter: parent.verticalCenter
-                            }
-                            Text {
-                                width:          parent.parent.width - 18
-                                font.pixelSize: 11
-                                color:          Qt.rgba(Theme.color.text.r, Theme.color.text.g, Theme.color.text.b, 0.55)
-                                elide:          Text.ElideRight
-                                // Strip the short hash prefix from the commit line
-                                text: {
-                                    var m = UpdateService.commitMessages[index] || ""
-                                    var sp = m.indexOf(" ")
-                                    return sp >= 0 ? m.substring(sp + 1) : m
-                                }
-                            }
-                        }
-                    }
-
-                    Text {
-                        visible:        UpdateService.commitMessages.length > 3
-                        text:           "+ " + (UpdateService.commitMessages.length - 3) + " more"
-                        font.pixelSize: 10
-                        color:          Qt.rgba(Theme.color.accent.r, Theme.color.accent.g, Theme.color.accent.b, 0.40)
-                        leftPadding:    16
-                    }
-                }
+                UpdateCommitList { width: parent.width }
 
                 Row {
                     spacing: 8
-
-                    // Update Now
-                    Rectangle {
-                        width: 108; height: 30; radius: Theme.radius.card
-                        color: uH.hovered
-                            ? Qt.rgba(Theme.color.accent.r, Theme.color.accent.g, Theme.color.accent.b, 0.26)
-                            : Qt.rgba(Theme.color.accent.r, Theme.color.accent.g, Theme.color.accent.b, 0.13)
-                        border.color: Qt.rgba(Theme.color.accent.r, Theme.color.accent.g, Theme.color.accent.b, 0.40)
-                        border.width: 1
-                        Behavior on color { ColorAnimation { duration: 120 } }
-                        Text {
-                            anchors.centerIn: parent
-                            text:           "Update Now"
-                            font.pixelSize: 11; font.weight: Font.Medium
-                            color:          Theme.color.accent
-                        }
-                        HoverHandler { id: uH; cursorShape: Qt.PointingHandCursor }
-                        MouseArea { anchors.fill: parent; onClicked: UpdateService.applyUpdate() }
+                    PillButton {
+                        width: 108; label: "Update Now"; medium: true
+                        tint: Theme.color.accent; restAlpha: 0.13; hoverAlpha: 0.26; borderAlpha: 0.40
+                        textColor: Theme.color.accent
+                        onClicked: UpdateService.applyUpdate()
                     }
-
                     // Skip (dismiss this check)
-                    Rectangle {
-                        width: 58; height: 30; radius: Theme.radius.card
-                        color:        skH.hovered ? Qt.rgba(1,1,1,0.08) : Qt.rgba(1,1,1,0.04)
-                        border.color: Qt.rgba(1,1,1,0.09); border.width: 1
-                        Behavior on color { ColorAnimation { duration: 120 } }
-                        Text { anchors.centerIn: parent; text: "Skip"; font.pixelSize: 11; color: Qt.rgba(1,1,1,0.52) }
-                        HoverHandler { id: skH; cursorShape: Qt.PointingHandCursor }
-                        MouseArea { anchors.fill: parent; onClicked: UpdateService.dismiss() }
-                    }
-
+                    PillButton { width: 58; label: "Skip"; onClicked: UpdateService.dismiss() }
                     // Disable auto-update
-                    Rectangle {
-                        width: 82; height: 30; radius: Theme.radius.card
-                        color:        disH.hovered ? Qt.rgba(1,1,1,0.06) : "transparent"
-                        border.color: Qt.rgba(1,1,1,0.07); border.width: 1
-                        Behavior on color { ColorAnimation { duration: 120 } }
-                        Text { anchors.centerIn: parent; text: "Disable"; font.pixelSize: 11; color: Qt.rgba(1,1,1,0.28) }
-                        HoverHandler { id: disH; cursorShape: Qt.PointingHandCursor }
-                        MouseArea { anchors.fill: parent; onClicked: UpdateService.disableAutoUpdate() }
+                    PillButton {
+                        width: 82; label: "Disable"
+                        restAlpha: 0; hoverAlpha: 0.06; borderAlpha: 0.07; textColor: Qt.rgba(1, 1, 1, 0.28)
+                        onClicked: UpdateService.disableAutoUpdate()
                     }
                 }
             }
@@ -307,35 +199,13 @@ PanelWindow {
 
                 Row {
                     spacing: 8
-
-                    // Stash & Update
-                    Rectangle {
-                        width: 128; height: 30; radius: Theme.radius.card
-                        color: saH.hovered
-                            ? Qt.rgba(245/255, 196/255, 122/255, 0.22)
-                            : Qt.rgba(245/255, 196/255, 122/255, 0.10)
-                        border.color: Qt.rgba(245/255, 196/255, 122/255, 0.38); border.width: 1
-                        Behavior on color { ColorAnimation { duration: 120 } }
-                        Text {
-                            anchors.centerIn: parent
-                            text:           "Stash & Update"
-                            font.pixelSize: 11; font.weight: Font.Medium
-                            color:          "#f5c47a"
-                        }
-                        HoverHandler { id: saH; cursorShape: Qt.PointingHandCursor }
-                        MouseArea { anchors.fill: parent; onClicked: UpdateService.stashAndUpdate() }
+                    PillButton {
+                        width: 128; label: "Stash & Update"; medium: true
+                        tint: "#f5c47a"; restAlpha: 0.10; hoverAlpha: 0.22; borderAlpha: 0.38
+                        textColor: "#f5c47a"
+                        onClicked: UpdateService.stashAndUpdate()
                     }
-
-                    // Cancel
-                    Rectangle {
-                        width: 72; height: 30; radius: Theme.radius.card
-                        color:        cxH.hovered ? Qt.rgba(1,1,1,0.08) : Qt.rgba(1,1,1,0.04)
-                        border.color: Qt.rgba(1,1,1,0.09); border.width: 1
-                        Behavior on color { ColorAnimation { duration: 120 } }
-                        Text { anchors.centerIn: parent; text: "Cancel"; font.pixelSize: 11; color: Qt.rgba(1,1,1,0.52) }
-                        HoverHandler { id: cxH; cursorShape: Qt.PointingHandCursor }
-                        MouseArea { anchors.fill: parent; onClicked: UpdateService.dismiss() }
-                    }
+                    PillButton { width: 72; label: "Cancel"; onClicked: UpdateService.dismiss() }
                 }
             }
 
@@ -368,36 +238,14 @@ PanelWindow {
 
                 Row {
                     spacing: 8
-
                     // Reload Shell — hyprctl reload + quickshell restart
-                    Rectangle {
-                        width: 108; height: 30; radius: Theme.radius.card
-                        color: rlH.hovered
-                            ? Qt.rgba(Theme.color.accent.r, Theme.color.accent.g, Theme.color.accent.b, 0.26)
-                            : Qt.rgba(Theme.color.accent.r, Theme.color.accent.g, Theme.color.accent.b, 0.13)
-                        border.color: Qt.rgba(Theme.color.accent.r, Theme.color.accent.g, Theme.color.accent.b, 0.40)
-                        border.width: 1
-                        Behavior on color { ColorAnimation { duration: 120 } }
-                        Text {
-                            anchors.centerIn: parent
-                            text:           "Reload Shell"
-                            font.pixelSize: 11; font.weight: Font.Medium
-                            color:          Theme.color.accent
-                        }
-                        HoverHandler { id: rlH; cursorShape: Qt.PointingHandCursor }
-                        MouseArea { anchors.fill: parent; onClicked: UpdateService.reloadShell() }
+                    PillButton {
+                        width: 108; label: "Reload Shell"; medium: true
+                        tint: Theme.color.accent; restAlpha: 0.13; hoverAlpha: 0.26; borderAlpha: 0.40
+                        textColor: Theme.color.accent
+                        onClicked: UpdateService.reloadShell()
                     }
-
-                    // Dismiss
-                    Rectangle {
-                        width: 72; height: 30; radius: Theme.radius.card
-                        color:        dmH.hovered ? Qt.rgba(1,1,1,0.08) : Qt.rgba(1,1,1,0.04)
-                        border.color: Qt.rgba(1,1,1,0.09); border.width: 1
-                        Behavior on color { ColorAnimation { duration: 120 } }
-                        Text { anchors.centerIn: parent; text: "Dismiss"; font.pixelSize: 11; color: Qt.rgba(1,1,1,0.52) }
-                        HoverHandler { id: dmH; cursorShape: Qt.PointingHandCursor }
-                        MouseArea { anchors.fill: parent; onClicked: UpdateService.dismiss() }
-                    }
+                    PillButton { width: 72; label: "Dismiss"; onClicked: UpdateService.dismiss() }
                 }
             }
 
@@ -419,31 +267,13 @@ PanelWindow {
 
                 Row {
                     spacing: 8
-
-                    // Retry
-                    Rectangle {
-                        width: 72; height: 30; radius: Theme.radius.card
-                        color: rtH.hovered
-                            ? Qt.rgba(Theme.color.accent.r, Theme.color.accent.g, Theme.color.accent.b, 0.22)
-                            : Qt.rgba(Theme.color.accent.r, Theme.color.accent.g, Theme.color.accent.b, 0.09)
-                        border.color: Qt.rgba(Theme.color.accent.r, Theme.color.accent.g, Theme.color.accent.b, 0.30)
-                        border.width: 1
-                        Behavior on color { ColorAnimation { duration: 120 } }
-                        Text { anchors.centerIn: parent; text: "Retry"; font.pixelSize: 11; color: Theme.color.accent }
-                        HoverHandler { id: rtH; cursorShape: Qt.PointingHandCursor }
-                        MouseArea { anchors.fill: parent; onClicked: UpdateService.check() }
+                    PillButton {
+                        width: 72; label: "Retry"
+                        tint: Theme.color.accent; restAlpha: 0.09; hoverAlpha: 0.22; borderAlpha: 0.30
+                        textColor: Theme.color.accent
+                        onClicked: UpdateService.check()
                     }
-
-                    // Close
-                    Rectangle {
-                        width: 72; height: 30; radius: Theme.radius.card
-                        color:        clH.hovered ? Qt.rgba(1,1,1,0.08) : Qt.rgba(1,1,1,0.04)
-                        border.color: Qt.rgba(1,1,1,0.09); border.width: 1
-                        Behavior on color { ColorAnimation { duration: 120 } }
-                        Text { anchors.centerIn: parent; text: "Close"; font.pixelSize: 11; color: Qt.rgba(1,1,1,0.52) }
-                        HoverHandler { id: clH; cursorShape: Qt.PointingHandCursor }
-                        MouseArea { anchors.fill: parent; onClicked: UpdateService.dismiss() }
-                    }
+                    PillButton { width: 72; label: "Close"; onClicked: UpdateService.dismiss() }
                 }
             }
         }

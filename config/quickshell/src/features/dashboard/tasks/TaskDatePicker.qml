@@ -19,12 +19,6 @@ Item {
     property int    pickerTimeM:   0
     property var    pickerDays:    []
 
-    readonly property var _monthNames: [
-        "January","February","March","April","May","June",
-        "July","August","September","October","November","December"
-    ]
-    readonly property var _dowNames: ["Su","Mo","Tu","We","Th","Fr","Sa"]
-
     function close() { pickerTaskId = -1 }
 
     function open(taskId) {
@@ -127,107 +121,20 @@ Item {
             anchors { left: parent.left; right: parent.right; top: parent.top; margins: 12 }
             spacing: 8
 
-            // ── Month nav ──────────────────────────────────────────────────────
-            Item {
-                width: parent.width; height: 22
-                Text {
-                    anchors { left: parent.left; verticalCenter: parent.verticalCenter }
-                    text: "‹"; font.pixelSize: 17
-                    color: pmH.hovered ? Qt.rgba(1,1,1,0.85) : Qt.rgba(1,1,1,0.30)
-                    Behavior on color { ColorAnimation { duration: 80 } }
-                    HoverHandler { id: pmH; cursorShape: Qt.PointingHandCursor }
-                    MouseArea {
-                        anchors.fill: parent
-                        onClicked: {
-                            if (root.pickerMonth === 0) { root.pickerMonth = 11; root.pickerYear-- }
-                            else root.pickerMonth--
-                        }
-                    }
+            // ── Month, weekdays and day grid ───────────────────────────────────
+            TaskCalendar {
+                width: parent.width
+                year:  root.pickerYear
+                month: root.pickerMonth
+                day:   root.pickerDay
+                days:  root.pickerDays
+                onMonthStepped: delta => {
+                    const m = root.pickerMonth + delta
+                    if (m < 0)       { root.pickerMonth = 11; root.pickerYear-- }
+                    else if (m > 11) { root.pickerMonth = 0;  root.pickerYear++ }
+                    else root.pickerMonth = m
                 }
-                Text {
-                    anchors.centerIn: parent
-                    text:  root._monthNames[root.pickerMonth].substring(0,3) + "  " + root.pickerYear
-                    color: Theme.color.text; font.pixelSize: 11; font.weight: Font.DemiBold
-                }
-                Text {
-                    anchors { right: parent.right; verticalCenter: parent.verticalCenter }
-                    text: "›"; font.pixelSize: 17
-                    color: nmH.hovered ? Qt.rgba(1,1,1,0.85) : Qt.rgba(1,1,1,0.30)
-                    Behavior on color { ColorAnimation { duration: 80 } }
-                    HoverHandler { id: nmH; cursorShape: Qt.PointingHandCursor }
-                    MouseArea {
-                        anchors.fill: parent
-                        onClicked: {
-                            if (root.pickerMonth === 11) { root.pickerMonth = 0; root.pickerYear++ }
-                            else root.pickerMonth++
-                        }
-                    }
-                }
-            }
-
-            // ── Day-of-week headers ────────────────────────────────────────────
-            Item {
-                width: parent.width; height: 14
-                Row {
-                    anchors.fill: parent
-                    Repeater {
-                        model: root._dowNames
-                        delegate: Text {
-                            width: Math.floor(parent.parent.width / 7)
-                            horizontalAlignment: Text.AlignHCenter
-                            text: modelData; font.pixelSize: 8; font.weight: Font.Bold
-                            color: Qt.rgba(1,1,1,0.18)
-                        }
-                    }
-                }
-            }
-
-            // ── Day grid ──────────────────────────────────────────────────────
-            Grid {
-                id: dayGrid
-                width: parent.width; columns: 7; rows: 6
-                readonly property real cW: width / 7
-                readonly property real cH: 24
-
-                Repeater {
-                    model: root.pickerDays
-                    delegate: Item {
-                        required property var modelData
-                        required property int index
-                        width: dayGrid.cW; height: dayGrid.cH
-
-                        readonly property bool isSel: modelData.cur && modelData.n === root.pickerDay
-                        readonly property bool isNow: {
-                            var n = new Date()
-                            return modelData.cur &&
-                                   modelData.n   === n.getDate() &&
-                                   root.pickerMonth === n.getMonth() &&
-                                   root.pickerYear  === n.getFullYear()
-                        }
-
-                        Rectangle {
-                            anchors.centerIn: parent
-                            width: Math.min(dayGrid.cW, dayGrid.cH) - 2; height: width; radius: width / 2
-                            color: isSel
-                                ? Qt.rgba(Theme.color.accent.r, Theme.color.accent.g, Theme.color.accent.b, 0.82)
-                                : isNow ? Qt.rgba(Theme.color.accent.r, Theme.color.accent.g, Theme.color.accent.b, 0.12)
-                                        : dayH.hovered && modelData.cur ? Qt.rgba(1,1,1,0.08) : "transparent"
-                            border.color: isNow && !isSel ? Qt.rgba(Theme.color.accent.r, Theme.color.accent.g, Theme.color.accent.b, 0.35) : "transparent"
-                            border.width: 1
-                            Behavior on color { ColorAnimation { duration: 80 } }
-
-                            Text {
-                                anchors.centerIn: parent
-                                text: modelData.n
-                                font.pixelSize: 9; font.weight: isSel ? Font.Bold : Font.Normal
-                                color: isSel ? Theme.color.background
-                                    : modelData.cur ? Qt.rgba(1,1,1,0.78) : Qt.rgba(1,1,1,0.14)
-                            }
-                        }
-                        HoverHandler { id: dayH; enabled: modelData.cur; cursorShape: Qt.PointingHandCursor }
-                        TapHandler  { enabled: modelData.cur; onTapped: root.pickerDay = modelData.n }
-                    }
-                }
+                onDayPicked: day => root.pickerDay = day
             }
 
             Rectangle { width: parent.width; height: 1; color: Qt.rgba(1,1,1,0.08) }
@@ -251,72 +158,20 @@ Item {
                         spacing: 4; visible: root.pickerHasTime
                         anchors.verticalCenter: parent.verticalCenter
 
-                        // ── Hour col ──────────────────────────────────────────
-                        Column {
-                            spacing: 2; anchors.verticalCenter: parent.verticalCenter
-                            Rectangle {
-                                width: 26; height: 18; radius: 4
-                                color: hUpH.hovered ? Qt.rgba(1,1,1,0.12) : Qt.rgba(1,1,1,0.05)
-                                border.color: Qt.rgba(1,1,1,0.10); border.width: 1
-                                Behavior on color { ColorAnimation { duration: 80 } }
-                                Text { anchors.centerIn: parent; text: "▲"; font.pixelSize: 7; color: Qt.rgba(1,1,1,0.50) }
-                                HoverHandler { id: hUpH; cursorShape: Qt.PointingHandCursor }
-                                MouseArea { anchors.fill: parent; onClicked: root.pickerTimeH = (root.pickerTimeH + 1) % 24 }
-                            }
-                            Rectangle {
-                                width: 26; height: 24; radius: 4
-                                color: Qt.rgba(1,1,1,0.07); border.color: Qt.rgba(1,1,1,0.10); border.width: 1
-                                Text {
-                                    anchors.centerIn: parent
-                                    text: TaskService.zp2(root.pickerTimeH)
-                                    font.pixelSize: 13; font.family: "JetBrainsMono Nerd Font"; font.weight: Font.Bold
-                                    color: Theme.color.accent
-                                }
-                            }
-                            Rectangle {
-                                width: 26; height: 18; radius: 4
-                                color: hDnH.hovered ? Qt.rgba(1,1,1,0.12) : Qt.rgba(1,1,1,0.05)
-                                border.color: Qt.rgba(1,1,1,0.10); border.width: 1
-                                Behavior on color { ColorAnimation { duration: 80 } }
-                                Text { anchors.centerIn: parent; text: "▼"; font.pixelSize: 7; color: Qt.rgba(1,1,1,0.50) }
-                                HoverHandler { id: hDnH; cursorShape: Qt.PointingHandCursor }
-                                MouseArea { anchors.fill: parent; onClicked: root.pickerTimeH = (root.pickerTimeH + 23) % 24 }
-                            }
+                        TimeSpinner {
+                            anchors.verticalCenter: parent.verticalCenter
+                            text:   TaskService.zp2(root.pickerTimeH)
+                            onUp:   root.pickerTimeH = (root.pickerTimeH + 1) % 24
+                            onDown: root.pickerTimeH = (root.pickerTimeH + 23) % 24
                         }
 
                         Text { anchors.verticalCenter: parent.verticalCenter; text: ":"; font.pixelSize: 15; font.weight: Font.Bold; color: Theme.color.text }
 
-                        // ── Minute col ────────────────────────────────────────
-                        Column {
-                            spacing: 2; anchors.verticalCenter: parent.verticalCenter
-                            Rectangle {
-                                width: 26; height: 18; radius: 4
-                                color: mUpH.hovered ? Qt.rgba(1,1,1,0.12) : Qt.rgba(1,1,1,0.05)
-                                border.color: Qt.rgba(1,1,1,0.10); border.width: 1
-                                Behavior on color { ColorAnimation { duration: 80 } }
-                                Text { anchors.centerIn: parent; text: "▲"; font.pixelSize: 7; color: Qt.rgba(1,1,1,0.50) }
-                                HoverHandler { id: mUpH; cursorShape: Qt.PointingHandCursor }
-                                MouseArea { anchors.fill: parent; onClicked: root.pickerTimeM = (root.pickerTimeM + 5) % 60 }
-                            }
-                            Rectangle {
-                                width: 26; height: 24; radius: 4
-                                color: Qt.rgba(1,1,1,0.07); border.color: Qt.rgba(1,1,1,0.10); border.width: 1
-                                Text {
-                                    anchors.centerIn: parent
-                                    text: TaskService.zp2(root.pickerTimeM)
-                                    font.pixelSize: 13; font.family: "JetBrainsMono Nerd Font"; font.weight: Font.Bold
-                                    color: Theme.color.accent
-                                }
-                            }
-                            Rectangle {
-                                width: 26; height: 18; radius: 4
-                                color: mDnH.hovered ? Qt.rgba(1,1,1,0.12) : Qt.rgba(1,1,1,0.05)
-                                border.color: Qt.rgba(1,1,1,0.10); border.width: 1
-                                Behavior on color { ColorAnimation { duration: 80 } }
-                                Text { anchors.centerIn: parent; text: "▼"; font.pixelSize: 7; color: Qt.rgba(1,1,1,0.50) }
-                                HoverHandler { id: mDnH; cursorShape: Qt.PointingHandCursor }
-                                MouseArea { anchors.fill: parent; onClicked: root.pickerTimeM = (root.pickerTimeM + 55) % 60 }
-                            }
+                        TimeSpinner {
+                            anchors.verticalCenter: parent.verticalCenter
+                            text:   TaskService.zp2(root.pickerTimeM)
+                            onUp:   root.pickerTimeM = (root.pickerTimeM + 5) % 60
+                            onDown: root.pickerTimeM = (root.pickerTimeM + 55) % 60
                         }
 
                         // Clear time ✕

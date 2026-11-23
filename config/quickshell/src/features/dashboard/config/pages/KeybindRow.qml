@@ -174,95 +174,42 @@ Item {
             }
 
             // Clear bind
-            Rectangle {
-                visible: br._pillText !== "Unbound"
-                width: 22; height: 22; radius: 6
-                color: _clrH.hovered ? Qt.rgba(1,1,1,0.09) : "transparent"
-                Behavior on color { ColorAnimation { duration: 100 } }
-                Text { anchors.centerIn: parent; text: "󰩺"; font.pixelSize: 11
-                    color: _clrH.hovered ? "#ff4444" : Qt.rgba(1,1,1,0.28) }
-                HoverHandler { id: _clrH; cursorShape: Qt.PointingHandCursor }
-                MouseArea {
-                    anchors.fill: parent
-                    enabled: br._interactive
-                    onClicked: {
-                        br.page.addPending(br.action, "", "")
-                    }
-                }
+            KeybindIconBtn {
+                visible:     br._pillText !== "Unbound"
+                icon:        "󰩺"
+                hoverColor:  "#ff4444"
+                interactive: br._interactive
+                onClicked:   br.page.addPending(br.action, "", "")
             }
 
             // Reset to default
-            Rectangle {
-                visible: !br._isDefault
-                width: 22; height: 22; radius: 6
-                color: _rstH.hovered ? Qt.rgba(1,1,1,0.09) : "transparent"
-                Behavior on color { ColorAnimation { duration: 100 } }
-                Text { anchors.centerIn: parent; text: "↺"; font.pixelSize: 11
-                    color: _rstH.hovered ? Theme.color.accent : Qt.rgba(1,1,1,0.28) }
-                HoverHandler { id: _rstH; cursorShape: Qt.PointingHandCursor }
-                MouseArea {
-                    anchors.fill: parent
-                    enabled: br._interactive
-                    onClicked: {
-                        if (br._isPending) {
-                            // If the saved value is already default, just drop pending
-                            var def = KeybindService._defaults[br.action]
-                            if (br._b && br._b.mods === def.mods && br._b.key === def.key)
-                                br.page.clearPending(br.action)
-                            else
-                                br.page.addPending(br.action, def.mods, def.key)
-                        } else {
-                            // No pending → immediate save (reset is always safe)
-                            KeybindService.resetBinding(br.action)
-                        }
+            KeybindIconBtn {
+                visible:     !br._isDefault
+                icon:        "↺"
+                hoverColor:  Theme.color.accent
+                interactive: br._interactive
+                onClicked: {
+                    if (br._isPending) {
+                        // If the saved value is already default, just drop pending
+                        var def = KeybindService._defaults[br.action]
+                        if (br._b && br._b.mods === def.mods && br._b.key === def.key)
+                            br.page.clearPending(br.action)
+                        else
+                            br.page.addPending(br.action, def.mods, def.key)
+                    } else {
+                        // No pending → immediate save (reset is always safe)
+                        KeybindService.resetBinding(br.action)
                     }
                 }
             }
 
             // Binding pill — amber tint when a pending change is staged
-            Rectangle {
-                height: 24; radius: 6
-                width:  _pillT.implicitWidth + 18
-                
-                color: br._isUnbound
-                    ? Qt.rgba(1, 1, 1, 0.04)
-                    : ((_pillH.hovered && br._interactive)
-                        ? Qt.rgba(Theme.color.accent.r, Theme.color.accent.g, Theme.color.accent.b, 0.16)
-                        : Qt.rgba(Theme.color.accent.r, Theme.color.accent.g, Theme.color.accent.b, 0.08))
-                        
-                border.color: br._isUnbound
-                    ? Qt.rgba(1, 1, 1, 0.1)
-                    : (br._isPending
-                        ? Qt.rgba(1.0, 0.74, 0.22, 0.55)
-                        : Qt.rgba(Theme.color.accent.r, Theme.color.accent.g, Theme.color.accent.b, 0.24))
-                        
-                border.width: 1
-                
-                opacity: br._interactive ? (br._isUnbound ? 0.7 : 1.0) : 0.4
-                
-                Behavior on color        { ColorAnimation { duration: 100 } }
-                Behavior on border.color { ColorAnimation { duration: 150 } }
-                Behavior on opacity      { NumberAnimation { duration: 120 } }
-
-                Text {
-                    id: _pillT
-                    anchors.centerIn: parent
-                    text:           br._pillText
-                    font.pixelSize: 10; font.family: "JetBrainsMono Nerd Font"
-                    font.italic:    br._isUnbound 
-                    
-                    color: br._isUnbound 
-                        ? Qt.rgba(1, 1, 1, 0.45) 
-                        : (br._isPending ? Qt.rgba(1.0, 0.74, 0.22, 1.0) : Theme.color.accent)
-                        
-                    Behavior on color { ColorAnimation { duration: 150 } }
-                }
-                HoverHandler { id: _pillH; cursorShape: br._interactive ? Qt.PointingHandCursor : Qt.ArrowCursor }
-                MouseArea {
-                    anchors.fill: parent
-                    enabled: br._interactive
-                    onClicked: br.requestCapture()
-                }
+            KeybindPill {
+                text:        br._pillText
+                unbound:     br._isUnbound
+                pending:     br._isPending
+                interactive: br._interactive
+                onClicked:   br.requestCapture()
             }
         }
     }
