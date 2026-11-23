@@ -1,26 +1,20 @@
 import QtQuick
 import qs.src.components.base
-import qs.src.features.dashboard.config.pages
 import qs.src.theme
 Item {
     id: root
 
     property string _page: "general"
 
+    ConfigTabs { id: registry }
+
     // First tab, every page scrolled to the top (the dashboard closed).
     function reset() {
-        _page = _tabs[0].key
-        generalPage.reset(); dataPage.reset(); keybindsPage.reset()
+        _page = registry.tabs[0].key
+        stack.resetAll()
     }
 
-    readonly property var _tabs: [
-        { key: "general",    icon: "󰒓", label: "General"           },
-        { key: "appearance", icon: "󰏘", label: "Appearance"        },
-        { key: "layout",     icon: "󰕰", label: "Layout & Behavior" },
-        { key: "data",       icon: "󰋊", label: "Data & Storage"    },
-        { key: "keybinds",   icon: "󰌌", label: "Keybinds"          },
-        { key: "misc",       icon: "󰇘", label: "Misc"               },
-    ]
+    readonly property var _tabs: Array.from(registry.tabs, t => ({ key: t.key, icon: t.icon, label: t.label }))
 
     Row {
         anchors {
@@ -61,35 +55,11 @@ Item {
             width:  parent.width - Math.floor((parent.width - parent.spacing) * 0.30) - parent.spacing
             height: parent.height
 
-            Item {
+            PageStack {
+                id: stack
                 anchors.fill: parent
-                visible: root._page === "general"
-                GeneralPage { id: generalPage; anchors.fill: parent }
-            }
-            Item {
-                anchors.fill: parent
-                visible: root._page === "appearance"
-                AppearancePage { anchors.fill: parent }
-            }
-            Item {
-                anchors.fill: parent
-                visible: root._page === "layout"
-                Text { anchors.centerIn: parent; text: "Layout & Behavior Coming Soon!"; font.pixelSize: 13; color: Qt.rgba(1,1,1,0.12) }
-            }
-            Item {
-                anchors.fill: parent
-                visible: root._page === "data"
-                DataPage { id: dataPage; anchors.fill: parent }
-            }
-            Item {
-                anchors.fill: parent
-                visible: root._page === "keybinds"
-                KeybindsPage { id: keybindsPage; anchors.fill: parent }
-            }
-            Item {
-                anchors.fill: parent
-                visible: root._page === "misc"
-                MiscPage { anchors.fill: parent }
+                pages:   registry.tabs
+                current: root._page
             }
         }
     }

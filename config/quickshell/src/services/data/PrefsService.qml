@@ -56,7 +56,12 @@ Singleton {
         cornerRadius:         17,
         // "frame" (notches joined by the borders), "bar" (full-width top
         // bar, no borders) or "pills" (floating capsules).
-        barStyle:             "frame"
+        barStyle:             "frame",
+        // Bar widget order per zone, { left: [keys], center: [keys], right:
+        // [keys] } (features/bar/BarWidgets.qml keys). A zone that isn't
+        // listed shows every widget of the zone in its default order; the
+        // layout picker comes with #23.
+        barLayout:            ({})
     })
 
     // ── Preferences ────────────────────────────────────────────────────────
@@ -76,6 +81,7 @@ Singleton {
     property alias borderWidth:                 adapter.borderWidth
     property alias cornerRadius:                adapter.cornerRadius
     property alias barStyle:                    adapter.barStyle
+    property alias barLayout:                   adapter.barLayout
 
     // True once the file has been read (or created). Services that act on a
     // pref at startup should wait for it.
@@ -138,6 +144,7 @@ Singleton {
             property int    borderWidth:                 root.defaults.borderWidth
             property int    cornerRadius:                root.defaults.cornerRadius
             property string barStyle:                    root.defaults.barStyle
+            property var    barLayout:                   root.defaults.barLayout
         }
     }
 

@@ -1,5 +1,7 @@
 import Quickshell
 import QtQuick
+import qs.src.actions
+import qs.src.features.bar
 import qs.src.services.data
 import qs.src.services.desktop
 import qs.src.services.media
@@ -10,13 +12,12 @@ import qs.src.state
 import qs.src.surface
 // App — the composition root: starts the services that must run from boot
 // and creates the per-screen shell. Everything that wires features into the
-// framework lives in this folder: the popup manifest here, the action
-// manifest with #145.
+// framework lives in this folder: the popup, action and bar manifests.
 Scope {
     // Singletons are created on first use: these need to run from startup.
     property var _keybinds:   KeybindService
     property var _updater:    UpdateService
-    property var _ipc:        IpcManager
+    property var _ipc:        IpcBridge
     property var _battery:    BatteryWarningService
     property var _focusMode:  FocusModeService
     property var _appearance: AppearanceService
@@ -46,6 +47,14 @@ Scope {
     PopupManifest { id: manifest }
     Binding { target: SurfaceState; property: "popups"; value: manifest.popups }
 
+    // Every action (the popups' toggles are generated from their specs):
+    // IpcBridge creates the IPC handlers from the registry.
+    ActionManifest { id: actionManifest; popups: manifest.popups }
+    Binding { target: Actions; property: "actions"; value: actionManifest.actions }
+
+    // The bar's widgets, by zone (the surface never imports them either).
+    BarWidgets { id: barWidgets }
+
     // One Dynamic Surface per screen (#37): frame, bar and every popup.
-    ShellHost { manifest: manifest }
+    ShellHost { manifest: manifest; barWidgets: barWidgets.widgets }
 }

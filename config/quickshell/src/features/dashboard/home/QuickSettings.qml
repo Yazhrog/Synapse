@@ -1,18 +1,13 @@
 import QtQuick
 import qs.src.components.base
 import qs.src.components.inputs
-import qs.src.services.desktop
 import qs.src.services.media
-import qs.src.services.network
-import qs.src.services.notifications
 import qs.src.state
 import qs.src.theme
 // QuickSettings — the dashboard's right column: brightness slider and the
 // scrollable grid of toggle tiles, plus the shader picker of the Filter tile.
-// Layout only: the state and actions live in BrightnessService,
-// QuickToggleService, WifiService, BluetoothService, HotspotService,
-// ScreenFilterService, ShellModes,
-// FocusModeService and ScreenRecService.
+// Layout only: the tiles come from QuickTiles, the state and actions from
+// the services they bind.
 
 StatCard {
     id: root
@@ -21,7 +16,9 @@ StatCard {
 
     property bool filterPickerOpen: false
 
-    function _openFilterPicker() {
+    QuickTiles { id: tiles }
+
+    function openFilterPicker() {
         ScreenFilterService.refreshList()
         filterPickerOpen = true
     }
@@ -70,81 +67,18 @@ StatCard {
 
                     readonly property real btnW: (width - spacing) / 2
                     readonly property real btnH: btnW * 0.85
-                    readonly property bool wifiShown: WifiService.radioOn && !HotspotService.on
 
-                    QuickToggleTile {
-                        width: tileGrid.btnW; height: tileGrid.btnH
-                        on: tileGrid.wifiShown
-                        icon: tileGrid.wifiShown ? "󰤨" : "󰤭"; label: "Wi-Fi"
-                        sublabel: tileGrid.wifiShown && WifiService.ssid !== ""
-                                  ? WifiService.ssid
-                                  : (HotspotService.on ? "Used by Hotspot" : "")
-                        onToggled: WifiService.toggleRadio()
-                    }
-                    QuickToggleTile {
-                        width: tileGrid.btnW; height: tileGrid.btnH
-                        on: BluetoothService.powered
-                        icon: BluetoothService.powered ? "󰂱" : "󰂲"; label: "Bluetooth"
-                        sublabel: BluetoothService.powered ? BluetoothService.connectedName : ""
-                        onToggled: BluetoothService.togglePower()
-                    }
-                    QuickToggleTile {
-                        width: tileGrid.btnW; height: tileGrid.btnH
-                        on: QuickToggleService.airplaneOn; icon: "󰀝"; label: "Airplane Mode"
-                        onToggled: QuickToggleService.toggleAirplane()
-                    }
-                    QuickToggleTile {
-                        width: tileGrid.btnW; height: tileGrid.btnH
-                        on: HotspotService.on || HotspotService.busy
-                        icon: "󰀃"; label: "Hotspot"
-                        sublabel: HotspotService.label
-                        onToggled: HotspotService.toggle()
-                    }
-                    QuickToggleTile {
-                        width: tileGrid.btnW; height: tileGrid.btnH
-                        on: QuickToggleService.nightLightOn; icon: "󰖐"; label: "Night Light"
-                        onToggled: QuickToggleService.toggleNightLight()
-                    }
-                    QuickToggleTile {
-                        width: tileGrid.btnW; height: tileGrid.btnH
-                        on: QuickToggleService.caffeineOn; icon: "󰅶"; label: "Caffeine"
-                        onToggled: QuickToggleService.toggleCaffeine()
-                    }
-                    QuickToggleTile {
-                        width: tileGrid.btnW; height: tileGrid.btnH
-                        on: ShellModes.focusMode
-                        icon: ShellModes.focusMode ? "󱃕" : "󰍻"; label: "Focus Mode"
-                        onToggled: FocusModeService.toggle()
-                    }
-                    QuickToggleTile {
-                        width: tileGrid.btnW; height: tileGrid.btnH
-                        on: ShellModes.dnd; icon: ShellModes.dnd ? "󰂛" : "󰂚"
-                        label: "Do Not Disturb"
-                        onToggled: NotificationService.dnd = !NotificationService.dnd
-                    }
-                    QuickToggleTile {
-                        width: tileGrid.btnW; height: tileGrid.btnH
-                        on:    ShellModes.screenRecord || ScreenRecService.recording
-                        icon:  ScreenRecService.recording ? "⏹" : "󰻂"
-                        label: ScreenRecService.recording ? "Recording" : "Screen Capture"
-                        onToggled: {
-                            if (ScreenRecService.recording) {
-                                ScreenRecService.stopRecording()
-                            } else if (ShellModes.screenRecord) {
-                                ScreenRecService.cancelSetup()
-                            } else {
-                                Popups.closeAll()
-                                ScreenRecService.openSetup()
-                            }
+                    Repeater {
+                        model: tiles.tiles
+                        delegate: QuickToggleTile {
+                            required property var modelData
+                            width: tileGrid.btnW; height: tileGrid.btnH
+                            on:       modelData.on
+                            icon:     modelData.icon
+                            label:    modelData.label
+                            sublabel: modelData.sublabel
+                            onToggled: modelData.toggle(root)
                         }
-                    }
-                    // Filter tile — opens the picker, does not toggle directly
-                    QuickToggleTile {
-                        width: tileGrid.btnW; height: tileGrid.btnH
-                        on:       ScreenFilterService.current !== ""
-                        icon:     "󱡓"; label: "Filter"
-                        sublabel: ScreenFilterService.current
-                        onToggled: root._openFilterPicker()
                     }
                 }
             }

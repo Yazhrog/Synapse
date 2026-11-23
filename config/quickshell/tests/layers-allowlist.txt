@@ -6,6 +6,5 @@ component	components/settings/SettingsRow.qml
 component	components/settings/SettingsSlider.qml
 component	components/settings/SettingsTextField.qml
 component	components/settings/SettingsToggle.qml
-host	surface/SurfaceBar.qml
 io	services/data/PrefsService.qml
 io	theme/ColorLoader.qml

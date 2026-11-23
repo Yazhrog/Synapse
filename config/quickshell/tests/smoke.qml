@@ -4,6 +4,7 @@
 // be created offscreen, so their contents are loaded on their own here.
 import Quickshell
 import QtQuick
+import qs.src.actions
 import qs.src.components.feedback
 import qs.src.core
 import qs.src.features.audio
@@ -28,7 +29,7 @@ import qs.src.surface.shape
 import qs.src.theme
 ShellRoot {
     property var _singletons: [Theme, Paths, PrefsService, SurfaceState, Popups, ToastState,
-                               ShellModes, KeybindService, UpdateService, IpcManager,
+                               ShellModes, KeybindService, UpdateService, IpcBridge, Actions,
                                FocusModeService, CavaService, AppearanceService, DataService, ClockService,
                                BrightnessService, QuickToggleService, HotspotService, ScreenFilterService,
                                TaskService, WifiService, BluetoothService, VpnService,
