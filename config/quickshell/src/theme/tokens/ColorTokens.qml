@@ -33,8 +33,9 @@ QtObject {
     readonly property color fillSubtle:  alpha(text, 0.04)   // resting card / row fill
     readonly property color fillHover:   alpha(text, 0.08)
     readonly property color fillPressed: alpha(text, 0.12)
-    // Behind a modal; dark in both palettes, so it is the background, not the foreground.
-    readonly property color scrim:       alpha(background, 0.6)
+    // Behind a modal. Not a state layer: it dims whatever the palette, so it is
+    // a fixed black (the views' "#99000000"), neither foreground nor background.
+    readonly property color scrim:       Qt.rgba(0, 0, 0, 0.6)
 
     // ── Workspace indicator ──────────────────────────────────────────────────
     readonly property color wsBackground: "#20000000"

@@ -41,6 +41,7 @@ ShellRoot {
                   && Theme.motion.emphasized === Easing.InOutCubic, "")
             check("surface = background × opacity", same(c.surface, c.background), c.surface)
             check("state layer from the foreground", same(c.hairline, Qt.rgba(c.text.r, c.text.g, c.text.b, 0.07)), c.hairline)
+            check("scrim is black", same(c.scrim, Qt.rgba(0, 0, 0, 0.6)), c.scrim)
             check("alpha()", same(c.alpha("#ff0000", 0.5), Qt.rgba(1, 0, 0, 0.5)), c.alpha("#ff0000", 0.5))
             seed.setText(JSON.stringify({ background: "#101010", active: "#ff8800", text: "#eeeeee",
                                           subtext: "#aaaaaa" }))
