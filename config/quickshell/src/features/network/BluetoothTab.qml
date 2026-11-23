@@ -13,14 +13,13 @@ Item {
     property string pairingMac: ""
     property string removeMac:  ""
 
-    Connections {
-        target: Popups
-        function onNetworkOpenChanged() {
-            if (Popups.networkOpen && root.visible) {
-                root.pairingMac = ""
-                root.removeMac  = ""
-                BluetoothService.refresh()
-            }
+    PopupLifecycle {
+        popup: "network"
+        onOpening: {
+            if (!root.visible) return
+            root.pairingMac = ""
+            root.removeMac  = ""
+            BluetoothService.refresh()
         }
     }
 

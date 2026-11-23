@@ -21,12 +21,14 @@ Column {
         if (modelData.confirm) {
             // Close menu first, then show confirm dialog
             Popups.closeAll()
-            Popups.showConfirm(
-                modelData.title,
-                modelData.message,
-                modelData.label2,
-                modelData.action
-            )
+            const action = modelData.action
+            Dialogs.confirm({
+                title:    modelData.title,
+                message:  modelData.message,
+                label:    modelData.label2,
+                icon:     modelData.dialogIcon,
+                onAccept: () => PowerService.run(action)
+            })
         } else {
             root.runDirect(modelData.action)
         }
@@ -70,6 +72,7 @@ Column {
             title:   "Log Out?",
             message: "You will be logged out of your session. Save your work before continuing.",
             label2:  "Log Out",
+            dialogIcon: "⎋",
             action:  "logout"
         },
         {
@@ -80,6 +83,7 @@ Column {
             title:   "Reboot?",
             message: "Your computer will restart. Save your work before continuing.",
             label2:  "Reboot",
+            dialogIcon: "↺",
             action:  "reboot"
         },
         {
@@ -90,6 +94,7 @@ Column {
             title:   "Shut Down?",
             message: "Your computer will power off. Save your work before continuing.",
             label2:  "Shut Down",
+            dialogIcon: "⏻",
             action:  "shutdown"
         },
     ]

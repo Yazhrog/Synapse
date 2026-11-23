@@ -175,16 +175,15 @@ Item {
     }
 
     // ── Reset state when dashboard closes ─────────────────────────────────────
-    Connections {
-        target: Popups
-        function onDashboardOpenChanged() {
-            if (!Popups.dashboardOpen) {
-                root.delConfirmId    = -1
-                root.clearConfirmCol = -1
-                root.selectedId   = -1
-                root.keyNav       = false
-                datePicker.close()
-            }
+    PopupLifecycle {
+        popup: "dashboard"
+        onClosing: {
+            if (Popups.dashboardOpen) return   // moved to another screen
+            root.delConfirmId    = -1
+            root.clearConfirmCol = -1
+            root.selectedId   = -1
+            root.keyNav       = false
+            datePicker.close()
         }
     }
 
