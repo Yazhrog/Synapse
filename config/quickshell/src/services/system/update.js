@@ -1,5 +1,5 @@
 // update.js — the pure parts of UpdateService: the pull-and-relink script and
-// the reading of its output. Pure JS, tested by tests/unit/update.test.mjs.
+// the reading of its output, and the version an update brings. Pure JS, tested by tests/unit/update.test.mjs.
 
 // The apply script: pull → relink → report. One shell script so the relink
 // can't be skipped: a pull that adds a new config file needs a symlink created
@@ -85,4 +85,35 @@ function parseApplyResult(text) {
              linkFailed:       text.indexOf("LINK_FAILED") >= 0 }
 }
 
-if (typeof module !== "undefined") module.exports = { applyScript, csvMarker, parseApplyResult }
+// Prints the installed VERSION (HEAD's) and origin/main's on two lines, an
+// empty line for a side without the file (installs from before it existed).
+// Run after the fetch; takes the repo path as $1.
+const versionScript =
+    "printf '%s\\n%s\\n' " +
+    "\"$(git -C \"$1\" show HEAD:VERSION 2>/dev/null)\" " +
+    "\"$(git -C \"$1\" show origin/main:VERSION 2>/dev/null)\""
+
+// One VERSION file's text → "X.Y.Z", or "" if it isn't a plain version.
+function readVersion(text) {
+    const v = (text || "").trim()
+    return /^\d+\.\d+\.\d+$/.test(v) ? v : ""
+}
+
+// versionScript's output → { installed, incoming } ("" when missing or invalid)
+function parseVersions(text) {
+    const lines = (text || "").split("\n")
+    return { installed: readVersion(lines[0]), incoming: readVersion(lines[1]) }
+}
+
+// What the update popup says about a pending update: the version change
+// ("v0.6.3 → v0.7.0") when both sides have a version and they differ, the
+// commit count otherwise.
+function availableSummary(commits, installed, incoming) {
+    if (installed !== "" && incoming !== "" && installed !== incoming)
+        return "v" + installed + " → v" + incoming
+    return commits + " new commit" + (commits === 1 ? "" : "s") + " on main"
+}
+
+if (typeof module !== "undefined")
+    module.exports = { applyScript, csvMarker, parseApplyResult,
+                       versionScript, readVersion, parseVersions, availableSummary }
