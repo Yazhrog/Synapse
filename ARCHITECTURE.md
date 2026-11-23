@@ -691,7 +691,8 @@ These are the APIs v0.7.0 implements. Property types are QML types; "→" is a s
 | `run(args?)` | function | starts (restarting if running); `args` overrides `command` once |
 | `cancel()` | function | |
 | → `succeeded(var result)` | | exit 0 |
-| → `failed(int code, string stderr)` | | non-zero exit or timeout |
+| → `failed(int code, string stderr)` | | non-zero exit, timeout (124), parse error (-1), command that can't start (-2) |
+| → `finished(bool ok)` | | after either, for "whatever happened" handlers |
 | → `line(string text)` | | streaming mode (`stream: true`), for `cava`, `wf-recorder` |
 
 `ExecQueue { function enqueue(argv, onDone) }` runs one at a time.
@@ -716,7 +717,7 @@ These are the APIs v0.7.0 implements. Property types are QML types; "→" is a s
 ### 8.3 `Poller`, `Lease`
 
 `Poller { interval; running; immediate: true; → tick() }` (a `Timer` that also fires on start).
-`Lease { service; active }` calls `service.acquire()` / `release()`; the service exposes `watched`.
+`Lease { service; active }` calls `service.acquire()` / `release()`; the service exposes `watched` from an embedded `LeaseCount` (_implemented in #142_).
 
 ### 8.4 `Hypr` (singleton, `core/`)
 
@@ -891,11 +892,11 @@ The sub-issues of #111 were rewritten on 2026-11-13 to match these steps: #112, 
 |---|---|---|---|---|---|
 | **S1** | Safety net | Unit test runner for all `*.mjs`; `smoke-registries.qml` + `lib/SceneList.qml` listing every content/page/tab/bar part by hand; `contracts.qml` (keybinds ↔ IPC targets); `golden.sh` (base vs head capture and compare) + CI job; `layers.py` in warn mode with today's violations allowlisted; **spike**: `IpcHandler` inside an `Instantiator` (works). | CI runs all of it; a 1 px change fails the golden check; spike result written in this file. | #141 | M |
 | **S2** | `qs.*` imports, one registry | Replace all 237 relative imports with `qs.src.*`; delete the 4 qmldirs; every singleton uses `pragma Singleton` + `Singleton {}`. No file moves. | No `import "../`; no qmldir; smoke + golden green. | #112 | M |
-| **S3** | Core toolkit | `core/Exec`, `ExecQueue`, `JsonStore`, `Poller`, `Lease`, `Hypr`, `Log`, `core/specs/*`, with unit tests where pure. Pilots: `TaskService` on `JsonStore`, `WifiService` + `VpnService` + `HotspotService` on `Exec` argv (this fixes F-1 if it wasn't fixed before the stack). | Pilots behave identically; F-1 closed. | #142 | M |
+| **S3** | Core toolkit | `core/Exec`, `ExecQueue`, `JsonStore`, `Poller`, `Lease`/`LeaseCount`, `Hypr`, `Log`, with unit tests where pure and behaviour tests (`tests/core.qml`); the spec types land with S7, their first user. Pilots: `TaskService` on `JsonStore`, `WifiService` + `VpnService` + `HotspotService` on `Exec` argv (this fixes F-1 if it wasn't fixed before the stack). | Pilots behave identically; F-1 closed. | #142 | M |
 | **S4** | Move the tree | Pure moves and renames to §6 / §7 (`features/`, `surface/`, `dialogs/`, `services/<domain>/`, `components/<group>/`, `app/`). Splits not included. | `popups/`, `windows/`, `modules/`, `shapes/`, `utils/`, `services/{config_tab,home,kanban,notifications}` gone; golden green. | #113 | L (mechanical) |
 | **S5** | Services on the toolkit | Every `Process` → `Exec`/`ExecQueue` (argv), every store → `JsonStore` (atomic), every poll → `Poller` + `Lease`; system services become singletons; services stop reading `Popups`; parsers → pure JS with tests. | Rules 1 and 3 pass for `services/`. | #115 | L |
 | **S6** | Processes out of the views, `ShellState` split | `PowerService`, `GpuModeService`, `AppsService`, `KeyboardLayoutService`, `ProfileService`, `SystemInfoService`, `AudioService`, `MediaService` (MPRIS selection only); views keep only bindings; `ShellState` → `ShellModes` + `Hypr` + `KeybindService`. | Rule 1 passes everywhere. | #143 | M |
-| **S7** | Popup registry and lifecycle, `Dialogs` | `PopupSpec` per popup, `app/PopupManifest`, `SurfaceState` phases + signals, `PopupLifecycle`; delete `contents`, `regionOf`, the `afterClose` timer and the `xxxOpenChanged` `Connections`; `Dialogs` mediator, render-only `ConfirmDialog`. | Adding a popup = spec + manifest line (checked by a throwaway test popup in the PR). | #144 | M |
+| **S7** | Popup registry and lifecycle, `Dialogs` | `core/specs/*`; `PopupSpec` per popup, `app/PopupManifest`, `SurfaceState` phases + signals, `PopupLifecycle`; delete `contents`, `regionOf`, the `afterClose` timer and the `xxxOpenChanged` `Connections`; `Dialogs` mediator, render-only `ConfirmDialog`. | Adding a popup = spec + manifest line (checked by a throwaway test popup in the PR). | #144 | M |
 | **S8** | Extension registries | `Actions` + `IpcBridge` (or fallback), dashboard pages, audio pages, network tabs, config tabs, Quick Settings tiles, bar widgets (layout pref with today's order as default), notch items; registries feed smoke and contracts. | §2.3 is one entry; contracts cover every registry. | #145 | L |
 | **S9** | Prefs schema and settings controls | `Prefs` on `JsonStore` + `PrefSchema` (same file, same keys); presentational `Settings*`; `Pref*` containers; validation (bar style, ranges) in the schema. | Adding a pref = one schema line + one control line. | #146 | M |
 | **S10** | Theme tokens | Token groups with today's values, `ColorSource` interface (matugen only), `Theme` facade; rename every existing `Theme.*` read; `Anim`/`Fade` motion components. | `Metrics`/`Colors` names gone from views; golden green. | #147 | M |

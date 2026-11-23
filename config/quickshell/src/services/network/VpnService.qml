@@ -1,8 +1,8 @@
 pragma Singleton
 import QtQuick
 import Quickshell
-import Quickshell.Io
-import qs.src.state
+import qs.src.core
+import "nmcli.js" as Nmcli
 // ============================================================
 // VpnService — WireGuard connections through nmcli, shared by the bar's VPN
 // icon and the network popup's VPN tab.
@@ -14,8 +14,9 @@ import qs.src.state
 //  • Kill switch (in memory): turning it on downs every active WireGuard
 //    connection. nmcli only, no root.
 //  • notify-send on connect, disconnect and failure.
-// The list is read at startup, then kept fresh while the network popup is
-// open (`nmcli monitor`, debounced, plus an 8 s poll).
+// The list is read at startup, then kept fresh while something holds a Lease
+// on the service (the network popup, while open): `nmcli monitor`, debounced,
+// plus an 8 s poll.
 // Connection: { name, active, busy }.
 // ============================================================
 
@@ -31,18 +32,21 @@ Singleton {
     property bool   connecting:  false
     property string activeName:  ""       // the active (or connecting) connection
 
-    property var _buf: []
+    // ── Lease: watch NetworkManager while a view needs fresh data ───────────
+    readonly property bool watched: _leases.watched
+    function acquire() { _leases.acquire() }
+    function release() { _leases.release() }
+    property LeaseCount _leases: LeaseCount {}
 
     // ── Actions ─────────────────────────────────────────────────────────────
     function refresh() {
-        if (wgProc.running) return
+        if (wgExec.busy) return
         loading = true
-        _buf    = []
-        wgProc.running = true
+        wgExec.run()
     }
 
     function connect(name) {
-        if (connectProc.running || disconnectProc.running) return
+        if (connectExec.busy || disconnectExec.busy) return
 
         // Mark the requested connection and the active one (if any) as busy
         var cons = connections.slice()
@@ -56,14 +60,13 @@ Singleton {
         active     = false
         activeName = name
 
-        connectProc._name   = name
+        connectExec._name = name
         // The name is passed as an argument ($1), never pasted into the script.
-        connectProc.command = ["bash", "-c", _downAllCmd + "; nmcli con up \"$1\" 2>&1", "--", name]
-        connectProc.running = false; connectProc.running = true
+        connectExec.run(["bash", "-c", _downAllCmd + "; nmcli con up \"$1\" 2>&1", "--", name])
     }
 
     function disconnect(name) {
-        if (connectProc.running || disconnectProc.running) return
+        if (connectExec.busy || disconnectExec.busy) return
 
         var cons = connections.slice()
         for (var i = 0; i < cons.length; i++)
@@ -71,16 +74,14 @@ Singleton {
                 cons[i] = { name: cons[i].name, active: cons[i].active, busy: true }
         connections = cons
 
-        disconnectProc._name   = name
-        disconnectProc.command = ["bash", "-c", "nmcli con down \"$1\" 2>/dev/null", "--", name]
-        disconnectProc.running = false; disconnectProc.running = true
+        disconnectExec._name = name
+        disconnectExec.run(["nmcli", "con", "down", name])
     }
 
     function toggleKillSwitch() {
         killSwitch = !killSwitch
         if (killSwitch && (active || connecting)) {
-            killSwitchProc.command = ["bash", "-c", _downAllCmd]
-            killSwitchProc.running = false; killSwitchProc.running = true
+            killSwitchExec.run(["bash", "-c", _downAllCmd])
             active = false; connecting = false; activeName = ""
         }
     }
@@ -92,75 +93,53 @@ Singleton {
         " | xargs -r -I {} nmcli connection down \"{}\""
 
     function _notify(title, body, urgency) {
-        notifyProc.command = ["notify-send", "--app-name=Synapse", "--urgency=" + urgency,
-                              "--icon=network-vpn", title, body]
-        notifyProc.running = false; notifyProc.running = true
+        notifyExec.run(["notify-send", "--app-name=Synapse", "--urgency=" + urgency,
+                        "--icon=network-vpn", title, body])
     }
 
-    // ── Processes ───────────────────────────────────────────────────────────
+    // ── Commands ────────────────────────────────────────────────────────────
     // Runs once at startup; safe to re-run.
-    Process {
-        id: disableAutoconnectProc
+    Exec {
+        id: disableAutoconnectExec
         command: ["bash", "-c",
             "nmcli -t -f NAME,TYPE con show" +
             " | awk -F: '$2==\"wireguard\"{print $1}'" +
             " | while IFS= read -r name; do" +
             "     nmcli con modify \"$name\" connection.autoconnect no 2>/dev/null;" +
             "   done"]
-        running: false
     }
 
-    Process {
-        id: wgProc
-        running: false
-        command: ["sh", "-c",
-            "nmcli -t -f NAME,TYPE,ACTIVE con show" +
-            " | awk -F: '$2==\"wireguard\"{print $1 \"|\" ($3==\"yes\" ? \"active\" : \"inactive\")}'"]
-        stdout: SplitParser {
-            onRead: function(data) {
-                var line = data.trim()
-                if (!line) return
-                var sep = line.lastIndexOf("|")
-                if (sep < 0) return
-                root._buf = root._buf.concat([{
-                    name:   line.substring(0, sep),
-                    active: line.substring(sep + 1) === "active",
-                    busy:   false
-                }])
-            }
-        }
-        onExited: function(code, status) {
-            var buf = root._buf.slice()
-            // Busy only while its process still runs
-            var connectingName    = connectProc.running    ? connectProc._name    : ""
-            var disconnectingName = disconnectProc.running ? disconnectProc._name : ""
-            buf.sort(function(a, b) { return a.name.localeCompare(b.name) })
-            for (var j = 0; j < buf.length; j++)
-                if (buf[j].name === connectingName || buf[j].name === disconnectingName)
-                    buf[j].busy = true
-
-            root._buf        = []
+    Exec {
+        id: wgExec
+        command: ["nmcli", "-t", "-f", "NAME,TYPE,ACTIVE", "con", "show"]
+        parse: Nmcli.parseWireguard
+        onSucceeded: list => _apply(list)
+        onFailed: _apply([])
+        function _apply(list) {
+            // Busy only while its command still runs
+            const connectingName    = connectExec.busy    ? connectExec._name    : ""
+            const disconnectingName = disconnectExec.busy ? disconnectExec._name : ""
+            const buf = list.map(c => ({ name: c.name, active: c.active,
+                                         busy: c.name === connectingName || c.name === disconnectingName }))
             root.connections = buf
             root.loading     = false
 
-            var up = buf.filter(function(c) { return c.active })
+            const up = buf.filter(c => c.active)
             root.active     = up.length > 0
-            root.connecting = connectProc.running
-            root.activeName = up.length > 0 ? up[0].name : (connectProc.running ? connectProc._name : "")
+            root.connecting = connectExec.busy
+            root.activeName = up.length > 0 ? up[0].name : (connectExec.busy ? connectExec._name : "")
         }
     }
 
-    Process {
-        id: connectProc
-        running: false
-        command: []
+    Exec {
+        id: connectExec
         property string _name: ""
-        stderr: StdioCollector { id: connectStderr }
-        onExited: function(code, status) {
-            var cname = connectProc._name
-            var cons = root.connections.slice()
-            for (var i = 0; i < cons.length; i++)
-                cons[i] = { name: cons[i].name, active: code === 0 ? cons[i].name === cname : cons[i].active, busy: false }
+        onSucceeded: _done(0, "")
+        onFailed: (code, err) => _done(code, err)
+        function _done(code, err) {
+            const cname = _name
+            const cons = root.connections.map(c => ({
+                name: c.name, active: code === 0 ? c.name === cname : c.active, busy: false }))
             root.connections = cons
             root.connecting  = false
 
@@ -173,51 +152,42 @@ Singleton {
                 root.active     = false
                 root.activeName = ""
                 root._notify("VPN Failed",
-                    "Could not connect to " + cname + ".\n" + connectStderr.text.trim(), "critical")
+                    "Could not connect to " + cname + ".\n" + err.trim(), "critical")
             }
             root.refresh()
         }
     }
 
-    Process {
-        id: disconnectProc
-        running: false
-        command: []
+    Exec {
+        id: disconnectExec
         property string _name: ""
-        onExited: function(code, status) {
-            var cons = root.connections.slice()
-            for (var i = 0; i < cons.length; i++)
-                cons[i] = { name: cons[i].name, active: false, busy: false }
-            root.connections = cons
+        onFinished: {
+            root.connections = root.connections.map(c => ({ name: c.name, active: false, busy: false }))
             root.active      = false
             root.connecting  = false
             root.activeName  = ""
-            root._notify("VPN Disconnected", "󰦝  " + disconnectProc._name + " has been disconnected.", "low")
+            root._notify("VPN Disconnected", "󰦝  " + _name + " has been disconnected.", "low")
             root.refresh()
         }
     }
 
-    Process {
-        id: killSwitchProc
-        running: false
-        command: []
-        onExited: root.refresh()
-    }
+    Exec { id: killSwitchExec; onFinished: root.refresh() }
 
-    Process { id: notifyProc; running: false; command: [] }
+    Exec { id: notifyExec }
 
-    // While the network popup is open: follow NetworkManager, debounced
-    Process {
-        id: monitorProc
-        running: Popups.networkOpen
+    // While watched: follow NetworkManager, debounced
+    Exec {
+        id: monitorExec
         command: ["nmcli", "monitor"]
-        stdout: SplitParser { onRead: function(data) { monitorDebounce.restart() } }
+        stream:  true
+        onLine: monitorDebounce.restart()
     }
+    onWatchedChanged: watched ? monitorExec.run() : monitorExec.cancel()
     Timer { id: monitorDebounce; interval: 600; repeat: false; onTriggered: root.refresh() }
-    Timer { interval: 8000; repeat: true; running: Popups.networkOpen; onTriggered: root.refresh() }
+    Timer { interval: 8000; repeat: true; running: root.watched; onTriggered: root.refresh() }
 
     Component.onCompleted: {
-        disableAutoconnectProc.running = true
+        disableAutoconnectExec.run()
         refresh()
     }
 }

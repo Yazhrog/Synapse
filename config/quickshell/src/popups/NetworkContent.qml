@@ -1,5 +1,7 @@
 import QtQuick
 import qs.src.components
+import qs.src.core
+import qs.src.services.network
 import qs.src.state
 // NetworkContent — the network popup's UI: the Wi-Fi / Bluetooth / VPN /
 // Hotspot tab pages and the tab bar. Hosted by the right region of DynamicSurface.
@@ -7,6 +9,9 @@ Item {
     id: root
 
     property string page: "wifi"
+
+    // VpnService follows NetworkManager while the popup is open.
+    Lease { service: VpnService; active: Popups.networkOpen }
 
     // ── Tab page area ─────────────────────────────────────────────────
     Item {
