@@ -572,6 +572,8 @@ Every directory is imported as `import qs.src.<path>` _(verified on 0.3.2: no `q
 
 Paths relative to `config/quickshell/src/`. "split" means the file is cut into the parts listed; "→" alone is a move (and rename where the name changes).
 
+**Done in #113 (S4)** — every move and rename below that needs no code change, with these differences from the target: `features/network/` stays flat (`NetworkContent` loads its tabs by file name; the tab subfolders come with the splits), names that change with a split keep their name until it (`AudioControl`, `HistoryTab`, `BatteryStatus`, `KanbanDeleteDialog` → `components/feedback/ConfirmOverlay`), `IpcManager` stays in `state/` until #145, `BrightnessSlider` sits in `components/inputs/` until #146 makes it presentational, and the system stats services stay per-use until #115. New: `app/App.qml` is the composition root (`shell.qml` only creates it).
+
 ### 7.1 Root, theme, utils
 
 | Today | Target | Notes |

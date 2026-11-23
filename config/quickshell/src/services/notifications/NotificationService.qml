@@ -1,7 +1,6 @@
 pragma Singleton
 import QtQuick
 import Quickshell.Services.Notifications
-import qs.src.modules.Right
 import qs.src.state
 // ─────────────────────────────────────────────────────────────
 // NotificationService — global singleton

@@ -2,7 +2,8 @@ pragma Singleton
 import QtQuick
 import Quickshell
 import Quickshell.Hyprland
-import qs.src.services
+import qs.src.services.data
+import qs.src.services.media
 // ============================================================
 // SurfaceState — what interactive popup is open, and on which screen.
 //

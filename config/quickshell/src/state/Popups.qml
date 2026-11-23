@@ -1,7 +1,7 @@
 pragma Singleton
 import QtQuick
 import Quickshell
-import qs.src.services
+import qs.src.services.data
 import qs.src.theme
 Singleton {
     id: root

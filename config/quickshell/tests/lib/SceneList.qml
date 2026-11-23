@@ -1,14 +1,19 @@
 import QtQuick
-import qs.src.components
-import qs.src.modules.Center
-import qs.src.modules.Left
-import qs.src.modules.Right
-import qs.src.popups
-import qs.src.services
-import qs.src.services.config_tab
-import qs.src.services.notifications
-import qs.src.shapes
+import qs.src.features.audio
+import qs.src.features.bar.center
+import qs.src.features.bar.left
+import qs.src.features.bar.right
+import qs.src.features.clipboard
+import qs.src.features.dashboard
+import qs.src.features.dashboard.config
+import qs.src.features.network
+import qs.src.features.notifications
+import qs.src.features.osd
+import qs.src.features.power
+import qs.src.features.screenrec
+import qs.src.features.wallpaper
 import qs.src.state
+import qs.src.surface.shape
 // SceneList — every view the shell can show, one scene each, at the size the
 // Dynamic Surface gives it (DynamicSurface.contents' place() at scale 1).
 // Used by tests/smoke-registries.qml (each scene loads without a QML error)
