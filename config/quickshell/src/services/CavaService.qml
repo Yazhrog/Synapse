@@ -3,14 +3,12 @@ import QtQuick
 import Quickshell
 import Quickshell.Io
 import Quickshell.Services.Mpris
-import "../"
-
 // Single cava process shared by CenterContent and PlayerCard.
 // 32 bars at 30fps. isPlaying mirrors the active MPRIS player state.
 // `enabled` follows PrefsService.enableVisualiser: when off, cava is stopped
 // and the bars are hidden.
 
-QtObject {
+Singleton {
     id: root
 
     readonly property int barCount: 32

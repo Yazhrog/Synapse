@@ -1,6 +1,6 @@
 import QtQuick
-import "../"
-
+import qs.src.services
+import qs.src.theme
 // SettingsDropdown — a row with a choice from a list of options.
 //
 // `options` is a list of { value, label } (or plain strings). Clicking the

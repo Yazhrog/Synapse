@@ -1,6 +1,6 @@
 import QtQuick
-import "../"
-
+import qs.src.services
+import qs.src.theme
 // SettingsRow — base of the settings widgets: label and optional description
 // on the left, a control on the right (the row's children), and a reset button
 // when the PrefsService key in `prefKey` differs from its default.

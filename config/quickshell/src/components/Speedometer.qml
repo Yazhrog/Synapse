@@ -1,6 +1,5 @@
 import QtQuick
-import "../"
-
+import qs.src.theme
 // Arc gauge component.
 // Name label above the arc, large percent text in the center,
 // detail string (e.g. "11.2 / 16 GB") below the center text.

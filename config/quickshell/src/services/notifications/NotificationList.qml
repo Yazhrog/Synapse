@@ -1,8 +1,7 @@
 import QtQuick
 import Quickshell.Services.Notifications
-import "../"
-import "../../"
-
+import qs.src.modules.Right
+import qs.src.theme
 // ─────────────────────────────────────────────────────────────
 // NotificationList — content of the notifications popup
 // ─────────────────────────────────────────────────────────────

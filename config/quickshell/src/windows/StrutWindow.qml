@@ -1,8 +1,6 @@
 import Quickshell
 import Quickshell.Wayland
 import QtQuick
-import "../"
-
 // StrutWindow — an invisible window whose only job is to reserve space
 // (an exclusive zone) along one screen edge, so tiled windows stay clear of
 // the frame. The DynamicSurface itself is fullscreen and ignores exclusive

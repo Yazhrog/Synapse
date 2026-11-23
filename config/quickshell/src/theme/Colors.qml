@@ -1,8 +1,7 @@
 pragma Singleton
 import QtQuick
-import "."
-
-QtObject {
+import Quickshell
+Singleton {
     id: root
 
     // ── Color loader — watches matugen output and updates live ────────────────

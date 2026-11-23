@@ -1,7 +1,7 @@
 import QtQuick
-import "../../../"
-import "../../../components"
-
+import qs.src.components
+import qs.src.state
+import qs.src.theme
 // TimerView — countdown ring, presets, a custom duration panel and Start/Pause + Reset.
 
 Item {

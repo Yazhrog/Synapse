@@ -1,8 +1,8 @@
 import QtQuick
-import "../"
-import "../components"
-import "../components/network"
-
+import qs.src.components.network
+import qs.src.services.network
+import qs.src.state
+import qs.src.theme
 // WifiTab — the network popup's Wi-Fi page: the wired connection (when a
 // cable is in), the current network and the available ones. Connect first
 // tries without a password; if nmcli asks for one, the row expands a field.

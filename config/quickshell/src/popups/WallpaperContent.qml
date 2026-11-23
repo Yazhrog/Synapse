@@ -1,11 +1,10 @@
 import QtQuick
 import QtQuick.Controls
 import Quickshell
-import "../components"
-import "../services"
-import "../"
-import "wallpaper"
-
+import qs.src.popups.wallpaper
+import qs.src.services
+import qs.src.state
+import qs.src.theme
 // WallpaperContent — the wallpaper picker UI: horizontal wallpaper strip,
 // search, folder mode, colour scheme dropdown and apply. Fills the popup body
 // (including the flare margins `fw`/`fh`). Hosted by the bottom-center region of

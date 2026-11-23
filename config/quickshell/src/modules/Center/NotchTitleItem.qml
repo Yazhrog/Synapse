@@ -1,6 +1,6 @@
 import QtQuick
-import "../../"
-
+import qs.src.services
+import qs.src.theme
 // NotchTitleItem — the focused app's name (ActiveWindowService).
 
 Text {

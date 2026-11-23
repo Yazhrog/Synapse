@@ -2,17 +2,14 @@ import Quickshell
 import Quickshell.Wayland
 import Quickshell.Hyprland
 import QtQuick
-import "../modules/Center/"
-import "../modules/Right/"
-import "../modules/Left/"
-import "../shapes/"
-import "../components/"
-import "../services/"
-import "../popups/"
-import "../theme/"
-import "../"
-import "surface"
-
+import qs.src.components
+import qs.src.popups
+import qs.src.services
+import qs.src.services.notifications
+import qs.src.shapes
+import qs.src.state
+import qs.src.theme
+import qs.src.windows.surface
 // DynamicSurface — one fullscreen, transparent layer surface per screen that
 // draws the whole frame (top notches + borders) as a single morphing shape
 // and hosts everything on it: the bar, the interactive popups (each grows a

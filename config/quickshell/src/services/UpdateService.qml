@@ -2,11 +2,10 @@ pragma Singleton
 import QtQuick
 import Quickshell
 import Quickshell.Io
-import "../"
-
+import qs.src.utils
 // UpdateService — startup update checker (30s delay).
 // The autoUpdate preference lives in PrefsService.
-QtObject {
+Singleton {
     id: root
 
     // ── Persistent preference ──────────────────────────────────────────────

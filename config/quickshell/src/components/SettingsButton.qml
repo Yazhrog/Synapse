@@ -1,6 +1,5 @@
 import QtQuick
-import "../"
-
+import qs.src.theme
 // SettingsButton — a row with an action button.
 //
 // `destructive` buttons are red and need a second click within 3s to fire

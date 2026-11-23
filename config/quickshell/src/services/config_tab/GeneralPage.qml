@@ -1,8 +1,6 @@
 import QtQuick
 import QtQuick.Controls
-import "../../"
-import "../../components"
-
+import qs.src.components
 // GeneralPage — Config → General: everyday shell preferences.
 //
 // Every row edits a PrefsService key and applies live. Defaults match the

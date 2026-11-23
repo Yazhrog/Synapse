@@ -1,11 +1,9 @@
 import QtQuick
 import Quickshell
 import Quickshell.Services.SystemTray
-import "../../components"
-import "../../windows"
-import "../../"
-import "../../services/"
-
+import qs.src.components
+import qs.src.services.notifications
+import qs.src.state
 IconBtn {
     text: ShellState.dnd
           ? "󰂛"

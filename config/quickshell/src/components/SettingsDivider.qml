@@ -1,6 +1,5 @@
 import QtQuick
-import "../"
-
+import qs.src.theme
 // SettingsDivider — thin separator between rows of a SettingsGroup.
 Item {
     width:  parent ? parent.width : 0

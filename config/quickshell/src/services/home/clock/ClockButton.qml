@@ -1,6 +1,5 @@
 import QtQuick
-import "../../../"
-
+import qs.src.theme
 // ClockButton — the 58×26 text button of the clock views (Start, Reset, Set …).
 // `accent` tints it with Theme.active; the alphas tune the accent fill.
 

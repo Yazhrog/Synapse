@@ -2,9 +2,11 @@
 
 import Quickshell
 import QtQuick
-import "./src/windows"
-import "./src/"
-
+import qs.src.services
+import qs.src.services.config_tab
+import qs.src.services.network
+import qs.src.state
+import qs.src.windows
 ShellRoot {
     // Force-instantiate lazy singletons that need startup behavior
     property var _keybinds:   KeybindService

@@ -1,8 +1,8 @@
 import QtQuick
-import "../"
-import "../components"
-import "../components/network"
-
+import qs.src.components.network
+import qs.src.services.network
+import qs.src.state
+import qs.src.theme
 // VPNTab — the network popup's VPN page: WireGuard connections (one active
 // at a time) and the kill switch. State and nmcli calls live in VpnService.
 

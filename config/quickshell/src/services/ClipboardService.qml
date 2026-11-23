@@ -2,9 +2,9 @@ pragma Singleton
 import QtQuick
 import Quickshell
 import Quickshell.Io
-import "../"
-
-QtObject {
+import qs.src.state
+import qs.src.utils
+Singleton {
     id: root
 
     property var  entries: []

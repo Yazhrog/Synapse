@@ -1,8 +1,7 @@
 pragma Singleton
 import QtQuick
-import "."
-
-QtObject {
+import Quickshell
+Singleton {
     // ── Bindings to Modular Singletons ────────────────────────────────────────
     // Note: property alias cannot point to other singletons, so we use direct bindings.
     

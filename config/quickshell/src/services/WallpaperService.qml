@@ -2,8 +2,8 @@ pragma Singleton
 import QtQuick
 import Quickshell
 import Quickshell.Io
-import "../"
-
+import qs.src.state
+import qs.src.utils
 // ============================================================
 // WallpaperService — wallpaper list + apply pipeline
 //
@@ -14,7 +14,7 @@ import "../"
 //                         → saveConfig() (writes src/user_data/wallpaper.json)
 // ============================================================
 
-QtObject {
+Singleton {
     id: root
 
     // ── Paths ─────────────────────────────────────────────────────────────────

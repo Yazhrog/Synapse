@@ -1,6 +1,6 @@
 import QtQuick
-import "../"
-
+import qs.src.services
+import qs.src.theme
 // SettingsSlider — a row with a slider and its current value.
 //
 // With `prefKey`, the slider reads and writes that PrefsService key

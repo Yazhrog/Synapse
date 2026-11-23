@@ -1,6 +1,6 @@
 import QtQuick
-import "../../"
-
+import qs.src.services.network
+import qs.src.theme
 // EthernetRow — the wired connection at the top of the Wi-Fi tab, shown
 // whenever a cable is connected (also while Wi-Fi is off).
 

@@ -1,6 +1,6 @@
 import QtQuick
-import "../../"
-
+import qs.src.services
+import qs.src.theme
 // BrightnessSlider — the dashboard's labelled brightness slider
 // (BRIGHTNESS + %, sun icons, track with thumb, click/drag/scroll).
 // Reads and writes BrightnessService.

@@ -1,6 +1,6 @@
 import QtQuick
-import "../../"
-
+import qs.src.services
+import qs.src.theme
 // KanbanDatePicker — the due-date picker: dims the board and shows a month
 // calendar with an optional time. open(taskId) loads the task's due date;
 // Done saves it (time only → today), Clear removes it, a click outside cancels.

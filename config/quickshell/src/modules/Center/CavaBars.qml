@@ -1,6 +1,5 @@
 import QtQuick
-import "../../"
-
+import qs.src.theme
 // CavaBars — a row of rounded bars that grow symmetrically from the middle,
 // one per value in `bars` (0–100). `tint` at minAlpha…1 by amplitude, or a
 // faint white when `muted`.

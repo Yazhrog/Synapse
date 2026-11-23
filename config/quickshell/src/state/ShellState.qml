@@ -2,8 +2,8 @@ pragma Singleton
 import Quickshell
 import QtQuick
 import Quickshell.Io
-import "../."
-
+import qs.src.services.config_tab
+import qs.src.utils
 // Global shell state.
 //
 // Airplane Mode     — written by QuickToggleService (rfkill)
@@ -14,7 +14,7 @@ import "../."
 // straight from their services (WifiService, BluetoothService, VpnService,
 // HotspotService, QuickToggleService).
 
-QtObject {
+Singleton {
     id: root
 
     

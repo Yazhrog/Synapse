@@ -1,8 +1,6 @@
 import QtQuick
-import "../"
-import "../components"
-import "kanban"
-
+import qs.src.services.kanban
+import qs.src.state
 // KanbanBoard — the dashboard's task board: three columns over KanbanService
 // (user_data/tasks.json).
 //

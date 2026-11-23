@@ -1,7 +1,7 @@
 import QtQuick
 import QtQuick.Effects
-import "../../"
-
+import qs.src.services
+import qs.src.theme
 // NotchMusicItem — the player's round cover art (or ♪) and the cava bars.
 
 Item {

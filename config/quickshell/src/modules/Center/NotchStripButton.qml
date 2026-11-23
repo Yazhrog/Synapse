@@ -1,7 +1,7 @@
 import QtQuick
 import Quickshell
-import "../../"
-
+import qs.src.services
+import qs.src.theme
 // NotchStripButton — a record-setup pill (capture mode, audio source).
 // Hovering opens its option strip under the notch (ScreenRecService);
 // leaving schedules it to close.

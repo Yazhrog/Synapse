@@ -1,6 +1,5 @@
 import QtQuick
-import "../../"
-
+import qs.src.theme
 // ScanRings — expanding rings around a pulsing glyph while `running`
 // (the Wi-Fi and Bluetooth scans).
 

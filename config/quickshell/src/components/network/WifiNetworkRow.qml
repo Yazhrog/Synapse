@@ -1,6 +1,6 @@
 import QtQuick
-import "../../"
-
+import qs.src.services.network
+import qs.src.theme
 // WifiNetworkRow — one Wi-Fi network: name, lock and signal, Connect /
 // Retry, and for the current one Disconnect and Forget (with a confirmation).
 // Expands a password field when WifiService asks for one.

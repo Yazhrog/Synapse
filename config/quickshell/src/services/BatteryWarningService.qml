@@ -3,15 +3,14 @@ import QtQuick
 import Quickshell
 import Quickshell.Io
 import Quickshell.Services.UPower
-import "../"
-
+import qs.src.state
 // Single source of truth for low-battery detection — force-instantiated once
 // in shell.qml so thresholds fire exactly once, regardless of monitor count.
 // 30/20/10% -> a real desktop notification (via notify-send, through the
 // shell's own NotificationServer) that auto-dismisses like any other toast.
 // <=5% -> a blocking BatteryCriticalDialog the user must acknowledge.
 
-QtObject {
+Singleton {
     id: root
 
     readonly property var  bat:      UPower.displayDevice

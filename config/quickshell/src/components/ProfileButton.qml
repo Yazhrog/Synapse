@@ -1,6 +1,5 @@
 import QtQuick
-import "../"
-
+import qs.src.theme
 Item {
     id: root
 
